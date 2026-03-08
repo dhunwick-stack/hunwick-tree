@@ -1283,7 +1283,7 @@ async function apiLoad() {
     Object.entries(edits||{}).forEach(([k,v]) => { if (!PEOPLE[k]) PEOPLE[k]={}; Object.assign(PEOPLE[k], v); });
     await Promise.all(Object.entries(photos||{}).map(async ([name, key]) => {
       try {
-        const r = await fetch(`/api/photo?key=${encodeURIComponent(key)}`);
+        const r = await fetch(`/api/photo-get?key=${encodeURIComponent(key)}`);
         if (r.ok) { const { dataUrl } = await r.json(); photoCache[name] = dataUrl; }
       } catch {}
     }));
@@ -1297,8 +1297,27 @@ async function apiSaveEdit(key, patch) {
   catch(e) { console.warn('Save failed',e); }
 }
 
+async function compressImage(dataUrl, maxWidth=800, quality=0.75) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const scale = Math.min(1, maxWidth / img.width);
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.src = dataUrl;
+  });
+}
+
 async function apiSavePhoto(name, dataUrl) {
-  try { await fetch('/api/photo', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,dataUrl})}); }
+  try {
+    const compressed = await compressImage(dataUrl);
+    const res = await fetch('/api/photo', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,dataUrl:compressed})});
+    if (!res.ok) console.warn('Photo save returned', res.status);
+  }
   catch(e) { console.warn('Photo save failed',e); }
 }
 
