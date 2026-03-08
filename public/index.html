@@ -2100,7 +2100,12 @@ async function apiLoad() {
         const r = await fetch(`/api/photo-get?key=${encodeURIComponent(key)}`);
         if (r.ok) {
           const blob = await r.blob();
-          photoCache[name] = URL.createObjectURL(blob);
+          const objUrl = URL.createObjectURL(blob);
+          // Store under both the saved name AND the resolved pkey
+          // so photos are found regardless of which form the key was saved under
+          photoCache[name] = objUrl;
+          const resolved = findKey(name);
+          if (resolved && resolved !== name) photoCache[resolved] = objUrl;
         }
       } catch {}
     }));
