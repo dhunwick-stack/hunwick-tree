@@ -1479,7 +1479,18 @@ function openPanel(displayName, card, explicitKey) {
   const relDiv=document.getElementById('dp-relatives');relDiv.innerHTML='';
   const rels=[...(d.parents||[]).map(p=>({label:p,role:'Parent'})),...(d.children||[]).map(c=>({label:c,role:'Child'}))];
   if(!rels.length){relDiv.innerHTML='<span style="font-size:0.85rem;color:var(--sepia-light);font-style:italic;">No linked relatives on record</span>';}
-  else{rels.forEach(r=>{const chip=document.createElement('span');chip.className='dp-chip';chip.title=r.role;chip.textContent=r.label.replace(/ \(.*/,'');chip.addEventListener('click',()=>{const target=[...document.querySelectorAll('.person-name')].find(el=>{const n=el.textContent.trim();return n===r.label||r.label.startsWith(n)||n.startsWith(r.label.split(' (')[0]);});if(target){closePanel();setTimeout(()=>{target.closest('.person').scrollIntoView({behavior:'smooth',block:'center'});openPanel(target.textContent.trim(),target.closest('.person'));},280);}});relDiv.appendChild(chip);});}
+  else{rels.forEach(r=>{const chip=document.createElement('span');chip.className='dp-chip';chip.title=r.role;chip.textContent=r.label.replace(/ \(.*/,'');chip.addEventListener('click',()=>{
+    // Find card by exact data-pkey match first, then fall back to name text
+    let target = document.querySelector(`.person[data-pkey="${CSS.escape(r.label)}"]`);
+    if (!target) {
+      target = [...document.querySelectorAll('.person')].find(card => {
+        const pkey = card.dataset.pkey;
+        const nameEl = card.querySelector('.person-name');
+        return pkey === r.label || (nameEl && nameEl.textContent.trim() === r.label);
+      });
+    }
+    if(target){closePanel();setTimeout(()=>{target.scrollIntoView({behavior:'smooth',block:'center'});openPanel(target.querySelector('.person-name').textContent.trim(),target,target.dataset.pkey||findKey(r.label));},280);}
+  });relDiv.appendChild(chip);});}
   document.getElementById('dp-notes').value=d.notes||'';
   document.getElementById('overlay').classList.add('open');
   document.getElementById('detail-panel').classList.add('open');
@@ -1533,12 +1544,23 @@ document.getElementById('dp-export-btn').addEventListener('click',()=>{
 });
 
 function findKey(displayName) {
-  if(PEOPLE[displayName])return displayName;
-  const dn=displayName.toLowerCase().trim();
-  return Object.keys(PEOPLE).find(k=>k.toLowerCase().split(' (')[0].trim()===dn)
-      ||Object.keys(PEOPLE).find(k=>k.toLowerCase().startsWith(dn+' ('))
-      ||Object.keys(PEOPLE).find(k=>{const b=k.toLowerCase().split(' (')[0].trim();return b.length>4&&dn.startsWith(b);})
-      ||displayName;
+  if (PEOPLE[displayName]) return displayName;
+  const dn = displayName.toLowerCase().trim();
+  // 1. Exact base name match (strip birth year suffix)
+  const exactBase = Object.keys(PEOPLE).find(k => k.toLowerCase().split(' (')[0].trim() === dn);
+  if (exactBase) return exactBase;
+  // 2. Key starts with displayName followed by ' ('
+  const prefixMatch = Object.keys(PEOPLE).find(k => k.toLowerCase().startsWith(dn + ' ('));
+  if (prefixMatch) return prefixMatch;
+  // 3. Only fuzzy match if displayName is long enough (>8 chars) to avoid "John" → "John (b.1796)"
+  if (dn.length > 8) {
+    const fuzzy = Object.keys(PEOPLE).find(k => {
+      const b = k.toLowerCase().split(' (')[0].trim();
+      return b.length > 6 && dn.startsWith(b);
+    });
+    if (fuzzy) return fuzzy;
+  }
+  return displayName;
 }
 
 apiLoad();
