@@ -993,7 +993,17 @@
     left: 0;
     right: 0;
     height: 1px;
-    background: transparent; /* drawn by JS for precision */
+    background: transparent;
+  }
+
+  /* Nested branch: e.g. Maia -> Bella appearing under Maia in a row */
+  .branch-children + .family-branch,
+  .child-col + .family-branch {
+    margin-top: 10px;
+    margin-left: 20px;
+    padding-left: 12px;
+    border-left: 1px dashed var(--line);
+    width: 100%;
   }
 
 
@@ -2918,33 +2928,20 @@ function renderNewCard(key, data, relType, relKey) {
   const relCard = document.querySelector(`.person[data-pkey="${CSS.escape(relKey)}"]`);
 
   if (relType === 'child' && relCard) {
-    // 1. Check for an existing branch-children already tagged for this parent
+    // Look for an existing branch-children SPECIFICALLY tagged for this parent key
+    // (never reuse a parent's sibling row — always nest directly under relCard)
     let childrenRow = document.querySelector(`.branch-children[data-parent="${CSS.escape(relKey)}"]`);
 
-    // 2. Check for an existing children-row tagged for this parent
     if (!childrenRow) {
-      childrenRow = document.querySelector(`.children-row[data-parent="${CSS.escape(relKey)}"]`);
-    }
-
-    // 3. Check if the parent card itself is already inside a branch-children,
-    //    and there's a sibling children-row in the same family-branch
-    if (!childrenRow) {
-      const parentBranch = relCard.closest('.family-branch');
-      if (parentBranch) {
-        childrenRow = parentBranch.querySelector('.branch-children');
-      }
-    }
-
-    // 4. Nothing found — create a new family-branch for this parent
-    if (!childrenRow) {
+      // Build a new nested branch anchored right after the parent card
       const branch = document.createElement('div');
       branch.className = 'family-branch';
-      branch.style.marginTop = '16px';
+      branch.style.cssText = 'margin-top:12px; padding-left:16px; border-left:2px solid var(--line,#c8b99a);';
 
       const ghostParent = document.createElement('div');
       ghostParent.className = 'branch-parent';
       const parentDisplayName = relKey.split(' (')[0];
-      ghostParent.innerHTML = `<div class="person" style="opacity:0.55;pointer-events:none;min-width:110px;max-width:130px;padding:8px 10px;"><div class="person-name" style="font-size:0.9rem;">${parentDisplayName}</div></div><div class="branch-arrow">→</div>`;
+      ghostParent.innerHTML = `<div class="person" style="opacity:0.6;pointer-events:none;min-width:100px;max-width:120px;padding:6px 10px;font-size:0.85rem;"><div class="person-name" style="font-size:0.85rem;">${parentDisplayName}</div></div><div class="branch-arrow">→</div>`;
 
       childrenRow = document.createElement('div');
       childrenRow.className = 'branch-children';
@@ -2953,17 +2950,10 @@ function renderNewCard(key, data, relType, relKey) {
       branch.appendChild(ghostParent);
       branch.appendChild(childrenRow);
 
-      // Find or create a family-branches wrapper near the parent card
-      const parentContainer = relCard.closest('.child-col, .branch-children') || relCard.parentElement;
-      const parentSection = parentContainer.closest('.col, .family-branch, .tree-section') || parentContainer.parentElement;
-      let branchesWrap = parentSection?.querySelector('.family-branches');
-      if (!branchesWrap) {
-        branchesWrap = document.createElement('div');
-        branchesWrap.className = 'family-branches';
-        branchesWrap.style.marginTop = '12px';
-        parentContainer.after(branchesWrap);
-      }
-      branchesWrap.appendChild(branch);
+      // Insert the branch directly after the parent card's wrapper
+      // so it's visually nested under that specific card
+      const parentWrapper = relCard.closest('.child-col') || relCard.parentElement;
+      parentWrapper.after(branch);
     }
 
     childrenRow.appendChild(card);
