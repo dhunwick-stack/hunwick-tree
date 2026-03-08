@@ -2193,8 +2193,14 @@ function applyPhoto(wrap, key) {
 
 // Apply a photo to ALL cards sharing the same pkey (e.g. ancestor shown multiple times)
 function applyPhotoToKey(key) {
+  // Try exact key first, then base-name fallback
+  // This handles cases where photo was saved as "Cara Eme" but pkey is "Cara Eme (b.11/1980)"
+  const cacheKey = photoCache[key] ? key : (
+    Object.keys(photoCache).find(k => k.split(' (')[0].toLowerCase() === key.split(' (')[0].toLowerCase())
+  );
+  if (!cacheKey) return;
   document.querySelectorAll(`.person[data-pkey="${CSS.escape(key)}"] .avatar-wrap`).forEach(wrap => {
-    applyPhoto(wrap, key);
+    applyPhoto(wrap, cacheKey);
   });
 }
 
@@ -3074,6 +3080,12 @@ apiLoad().then(() => {
     });
     updateCardMeta();
     injectAddButtonsAll();
+    // Apply photos to all newly-rendered dynamic cards
+    // (must run AFTER renderNewCard so the cards exist in DOM)
+    document.querySelectorAll('.person[data-pkey]').forEach(card => {
+      const key = card.dataset.pkey;
+      if (key && photoCache[key]) applyPhotoToKey(key);
+    });
     requestAnimationFrame(drawSpineConnectors);
   });
 });
