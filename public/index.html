@@ -1262,6 +1262,21 @@
   }
 
 
+  /* Presumed deceased — no confirmed death date but born before threshold */
+  .person.presumed-deceased .person-dates::after {
+    content: ' · d. ?';
+    color: var(--sepia-light);
+    font-style: italic;
+    font-size: 0.85em;
+    opacity: 0.7;
+  }
+  .person.presumed-deceased {
+    opacity: 0.82;
+  }
+  .person.presumed-deceased .avatar-wrap {
+    filter: grayscale(35%);
+  }
+
   .person { padding-bottom: 28px; } /* extend hover area to cover buttons */
   .card-add-btns {
     display: none;
@@ -2302,6 +2317,26 @@ window.addEventListener('resize', drawSpineConnectors);
 
 stampAllPkeys();
 
+// ── Mark presumed-deceased cards ──
+// Anyone born before 1940 with no confirmed death date is shown as presumed deceased
+function markPresumedException() {
+  const PRESUMED_CUTOFF = 1940;
+  document.querySelectorAll('.person[data-pkey]').forEach(card => {
+    const key = card.dataset.pkey;
+    const d = PEOPLE[key] || {};
+    const bornRaw = d.born || '';
+    const yearM = bornRaw.match(/\b(1[5-9]\d\d)\b/);
+    const year = yearM ? parseInt(yearM[1]) : null;
+    const hasDied = d.died && d.died !== 'null';
+    if (year && year < PRESUMED_CUTOFF && !hasDied) {
+      card.classList.add('presumed-deceased');
+    } else {
+      card.classList.remove('presumed-deceased');
+    }
+  });
+}
+markPresumedException();
+
 // ── Card clicks ──
 document.querySelectorAll('.person').forEach(card => {
   card.style.cursor = 'pointer';
@@ -2497,6 +2532,7 @@ async function saveEditForm() {
   msg.classList.add('show');setTimeout(()=>msg.classList.remove('show'),2500);
   setEditMode(false);
   updateCardMeta();
+  markPresumedException();
   openPanel(document.getElementById('dp-name').textContent,currentCard,currentKey);
 }
 
@@ -2523,7 +2559,11 @@ function openPanel(displayName, card, explicitKey) {
   const age=calcAge(d.born,d.died);
   document.getElementById('dp-vitals').innerHTML=[
     {label:'Born',val:d.born||'—'},{label:'Place of Birth',val:d.pob||'—'},
-    {label:'Died',val:d.died||(d.born?'Living':'—')},
+    {label:'Died',val:d.died||(()=>{
+      const yr = (d.born||'').match(/\b(1[5-9]\d\d)\b/)?.[1];
+      if (yr && parseInt(yr) < 1940) return '<span style="color:var(--sepia-light);font-style:italic;">Presumed deceased</span>';
+      return d.born ? 'Living' : '—';
+    })()},
     {label:'Place of Death',val:d.pod||'—'},
     {label:'Cause of Death',val:d.cod||'—'},
     {label:d.died?'Age at Death':'Current Age',val:age!==null?age+' years':'—'},
@@ -3079,6 +3119,7 @@ apiLoad().then(() => {
       if (PEOPLE[k]) Object.assign(PEOPLE[k], v);
     });
     updateCardMeta();
+    markPresumedException();
     injectAddButtonsAll();
     // Apply photos to all newly-rendered dynamic cards
     // (must run AFTER renderNewCard so the cards exist in DOM)
