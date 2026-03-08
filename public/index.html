@@ -763,6 +763,127 @@
     border-radius: 50%;
   }
 
+  /* ── STATS PANEL ── */
+  #stats-toggle {
+    position: fixed;
+    bottom: 28px;
+    left: 24px;
+    z-index: 800;
+    background: var(--sepia-dark);
+    color: #fdf8f0;
+    border: none;
+    border-radius: 50px;
+    padding: 10px 18px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.88rem;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(92,71,48,0.28);
+    transition: background 0.15s, transform 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  #stats-toggle:hover { background: var(--accent); transform: translateY(-2px); }
+
+  #stats-panel {
+    position: fixed;
+    bottom: 80px;
+    left: 24px;
+    z-index: 799;
+    width: 290px;
+    max-height: 70vh;
+    overflow-y: auto;
+    background: #fdf8f0;
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    box-shadow: 0 12px 40px rgba(92,71,48,0.22);
+    font-family: 'Crimson Pro', serif;
+    transform: translateY(20px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.22s ease, transform 0.22s ease;
+  }
+  #stats-panel.open {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: all;
+  }
+  .stats-header {
+    padding: 16px 18px 12px;
+    border-bottom: 1px solid var(--card-border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .stats-header-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--sepia-dark);
+  }
+  .stats-header-sub {
+    font-size: 0.75rem;
+    color: var(--sepia-light);
+    font-style: italic;
+  }
+  .stats-section {
+    padding: 12px 18px 8px;
+    border-bottom: 1px solid var(--card-border);
+  }
+  .stats-section:last-child { border-bottom: none; padding-bottom: 16px; }
+  .stats-section-title {
+    font-size: 0.65rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--sepia-light);
+    font-family: 'Playfair Display', serif;
+    margin-bottom: 8px;
+  }
+  .stat-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    gap: 8px;
+  }
+  .stat-label {
+    font-size: 0.85rem;
+    color: var(--ink);
+    line-height: 1.3;
+    flex: 1;
+  }
+  .stat-val {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--sepia-dark);
+    white-space: nowrap;
+  }
+  .stat-highlight {
+    font-size: 0.78rem;
+    color: var(--sepia);
+    font-style: italic;
+    margin-top: -4px;
+    margin-bottom: 8px;
+    line-height: 1.3;
+  }
+  .stat-bar-wrap {
+    background: var(--parchment);
+    border-radius: 4px;
+    height: 6px;
+    margin-top: 3px;
+    overflow: hidden;
+    flex-shrink: 0;
+    width: 60px;
+  }
+  .stat-bar {
+    height: 100%;
+    background: var(--sepia);
+    border-radius: 4px;
+    transition: width 0.6s ease;
+  }
+
 </style>
 </head>
 <body>
@@ -1225,6 +1346,20 @@
   <br><br>
   <span style="font-size:0.7rem; opacity:0.6">Cards with a left border indicate the direct ancestral line</span>
 </footer>
+
+<!-- ── STATS PANEL ── -->
+<button id="stats-toggle" onclick="toggleStats()" aria-label="Family statistics">
+  <span>📊</span><span>Family Stats</span>
+</button>
+<div id="stats-panel" role="complementary" aria-label="Family statistics">
+  <div class="stats-header">
+    <div>
+      <div class="stats-header-title">Hunwick by the Numbers</div>
+      <div class="stats-header-sub">Calculated from family data</div>
+    </div>
+  </div>
+  <div id="stats-body"></div>
+</div>
 
 
 
@@ -1792,6 +1927,193 @@ document.querySelectorAll('.person').forEach(card => {
     clearTimeout(hoverTimeout);
     hideHoverCard();
   });
+});
+
+// ── STATS PANEL ──
+let statsOpen = false;
+
+function toggleStats() {
+  statsOpen = !statsOpen;
+  document.getElementById('stats-panel').classList.toggle('open', statsOpen);
+  if (statsOpen) renderStats();
+}
+
+function renderStats() {
+  const people = Object.entries(PEOPLE);
+  const today = new Date();
+
+  // ── Helpers ──
+  function age(d) { return calcAge(d.born, d.died); }
+  function isLiving(d) { return d.born && !d.died; }
+  function birthYear(d) {
+    if (!d.born) return null;
+    const m = d.born.match(/\b(1[0-9]{3}|20[0-9]{2})\b/);
+    return m ? +m[1] : null;
+  }
+  function locationContains(d, str) {
+    return d.location && d.location.toLowerCase().includes(str.toLowerCase());
+  }
+
+  // ── Compute ──
+  const living = people.filter(([k,d]) => isLiving(d));
+  const deceased = people.filter(([k,d]) => d.born && d.died);
+  const totalKnown = people.filter(([k,d]) => d.born).length;
+
+  // Oldest living
+  const oldestLiving = living
+    .map(([k,d]) => ({ key: k, d, a: age(d) }))
+    .filter(x => x.a !== null)
+    .sort((a,b) => b.a - a.a)[0];
+
+  // Youngest
+  const youngest = living
+    .map(([k,d]) => ({ key: k, d, a: age(d) }))
+    .filter(x => x.a !== null)
+    .sort((a,b) => a.a - b.a)[0];
+
+  // Longest lived (deceased)
+  const longestLived = deceased
+    .map(([k,d]) => ({ key: k, d, a: age(d) }))
+    .filter(x => x.a !== null)
+    .sort((a,b) => b.a - a.a)[0];
+
+  // Average lifespan (deceased with known age)
+  const deceasedAges = deceased.map(([k,d]) => age(d)).filter(a => a !== null && a > 0);
+  const avgLifespan = deceasedAges.length
+    ? Math.round(deceasedAges.reduce((s,a) => s+a, 0) / deceasedAges.length)
+    : null;
+
+  // Generations
+  const genNums = people.map(([k,d]) => {
+    const m = d.generation && d.generation.match(/^(\d+)/);
+    return m ? +m[1] : null;
+  }).filter(Boolean);
+  const totalGens = genNums.length ? Math.max(...genNums) : 11;
+
+  // Span of years
+  const years = people.map(([k,d]) => birthYear(d)).filter(Boolean);
+  const earliestYear = years.length ? Math.min(...years) : null;
+  const spanYears = earliestYear ? today.getFullYear() - earliestYear : null;
+
+  // Locations
+  const locationGroups = {};
+  people.forEach(([k,d]) => {
+    if (!d.location) return;
+    const loc = d.location.trim();
+    // Normalise to country/region
+    let region = loc;
+    if (/chicago|evanston|skokie|illinois|IL/i.test(loc)) region = 'Chicago / Illinois';
+    else if (/prague|czech/i.test(loc)) region = 'Prague, Czech Republic';
+    else if (/london|england|uk|united kingdom/i.test(loc)) region = 'United Kingdom';
+    else if (/nigeria|nigeria/i.test(loc)) region = 'Nigeria';
+    else if (/usa|united states/i.test(loc)) region = 'USA';
+    else if (/ireland/i.test(loc)) region = 'Ireland';
+    locationGroups[region] = (locationGroups[region] || 0) + 1;
+  });
+  const locationList = Object.entries(locationGroups).sort((a,b) => b[1]-a[1]);
+  const maxLoc = locationList.length ? locationList[0][1] : 1;
+
+  // Most common birth month
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const monthCounts = Array(12).fill(0);
+  people.forEach(([k,d]) => {
+    if (!d.born) return;
+    const mo = months.findIndex(m => d.born.toLowerCase().includes(m.toLowerCase()));
+    if (mo >= 0) monthCounts[mo]++;
+    const slashM = d.born.match(/^(\d{1,2})\//);
+    if (slashM) monthCounts[+slashM[1]-1]++;
+  });
+  const peakMonthIdx = monthCounts.indexOf(Math.max(...monthCounts));
+  const peakMonth = Math.max(...monthCounts) > 0 ? months[peakMonthIdx] : null;
+
+  // Direct line length
+  const directLine = people.filter(([k,d]) => d.isDirect);
+
+  // Occupations
+  const occupations = people.map(([k,d]) => d.occupation).filter(Boolean);
+
+  // ── Render ──
+  function section(title, rows) {
+    return `<div class="stats-section">
+      <div class="stats-section-title">${title}</div>
+      ${rows.join('')}
+    </div>`;
+  }
+
+  function row(label, val, sub) {
+    return `<div class="stat-row">
+      <span class="stat-label">${label}</span>
+      <span class="stat-val">${val}</span>
+    </div>${sub ? `<div class="stat-highlight">${sub}</div>` : ''}`;
+  }
+
+  function barRow(label, val, max) {
+    const pct = Math.round((val/max)*100);
+    return `<div class="stat-row">
+      <span class="stat-label">${label}</span>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <div class="stat-bar-wrap"><div class="stat-bar" style="width:${pct}%"></div></div>
+        <span class="stat-val" style="font-size:0.9rem;">${val}</span>
+      </div>
+    </div>`;
+  }
+
+  const sections = [];
+
+  // Overview
+  sections.push(section('The Family', [
+    row('People on record', totalKnown),
+    row('Generations documented', totalGens),
+    row('Years of family history', spanYears ? spanYears + ' yrs' : '—',
+        earliestYear ? `From ${earliestYear} to present` : null),
+    row('Direct ancestral line', directLine.length + ' people'),
+  ]));
+
+  // Living members
+  sections.push(section('Living Members', [
+    row('Living family members', living.length),
+    oldestLiving ? row('Oldest living', oldestLiving.a + ' years old',
+      oldestLiving.key.split(' (')[0]) : '',
+    youngest ? row('Youngest', youngest.a + ' years old',
+      youngest.key.split(' (')[0]) : '',
+  ]));
+
+  // Longevity
+  const longevityRows = [];
+  if (longestLived) longevityRows.push(
+    row('Longest lived', longestLived.a + ' years',
+      longestLived.key.split(' (')[0])
+  );
+  if (avgLifespan) longevityRows.push(
+    row('Average lifespan', avgLifespan + ' years', 'among those with known dates')
+  );
+  if (longevityRows.length) sections.push(section('Longevity', longevityRows));
+
+  // Where they live
+  if (locationList.length) {
+    sections.push(section('Where They Live', locationList.map(([loc, n]) =>
+      barRow(loc, n, maxLoc)
+    )));
+  }
+
+  // Fun facts
+  const funRows = [];
+  if (peakMonth) funRows.push(row('Most common birth month', peakMonth));
+  if (occupations.length) funRows.push(row('Occupations recorded', occupations.length));
+  const photoCount = Object.keys(photoCache).length;
+  if (photoCount) funRows.push(row('Photos added', photoCount));
+  funRows.push(row('Has a website listed', people.filter(([k,d])=>d.url).length));
+  if (funRows.length) sections.push(section('Fun Facts', funRows));
+
+  document.getElementById('stats-body').innerHTML = sections.join('');
+}
+
+// Close stats when clicking outside
+document.addEventListener('click', e => {
+  if (statsOpen && !e.target.closest('#stats-panel') && !e.target.closest('#stats-toggle')) {
+    statsOpen = false;
+    document.getElementById('stats-panel').classList.remove('open');
+  }
 });
 
 apiLoad();
