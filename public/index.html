@@ -1225,6 +1225,7 @@
     flex-wrap: wrap;
     gap: 10px;
     align-items: flex-start;
+    align-content: flex-start;
     position: relative;
   }
 
@@ -1239,14 +1240,23 @@
     background: transparent;
   }
 
-  /* Nested branch: e.g. Maia -> Bella appearing under Maia in a row */
-  .branch-children + .family-branch,
-  .child-col + .family-branch {
-    margin-top: 10px;
-    margin-left: 20px;
-    padding-left: 12px;
-    border-left: 1px dashed var(--line);
+  /* Nested sub-branch (e.g. Zion under Jason, Bella under Maia)
+     Must break to its own full row below the sibling cards */
+  .family-branch.sub-branch {
+    flex-direction: row;
+    align-items: center;
+    flex-basis: 100%;   /* force onto new row inside flex parent */
     width: 100%;
+    margin-top: 8px;
+    padding-left: 14px;
+    border-left: 1px solid var(--line);
+  }
+  .family-branch.sub-branch .branch-parent .person {
+    min-width: 90px !important;
+    max-width: 110px !important;
+    padding: 5px 8px !important;
+    font-size: 0.8em;
+    opacity: 0.5;
   }
 
 
@@ -3237,10 +3247,12 @@ function renderNewCard(key, data, relType, relKey) {
     let childrenRow = document.querySelector(`.branch-children[data-parent="${CSS.escape(relKey)}"]`);
 
     if (!childrenRow) {
-      // Build a new nested branch anchored right after the parent card
+      // Determine if parent is itself inside a branch-children (nested grandchild case)
+      const parentIsInBranch = !!relCard.closest('.branch-children');
+
       const branch = document.createElement('div');
-      branch.className = 'family-branch';
-      branch.style.cssText = 'margin-top:12px; padding-left:16px; border-left:2px solid var(--line,#c8b99a);';
+      // sub-branch class forces flex-basis:100% so it wraps below siblings
+      branch.className = parentIsInBranch ? 'family-branch sub-branch' : 'family-branch';
 
       const ghostParent = document.createElement('div');
       ghostParent.className = 'branch-parent';
@@ -3254,10 +3266,16 @@ function renderNewCard(key, data, relType, relKey) {
       branch.appendChild(ghostParent);
       branch.appendChild(childrenRow);
 
-      // Insert the branch directly after the parent card's wrapper
-      // so it's visually nested under that specific card
-      const parentWrapper = relCard.closest('.child-col') || relCard.parentElement;
-      parentWrapper.after(branch);
+      if (parentIsInBranch) {
+        // Insert as a flex-wrapped row INSIDE the parent's branch-children
+        // so it sits below the sibling cards on its own line
+        const parentBranchChildren = relCard.closest('.branch-children');
+        parentBranchChildren.appendChild(branch);
+      } else {
+        // Top-level: insert after the parent card's wrapper
+        const parentWrapper = relCard.closest('.child-col') || relCard.parentElement;
+        parentWrapper.after(branch);
+      }
     }
 
     childrenRow.appendChild(card);
@@ -3492,12 +3510,13 @@ let reviewList = [];   // ordered list of pkeys to review
 let reviewIdx  = 0;
 
 function buildReviewList() {
-  // All people born >= REVIEW_BIRTH_CUTOFF, ordered by birth year
-  const entries = Object.entries(PEOPLE).map(([key, d]) => {
-    const raw = d.born || '';
-    const m = raw.match(/(1[89]\d\d|20\d\d)/);
-    return { key, year: m ? parseInt(m[1]) : null, d };
-  });
+  const entries = Object.entries(PEOPLE)
+    .filter(([key, d]) => key && typeof key === 'string' && d && typeof d === 'object')
+    .map(([key, d]) => {
+      const raw = d.born || '';
+      const m = raw.match(/(1[89][0-9][0-9]|20[0-9][0-9])/);
+      return { key, year: m ? parseInt(m[1]) : null };
+    });
   return entries
     .filter(e => e.year && e.year >= REVIEW_BIRTH_CUTOFF)
     .sort((a, b) => a.year - b.year)
@@ -3524,9 +3543,16 @@ function reviewStep(dir) {
 
 function renderReviewCard() {
   const total = reviewList.length;
-  const key   = reviewList[reviewIdx];
-  const d     = PEOPLE[key] || {};
-  const displayName = key.split(' (')[0];
+  if (!total) {
+    document.getElementById('review-person-name').textContent = 'Nothing to review';
+    document.getElementById('review-person-born').textContent = 'No people found born after 1950';
+    document.getElementById('review-fields').innerHTML = '';
+    return;
+  }
+  const key = reviewList[reviewIdx];
+  if (!key || typeof key !== 'string') { reviewStep(1); return; }
+  const d = PEOPLE[key] || {};
+  const displayName = key.split(' (')[0] || key;
 
   // Progress
   const pct = total > 1 ? Math.round((reviewIdx / (total - 1)) * 100) : 100;
