@@ -90,7 +90,7 @@
 
   .gen-row {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: flex-start;
     gap: 16px;
     flex-wrap: wrap;
@@ -375,6 +375,9 @@
     margin: 4px 0;
   }
 
+  /* tree section left-aligned so bracket chains read left-to-right */
+  .tree-section { display: flex; flex-direction: column; align-items: flex-start; padding-left: 80px; }
+
   /* footnote */
   footer {
     text-align: center;
@@ -414,7 +417,7 @@
 
   /* ─── layout helpers ─── */
   .center { display:flex; justify-content:center; }
-  .col { display:flex; flex-direction:column; align-items:center; }
+  .col { display:flex; flex-direction:column; align-items:flex-start; }
   .row { display:flex; flex-direction:row; align-items:flex-start; justify-content:center; gap:12px; flex-wrap:wrap; }
 
   .branch-container {
@@ -423,15 +426,22 @@
     align-items: center;
   }
 
+  /* ── children-row: horizontal bracket layout ── */
   .children-row {
     display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    gap: 12px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
     flex-wrap: wrap;
+    gap: 12px;
     position: relative;
+    /* Left bracket line */
+    border-left: 1px solid var(--line);
+    padding: 12px 0 12px 28px;
+    margin-left: 0;
   }
 
+  /* Horizontal tick from left bracket to each card */
   .child-col {
     display: flex;
     flex-direction: column;
@@ -439,27 +449,18 @@
     position: relative;
   }
 
-  /* Vertical drop from horizontal bar to each child card */
   .child-col::before {
     content: '';
-    display: block;
-    width: 1px;
-    height: 24px;
-    background: var(--line);
-    flex-shrink: 0;
-  }
-
-  /* Horizontal bar drawn by JS via drawSpineConnectors() */
-  .children-row { position: relative; }
-  .spine-hbar {
     position: absolute;
-    top: 0;
+    top: 50%;
+    left: -30px;
+    width: 28px;
     height: 1px;
     background: var(--line);
-    pointer-events: none;
   }
-  /* Single child — vertical drop only, JS skips hbar */
-  .children-row.single-child .child-col::before { height: 24px; }
+
+  /* spine-hbar no longer needed */
+  .spine-hbar { display: none; }
 
   .top-bar {
     display: flex;
@@ -928,7 +929,74 @@
   }
 
 
-  /* ── Add Person buttons on cards ── */
+  /* ── Horizontal family branches ── */
+  .family-branches {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-items: flex-start;
+    padding-left: 20px;
+    border-left: 1px solid var(--line);
+    margin-left: 0;
+  }
+
+  .family-branch {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0;
+  }
+
+  .branch-parent {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0;
+    flex-shrink: 0;
+  }
+
+  /* Ghost parent card — smaller, dimmed, non-interactive */
+  .branch-parent .person {
+    min-width: 110px !important;
+    max-width: 130px !important;
+    padding: 8px 10px 10px !important;
+    opacity: 0.55;
+    font-size: 0.85em;
+    pointer-events: none;
+  }
+  .branch-parent .person .avatar-wrap { display: none; }
+  .branch-parent .person-name { font-size: 0.9rem; }
+  .branch-parent .person-dates { font-size: 0.72rem; }
+
+  .branch-arrow {
+    color: var(--line);
+    font-size: 1.1rem;
+    padding: 0 8px;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+
+  .branch-children {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: flex-start;
+    position: relative;
+  }
+
+  /* Horizontal connector bar across children in a branch */
+  .branch-children::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: transparent; /* drawn by JS for precision */
+  }
+
+
   .person { padding-bottom: 28px; } /* extend hover area to cover buttons */
   .card-add-btns {
     display: none;
@@ -1416,73 +1484,81 @@
           </div>
         </div>
 
-        <!-- Yvette's children -->
+        <!-- Generation branches: each parent inline with their children -->
         <div class="v-line" style="height:24px;"></div>
-        <div class="marriage-note">Yvette's children</div>
-        <div class="v-line" style="height:16px;"></div>
-        <div class="children-row">
-          <div class="child-col">
-            <div class="person" data-pkey="Laith (b.2000)">
-      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Laith</div>
-              <div class="person-dates">b. 25 Jan 2000</div>
-            </div>
-          </div>
-        </div>
+        <div class="family-branches">
 
-        <!-- Ann-Clare's children -->
-        <div class="v-line" style="height:24px;"></div>
-        <div class="marriage-note">Ann Clare's children</div>
-        <div class="v-line" style="height:16px;"></div>
-        <div class="children-row">
-          <div class="child-col">
-            <div class="person" data-pkey="Jason (b.1990)">
-      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Jason</div>
-              <div class="person-dates">b. 1990</div>
+          <!-- Yvette -->
+          <div class="family-branch">
+            <div class="branch-parent">
+              <div class="person" data-pkey="Yvette (b.1969)" style="opacity:0.6;pointer-events:none;">
+                <div class="person-name">Yvette</div>
+                <div class="person-dates">b. 1969</div>
+              </div>
+              <div class="branch-arrow">→</div>
+            </div>
+            <div class="branch-children">
+              <div class="person" data-pkey="Laith (b.2000)">
+                <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Laith</div>
+                <div class="person-dates">b. 25 Jan 2000</div>
+              </div>
             </div>
           </div>
-          <div class="child-col">
-            <div class="person" data-pkey="Jessica (b.1991)">
-      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Jessica</div>
-              <div class="person-dates">b. 1991</div>
-            </div>
-          </div>
-          <div class="child-col">
-            <div class="person" data-pkey="Shawnine (b.1994)">
-      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Shawnine</div>
-              <div class="person-dates">b. 1994</div>
-            </div>
-          </div>
-          <div class="child-col">
-            <div class="person" data-pkey="Maia (b.1999)">
-      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Maia</div>
-              <div class="person-dates">b. 1999</div>
-            </div>
-          </div>
-        </div>
 
-        <!-- Dave's children -->
-        <div class="v-line" style="height:24px;"></div>
-        <div class="marriage-note">David's children</div>
-        <div class="v-line" style="height:16px;"></div>
-        <div class="children-row">
-          <div class="child-col">
-            <div class="person" data-pkey="Johnny (b.2007)">
-      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Johnny</div>
-              <div class="person-dates">b. 27 Jan 2007</div>
+          <!-- Ann Clare -->
+          <div class="family-branch">
+            <div class="branch-parent">
+              <div class="person direct ancestor" data-pkey="Ann Clare (b.1971)" style="opacity:0.6;pointer-events:none;">
+                <div class="person-name">Ann Clare</div>
+                <div class="person-dates">b. 1971</div>
+              </div>
+              <div class="branch-arrow">→</div>
+            </div>
+            <div class="branch-children">
+              <div class="person" data-pkey="Jason (b.1990)">
+                <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Jason</div>
+                <div class="person-dates">b. 1990</div>
+              </div>
+              <div class="person" data-pkey="Jessica (b.1991)">
+                <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Jessica</div>
+                <div class="person-dates">b. 1991</div>
+              </div>
+              <div class="person" data-pkey="Shawnine (b.1994)">
+                <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Shawnine</div>
+                <div class="person-dates">b. 1994</div>
+              </div>
+              <div class="person" data-pkey="Maia (b.1999)">
+                <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Maia</div>
+                <div class="person-dates">b. 1999</div>
+              </div>
             </div>
           </div>
-          <div class="child-col">
-            <div class="person" data-pkey="Sophia (b.2009)">
-      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Sophia</div>
-              <div class="person-dates">b. 28 Apr 2009</div>
+
+          <!-- David -->
+          <div class="family-branch">
+            <div class="branch-parent">
+              <div class="person direct" data-pkey="David (b.1973)" style="opacity:0.6;pointer-events:none;">
+                <div class="person-name">David</div>
+                <div class="person-dates">b. 1973</div>
+              </div>
+              <div class="branch-arrow">→</div>
+            </div>
+            <div class="branch-children">
+              <div class="person" data-pkey="Johnny (b.2007)">
+                <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Johnny</div>
+                <div class="person-dates">b. 27 Jan 2007</div>
+              </div>
+              <div class="person" data-pkey="Sophia (b.2009)">
+                <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Sophia</div>
+                <div class="person-dates">b. 28 Apr 2009</div>
+              </div>
+              <div class="person" data-pkey="Sean (b.2013)">
+                <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Sean</div>
+                <div class="person-dates">b. 8 Feb 2013</div>
+              </div>
             </div>
           </div>
-          <div class="child-col">
-            <div class="person" data-pkey="Sean (b.2013)">
-      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Sean</div>
-              <div class="person-dates">b. 8 Feb 2013</div>
-            </div>
-          </div>
+
         </div>
       </div>
 
@@ -1874,7 +1950,6 @@ function stampAllPkeys() {
 // ════════════════════════════════════════════
 
 function drawSpineConnectors() {
-  // Remove any previously drawn bars (for re-runs)
   document.querySelectorAll('.spine-hbar').forEach(el => el.remove());
 
   document.querySelectorAll('.children-row').forEach(row => {
@@ -1885,12 +1960,15 @@ function drawSpineConnectors() {
     }
     row.classList.remove('single-child');
 
-    // Get positions relative to the row
     const rowRect = row.getBoundingClientRect();
 
-    // Left edge: centre of first child-col
-    const firstRect = cols[0].getBoundingClientRect();
-    const lastRect  = cols[cols.length - 1].getBoundingClientRect();
+    // Only connect children on the FIRST row (in case of wrapping)
+    const firstTop = cols[0].getBoundingClientRect().top;
+    const firstRowCols = cols.filter(c => Math.abs(c.getBoundingClientRect().top - firstTop) < 10);
+    if (firstRowCols.length < 2) return;
+
+    const firstRect = firstRowCols[0].getBoundingClientRect();
+    const lastRect  = firstRowCols[firstRowCols.length - 1].getBoundingClientRect();
 
     const left  = (firstRect.left + firstRect.right) / 2 - rowRect.left;
     const right = (lastRect.left  + lastRect.right)  / 2 - rowRect.left;
@@ -1899,11 +1977,11 @@ function drawSpineConnectors() {
     bar.className = 'spine-hbar';
     bar.style.left  = left + 'px';
     bar.style.width = (right - left) + 'px';
-    row.appendChild(bar);
+    bar.style.top   = '0px';
+    row.insertBefore(bar, row.firstChild);
   });
 }
 
-// Run after layout settles
 requestAnimationFrame(() => requestAnimationFrame(drawSpineConnectors));
 window.addEventListener('resize', drawSpineConnectors);
 
@@ -2186,7 +2264,7 @@ function openPanel(displayName, card, explicitKey) {
     'jessica','maia','shawnine','ella','gillian','muriel','yvette','maryam',
     'sapphire','agnes','natasha','lydia','leila','layla','fatima','amina',
     'zainab','aisha','hafsa','khadija','nadia','lena','clara','anna','sofia',
-    'doris','audrey','uwa',
+    'doris','audrey','uwa','cara','caraeme','grace','eleanor','eve','eve',
     'olivia','chloe','hannah','abigail','madison','ashley','alexis','brianna',
     'taylor','samantha','lauren','amber','courtney','danielle','stephanie',
     'melissa','nicole','michelle','christina','amanda','heather','tiffany',
