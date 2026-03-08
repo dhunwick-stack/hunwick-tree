@@ -136,10 +136,10 @@
   .person {
     background: var(--card-bg);
     border: 1px solid var(--card-border);
-    border-radius: 4px;
-    padding: 10px 12px 12px;
-    min-width: 120px;
-    max-width: 160px;
+    border-radius: 14px;
+    padding: 14px 14px 14px;
+    min-width: 148px;
+    max-width: 180px;
     text-align: center;
     position: relative;
     box-shadow: 0 2px 8px var(--shadow), inset 0 1px 0 rgba(255,255,255,0.7);
@@ -150,10 +150,10 @@
 
   /* ── AVATAR ── */
   .avatar-wrap {
-    width: 52px;
-    height: 52px;
-    border-radius: 50%;
-    margin: 0 auto 7px;
+    width: 72px;
+    height: 72px;
+    border-radius: 10px;
+    margin: 0 auto 9px;
     border: 2px solid var(--card-border);
     overflow: hidden;
     background: var(--parchment);
@@ -183,7 +183,7 @@
     display: flex; align-items: center; justify-content: center;
     opacity: 0;
     transition: opacity 0.2s;
-    border-radius: 50%;
+    border-radius: 10px;
     font-family: 'Crimson Pro', serif;
     text-transform: uppercase;
   }
@@ -226,6 +226,18 @@
     margin-top: 3px;
     line-height: 1.3;
   }
+
+  .person-meta {
+    font-size: 0.7rem;
+    color: var(--sepia);
+    margin-top: 5px;
+    line-height: 1.4;
+    border-top: 1px solid var(--card-border);
+    padding-top: 5px;
+  }
+  .person-meta .meta-age { font-weight: 600; }
+  .person-meta .meta-loc { font-style: italic; color: var(--sepia-light); }
+  .person-meta .meta-occ { color: var(--sepia); }
 
   /* marriage equals sign */
   .marriage {
@@ -1198,6 +1210,8 @@
     <div class="dp-edit-row"><label>Date of Death</label><input class="dp-edit-input" id="ef-died" type="text" placeholder="Leave blank if living"></div>
     <div class="dp-edit-row"><label>Spouse / Partner</label><input class="dp-edit-input" id="ef-spouse" type="text" placeholder="e.g. Mary Greenham"></div>
     <div class="dp-edit-row"><label>Generation / Role</label><input class="dp-edit-input" id="ef-generation" type="text" placeholder="e.g. 11th"></div>
+    <div class="dp-edit-row"><label>Current Location</label><input class="dp-edit-input" id="ef-location" type="text" placeholder="e.g. Evanston, IL, USA"></div>
+    <div class="dp-edit-row"><label>Occupation</label><input class="dp-edit-input" id="ef-occupation" type="text" placeholder="e.g. Apple Consultant, Photographer"></div>
     <div class="dp-edit-row"><label>Notes</label><textarea class="dp-edit-input" id="ef-notes" rows="3" placeholder="Any additional information…" style="resize:vertical;"></textarea></div>
     <div class="dp-edit-actions">
       <button class="dp-btn-save" id="dp-edit-save">Save Changes</button>
@@ -1257,13 +1271,13 @@ const PEOPLE_DEFAULT = {
   "Maryam (b.1960)": { born: "1960", died: null, parents: ["John O. Hunwick", "Audrey Najer-Grant"], children: ["Natasha", "Ben"], spouse: null, notes: "", generation: "10th", isDirect: false },
   "Yvette (b.1969)": { born: "1969", died: null, pob: "Islington, London, UK", parents: ["John O. Hunwick", "Uwa Uldensi"], children: ["Laith (b.2000)"], spouse: null, notes: "", generation: "10th", isDirect: false },
   "Ann Clare (b.1971)": { born: "1971", died: null, pob: "Islington, London, UK", parents: ["John O. Hunwick", "Uwa Uldensi"], children: ["Jason (b.1990)", "Jessica (b.1991)", "Shawnine (b.1994)", "Maia (b.1999)"], spouse: null, notes: "", generation: "10th — Direct Line", isDirect: true },
-  "David (b.1973)": { born: "1973", died: null, pob: "Islington, London, UK", parents: ["John O. Hunwick", "Uwa Uldensi"], children: ["Johnny (b.2007)", "Sophia (b.2009)", "Sean (b.2013)"], spouse: null, notes: "Dave Hunwick — Apple ecosystem consultant, photographer, DJ. Evanston, IL.", generation: "10th — Direct Line", isDirect: true },
+  "David (b.1973)": { born: "1973", died: null, pob: "Islington, London, UK", parents: ["John O. Hunwick", "Uwa Uldensi"], children: ["Johnny (b.2007)", "Sophia (b.2009)", "Sean (b.2013)"], spouse: null, notes: "Dave Hunwick — Apple ecosystem consultant, photographer, DJ.", generation: "10th — Direct Line", location: "Evanston, IL, USA", occupation: "Apple Consultant, Photographer, DJ", isDirect: true },
   "Laith (b.2000)": { born: "25 January 2000", died: null, pob: "Chicago, IL, USA", parents: ["Yvette (b.1969)"], children: [], spouse: null, notes: "", generation: "11th", isDirect: false },
   "Jason (b.1990)": { born: "1990", died: null, pob: "England, UK", parents: ["Ann Clare (b.1971)"], children: [], spouse: null, notes: "", generation: "11th", isDirect: false },
   "Jessica (b.1991)": { born: "1991", died: null, pob: "England, UK", parents: ["Ann Clare (b.1971)"], children: [], spouse: null, notes: "", generation: "11th", isDirect: false },
   "Shawnine (b.1994)": { born: "1994", died: null, pob: "England, UK", parents: ["Ann Clare (b.1971)"], children: [], spouse: null, notes: "", generation: "11th", isDirect: false },
   "Maia (b.1999)": { born: "1999", died: null, pob: "England, UK", parents: ["Ann Clare (b.1971)"], children: [], spouse: null, notes: "", generation: "11th", isDirect: false },
-  "Johnny (b.2007)": { born: "27 January 2007", died: null, pob: "Skokie, IL, USA", parents: ["David (b.1973)"], children: [], spouse: null, notes: "", generation: "11th", isDirect: false },
+  "Johnny (b.2007)": { born: "27 January 2007", died: null, pob: "Skokie, IL, USA", parents: ["David (b.1973)"], children: [], spouse: null, notes: "", generation: "11th", location: "Prague, Czech Republic", occupation: "Footballer, Bohemians U19", isDirect: false },
   "Sophia (b.2009)": { born: "28 April 2009", died: null, pob: "Evanston, IL, USA", parents: ["David (b.1973)"], children: [], spouse: null, notes: "", generation: "11th", isDirect: false },
   "Sean (b.2013)": { born: "8 February 2013", died: null, pob: "Evanston, IL, USA", parents: ["David (b.1973)"], children: [], spouse: null, notes: "", generation: "11th", isDirect: false },
   "Sapphire": { born: null, died: null, parents: ["Joseph (b.1959)"], children: [], spouse: null, notes: "", generation: "11th", isDirect: false },
@@ -1291,6 +1305,7 @@ async function apiLoad() {
       } catch {}
     }));
     markEditedCards();
+    updateCardMeta();
     document.querySelectorAll('.avatar-wrap').forEach(w => { const n=w.dataset.personName; if(n&&photoCache[n]) applyPhoto(w,n); });
   } catch(e) { console.warn('Server load failed, using defaults', e); }
 }
@@ -1387,6 +1402,29 @@ function markEditedCards() {
   });
 }
 
+function updateCardMeta() {
+  document.querySelectorAll('.person[data-pkey]').forEach(card => {
+    const key = card.dataset.pkey;
+    const d = PEOPLE[key] || {};
+    // Remove existing meta
+    card.querySelectorAll('.person-meta').forEach(el => el.remove());
+    const age = calcAge(d.born, d.died);
+    const lines = [];
+    if (age !== null) {
+      const ageLabel = d.died ? `d. age ${age}` : `age ${age}`;
+      lines.push(`<span class="meta-age">${ageLabel}</span>`);
+    }
+    if (d.location) lines.push(`<span class="meta-loc">📍 ${d.location}</span>`);
+    if (d.occupation) lines.push(`<span class="meta-occ">${d.occupation}</span>`);
+    if (lines.length) {
+      const meta = document.createElement('div');
+      meta.className = 'person-meta';
+      meta.innerHTML = lines.join('<br>');
+      card.appendChild(meta);
+    }
+  });
+}
+
 // ── Age ──
 function calcAge(born, died) {
   if (!born) return null;
@@ -1422,6 +1460,8 @@ function populateEditForm(key) {
   document.getElementById('ef-died').value=d.died||'';
   document.getElementById('ef-spouse').value=d.spouse||'';
   document.getElementById('ef-generation').value=d.generation||'';
+  document.getElementById('ef-location').value=d.location||'';
+  document.getElementById('ef-occupation').value=d.occupation||'';
   document.getElementById('ef-notes').value=d.notes||'';
 }
 
@@ -1433,6 +1473,8 @@ async function saveEditForm() {
     died:document.getElementById('ef-died').value.trim()||null,
     spouse:document.getElementById('ef-spouse').value.trim()||null,
     generation:document.getElementById('ef-generation').value.trim()||null,
+    location:document.getElementById('ef-location').value.trim()||null,
+    occupation:document.getElementById('ef-occupation').value.trim()||null,
     notes:document.getElementById('ef-notes').value.trim()
   };
   if(!PEOPLE[currentKey])PEOPLE[currentKey]={};
@@ -1448,6 +1490,7 @@ async function saveEditForm() {
   const msg=document.getElementById('dp-edit-saved-msg');
   msg.classList.add('show');setTimeout(()=>msg.classList.remove('show'),2500);
   setEditMode(false);
+  updateCardMeta();
   openPanel(document.getElementById('dp-name').textContent,currentCard,currentKey);
 }
 
@@ -1474,7 +1517,9 @@ function openPanel(displayName, card, explicitKey) {
     {label:'Born',val:d.born||'—'},{label:'Place of Birth',val:d.pob||'—'},
     {label:'Died',val:d.died||(d.born?'Living':'—')},
     {label:d.died?'Age at Death':'Current Age',val:age!==null?age+' years':'—'},
-    {label:'Spouse / Partner',val:d.spouse||'—'}
+    {label:'Spouse / Partner',val:d.spouse||'—'},
+    {label:'Current Location',val:d.location||'—'},
+    {label:'Occupation',val:d.occupation||'—'}
   ].map(f=>`<div class="dp-field"><div class="dp-field-label">${f.label}</div><div class="dp-field-val">${f.val}</div></div>`).join('');
   const relDiv=document.getElementById('dp-relatives');relDiv.innerHTML='';
   const rels=[...(d.parents||[]).map(p=>({label:p,role:'Parent'})),...(d.children||[]).map(c=>({label:c,role:'Child'}))];
@@ -1564,6 +1609,7 @@ function findKey(displayName) {
 }
 
 apiLoad();
+updateCardMeta();
 </script>
 </body>
 </html>
