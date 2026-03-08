@@ -436,7 +436,30 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    position: relative;
   }
+
+  /* Vertical drop from horizontal bar to each child card */
+  .child-col::before {
+    content: '';
+    display: block;
+    width: 1px;
+    height: 24px;
+    background: var(--line);
+    flex-shrink: 0;
+  }
+
+  /* Horizontal bar drawn by JS via drawSpineConnectors() */
+  .children-row { position: relative; }
+  .spine-hbar {
+    position: absolute;
+    top: 0;
+    height: 1px;
+    background: var(--line);
+    pointer-events: none;
+  }
+  /* Single child — vertical drop only, JS skips hbar */
+  .children-row.single-child .child-col::before { height: 24px; }
 
   .top-bar {
     display: flex;
@@ -1522,7 +1545,10 @@
     </div>
     <div class="dp-divider"></div>
     <div class="dp-section" id="dp-relatives-section">
-      <div class="dp-label">Family Connections</div>
+      <div class="dp-label" style="display:flex;align-items:center;justify-content:space-between;">
+        Family Connections
+        <button id="dp-link-child-btn" title="Link an existing person as a child" style="font-size:0.72rem;padding:2px 9px;background:var(--accent);color:#fff;border:none;border-radius:10px;cursor:pointer;font-family:'Crimson Pro',serif;opacity:0.85;">+ Link Child</button>
+      </div>
       <div class="dp-chips" id="dp-relatives"></div>
     </div>
     <div class="dp-divider"></div>
@@ -1590,10 +1616,29 @@
       <label>Notes</label>
       <input id="ap-notes" type="text" placeholder="Any additional details">
     </div>
+    <div class="ap-row" id="ap-link-children-section" style="display:none;">
+      <label>Also link existing children? <span style="font-weight:normal;text-transform:none;font-size:0.82rem;color:var(--sepia-light);">(optional)</span></label>
+      <div id="ap-children-list" style="max-height:160px;overflow-y:auto;border:1px solid var(--card-border);border-radius:6px;padding:6px 8px;background:var(--parchment);display:flex;flex-direction:column;gap:3px;"></div>
+    </div>
     <div class="ap-err" id="ap-err"></div>
     <div class="ap-btns">
       <button class="ap-btn-cancel" id="ap-cancel">Cancel</button>
       <button class="ap-btn-save" id="ap-save">Add to Tree</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Link Existing Child Modal -->
+<div id="link-child-modal" style="display:none;position:fixed;inset:0;z-index:3001;background:rgba(26,18,8,0.55);align-items:center;justify-content:center;">
+  <div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;padding:24px 28px;width:min(420px,92vw);max-height:80vh;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(90,60,20,0.22);">
+    <h3 style="font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--sepia-dark);margin-bottom:4px;">Link Existing Child</h3>
+    <div id="lc-sub" style="font-size:0.82rem;color:var(--sepia-light);font-style:italic;margin-bottom:12px;"></div>
+    <input id="lc-search" type="text" placeholder="Search by name…" style="width:100%;padding:7px 10px;border:1px solid var(--card-border);border-radius:6px;background:var(--parchment);font-family:'Crimson Pro',serif;font-size:0.95rem;margin-bottom:10px;">
+    <div id="lc-list" style="overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:4px;max-height:320px;"></div>
+    <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end;">
+      <button id="lc-cancel" style="padding:7px 14px;background:transparent;color:var(--sepia);border:1px solid var(--card-border);border-radius:8px;font-family:'Crimson Pro',serif;font-size:0.95rem;cursor:pointer;">Cancel</button>
+      <button id="lc-save" style="padding:7px 20px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:'Crimson Pro',serif;font-size:0.95rem;cursor:pointer;">Link Selected</button>
     </div>
   </div>
 </div>
@@ -1823,6 +1868,45 @@ function stampAllPkeys() {
     }
   });
 }
+
+// ════════════════════════════════════════════
+//  SPINE CONNECTOR LINES
+// ════════════════════════════════════════════
+
+function drawSpineConnectors() {
+  // Remove any previously drawn bars (for re-runs)
+  document.querySelectorAll('.spine-hbar').forEach(el => el.remove());
+
+  document.querySelectorAll('.children-row').forEach(row => {
+    const cols = Array.from(row.querySelectorAll(':scope > .child-col'));
+    if (cols.length < 2) {
+      row.classList.add('single-child');
+      return;
+    }
+    row.classList.remove('single-child');
+
+    // Get positions relative to the row
+    const rowRect = row.getBoundingClientRect();
+
+    // Left edge: centre of first child-col
+    const firstRect = cols[0].getBoundingClientRect();
+    const lastRect  = cols[cols.length - 1].getBoundingClientRect();
+
+    const left  = (firstRect.left + firstRect.right) / 2 - rowRect.left;
+    const right = (lastRect.left  + lastRect.right)  / 2 - rowRect.left;
+
+    const bar = document.createElement('div');
+    bar.className = 'spine-hbar';
+    bar.style.left  = left + 'px';
+    bar.style.width = (right - left) + 'px';
+    row.appendChild(bar);
+  });
+}
+
+// Run after layout settles
+requestAnimationFrame(() => requestAnimationFrame(drawSpineConnectors));
+window.addEventListener('resize', drawSpineConnectors);
+
 stampAllPkeys();
 
 // ── Card clicks ──
@@ -2635,6 +2719,38 @@ function openAddModal(relType, card) {
     document.getElementById(id).value = '';
   });
   document.getElementById('ap-err').style.display = 'none';
+
+  // Show link-children section only for spouse flow
+  const linkSection = document.getElementById('ap-link-children-section');
+  const childrenList = document.getElementById('ap-children-list');
+  if (relType === 'spouse') {
+    linkSection.style.display = '';
+    childrenList.innerHTML = '';
+    const existingChildren = PEOPLE[addRelKey]?.children || PEOPLE_DEFAULT[addRelKey]?.children || [];
+    const allPeople = Object.keys(PEOPLE).filter(k => k !== addRelKey);
+    const candidates = allPeople.slice(0, 80);
+    if (!candidates.length) {
+      childrenList.innerHTML = '<span style="font-size:0.82rem;color:var(--sepia-light);font-style:italic;">No other people in tree yet</span>';
+    } else {
+      candidates.forEach(k => {
+        const d = PEOPLE[k] || {};
+        const label = document.createElement('label');
+        label.style.cssText = 'display:flex;align-items:center;gap:6px;font-size:0.88rem;cursor:pointer;';
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.value = k;
+        cb.checked = existingChildren.includes(k);
+        const born = d.born ? ` · b.${d.born}` : '';
+        label.appendChild(cb);
+        label.innerHTML += `<span><strong>${k.split(' (')[0]}</strong><span style="color:var(--sepia-light);font-size:0.78rem;">${born}</span></span>`;
+        label.prepend(cb);
+        childrenList.appendChild(label);
+      });
+    }
+  } else {
+    linkSection.style.display = 'none';
+  }
+
   document.getElementById('add-person-modal').classList.add('open');
   document.getElementById('ap-name').focus();
 }
@@ -2791,6 +2907,24 @@ document.getElementById('ap-save').addEventListener('click', async () => {
     if (!PEOPLE[addRelKey]) PEOPLE[addRelKey] = {};
     PEOPLE[addRelKey].spouse = nameVal;
     await apiSaveEdit(addRelKey, { spouse: nameVal });
+
+    // Link any checked existing children to the new spouse's record
+    const checkedChildren = [...document.querySelectorAll('#ap-children-list input[type=checkbox]:checked')]
+      .map(cb => cb.value);
+    if (checkedChildren.length) {
+      data.children = checkedChildren;
+      PEOPLE[key].children = checkedChildren;
+      // Save parent link on each child
+      for (const childKey of checkedChildren) {
+        if (!PEOPLE[childKey]) PEOPLE[childKey] = {};
+        const existingParents = [...(PEOPLE[childKey].parents || PEOPLE_DEFAULT[childKey]?.parents || [])];
+        if (!existingParents.includes(key)) {
+          const updatedParents = [...existingParents, key];
+          PEOPLE[childKey].parents = updatedParents;
+          await apiSaveEdit(childKey, { parents: updatedParents });
+        }
+      }
+    }
   }
 
   // Save new person to server
@@ -2808,9 +2942,117 @@ document.getElementById('ap-save').addEventListener('click', async () => {
   renderNewCard(key, data, addRelType, addRelKey);
   updateCardMeta();
   markEditedCards();
+  requestAnimationFrame(() => requestAnimationFrame(drawSpineConnectors));
 
   closeAddModal();
 });
+
+// ════════════════════════════════════════════
+//  LINK EXISTING CHILD
+// ════════════════════════════════════════════
+
+let lcSelected = new Set();
+
+function openLinkChildModal() {
+  if (!currentKey) return;
+  lcSelected.clear();
+  const parentName = document.getElementById('dp-name').textContent;
+  document.getElementById('lc-sub').textContent = `Choose existing people to add as children of ${parentName}`;
+  document.getElementById('lc-search').value = '';
+  document.getElementById('link-child-modal').style.display = 'flex';
+  renderLcList('');
+  document.getElementById('lc-search').focus();
+}
+
+function closeLinkChildModal() {
+  document.getElementById('link-child-modal').style.display = 'none';
+  lcSelected.clear();
+}
+
+function renderLcList(filter) {
+  const list = document.getElementById('lc-list');
+  list.innerHTML = '';
+  const existingChildren = new Set(PEOPLE[currentKey]?.children || PEOPLE_DEFAULT[currentKey]?.children || []);
+  const lc = filter.toLowerCase();
+
+  const candidates = Object.keys(PEOPLE)
+    .filter(k => {
+      if (k === currentKey) return false;
+      if (existingChildren.has(k)) return false;
+      const name = k.split(' (')[0].toLowerCase();
+      return !lc || name.includes(lc);
+    })
+    .slice(0, 60);
+
+  if (!candidates.length) {
+    list.innerHTML = '<div style="font-size:0.85rem;color:var(--sepia-light);font-style:italic;padding:8px 0;">No matches</div>';
+    return;
+  }
+
+  candidates.forEach(k => {
+    const d = PEOPLE[k] || {};
+    const row = document.createElement('label');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:6px;cursor:pointer;font-size:0.9rem;';
+    row.style.background = lcSelected.has(k) ? 'var(--parchment)' : 'transparent';
+
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = lcSelected.has(k);
+    cb.addEventListener('change', () => {
+      if (cb.checked) lcSelected.add(k); else lcSelected.delete(k);
+      row.style.background = cb.checked ? 'var(--parchment)' : 'transparent';
+    });
+
+    const born = d.born ? ` · b.${d.born}` : '';
+    row.innerHTML = `<span style="flex:1"><strong style="font-family:'Playfair Display',serif;">${k.split(' (')[0]}</strong><span style="color:var(--sepia-light);font-size:0.8rem;">${born}</span></span>`;
+    row.prepend(cb);
+    list.appendChild(row);
+  });
+}
+
+document.getElementById('lc-search').addEventListener('input', e => renderLcList(e.target.value));
+document.getElementById('lc-cancel').addEventListener('click', closeLinkChildModal);
+document.getElementById('link-child-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('link-child-modal')) closeLinkChildModal();
+});
+
+document.getElementById('dp-link-child-btn').addEventListener('click', openLinkChildModal);
+
+document.getElementById('lc-save').addEventListener('click', async () => {
+  if (!lcSelected.size) { closeLinkChildModal(); return; }
+
+  const parentD = PEOPLE[currentKey] || {};
+  const existingChildren = [...(parentD.children || PEOPLE_DEFAULT[currentKey]?.children || [])];
+  const newChildren = [...existingChildren, ...lcSelected];
+
+  if (!PEOPLE[currentKey]) PEOPLE[currentKey] = {};
+  PEOPLE[currentKey].children = newChildren;
+  await apiSaveEdit(currentKey, { children: newChildren });
+
+  // Also update each child's parents list
+  for (const childKey of lcSelected) {
+    if (!PEOPLE[childKey]) PEOPLE[childKey] = {};
+    const existingParents = [...(PEOPLE[childKey].parents || PEOPLE_DEFAULT[childKey]?.parents || [])];
+    if (!existingParents.includes(currentKey)) {
+      const newParents = [...existingParents, currentKey];
+      PEOPLE[childKey].parents = newParents;
+      await apiSaveEdit(childKey, { parents: newParents });
+    }
+  }
+
+  closeLinkChildModal();
+  // Refresh the panel to show new connections
+  openPanel(document.getElementById('dp-name').textContent, currentCard, currentKey);
+});
+
+// ── Also wire up "link children" checklist inside the Add Person modal (spouse flow) ──
+// Show the link-children step after adding a spouse
+const apLinkSection = document.getElementById('ap-link-children-section');
+if (apLinkSection) {
+  // handled inline in ap-save listener
+}
+
+// Also add checklist in add-person modal for spouse flow
 </script>
 </body>
 </html>
