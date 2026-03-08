@@ -1497,7 +1497,7 @@
               </div>
               <div class="branch-arrow">→</div>
             </div>
-            <div class="branch-children">
+            <div class="branch-children" data-parent="Yvette (b.1969)">
               <div class="person" data-pkey="Laith (b.2000)">
                 <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Laith</div>
                 <div class="person-dates">b. 25 Jan 2000</div>
@@ -1514,7 +1514,7 @@
               </div>
               <div class="branch-arrow">→</div>
             </div>
-            <div class="branch-children">
+            <div class="branch-children" data-parent="Ann Clare (b.1971)">
               <div class="person" data-pkey="Jason (b.1990)">
                 <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Jason</div>
                 <div class="person-dates">b. 1990</div>
@@ -1543,7 +1543,7 @@
               </div>
               <div class="branch-arrow">→</div>
             </div>
-            <div class="branch-children">
+            <div class="branch-children" data-parent="David (b.1973)">
               <div class="person" data-pkey="Johnny (b.2007)">
                 <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Johnny</div>
                 <div class="person-dates">b. 27 Jan 2007</div>
@@ -2918,26 +2918,34 @@ function renderNewCard(key, data, relType, relKey) {
   const relCard = document.querySelector(`.person[data-pkey="${CSS.escape(relKey)}"]`);
 
   if (relType === 'child' && relCard) {
-    // Look for an existing children-row immediately after the parent's containing element
-    // The parent card may be inside: .child-col, .branch-children, .branch-parent, or bare in .col
-    const parentContainer = relCard.closest('.child-col, .branch-children, .branch-parent') || relCard.parentElement;
-    const parentSection   = parentContainer.closest('.col, .branch, .family-branch, .tree-section') || parentContainer.parentElement;
+    // 1. Check for an existing branch-children already tagged for this parent
+    let childrenRow = document.querySelector(`.branch-children[data-parent="${CSS.escape(relKey)}"]`);
 
-    // Check if there's already a children-row associated with this parent
-    let childrenRow = parentSection?.querySelector(`.children-row[data-parent="${CSS.escape(relKey)}"]`);
-
+    // 2. Check for an existing children-row tagged for this parent
     if (!childrenRow) {
-      // Create a new family-branch: ghost parent label + children-row bracket
+      childrenRow = document.querySelector(`.children-row[data-parent="${CSS.escape(relKey)}"]`);
+    }
+
+    // 3. Check if the parent card itself is already inside a branch-children,
+    //    and there's a sibling children-row in the same family-branch
+    if (!childrenRow) {
+      const parentBranch = relCard.closest('.family-branch');
+      if (parentBranch) {
+        childrenRow = parentBranch.querySelector('.branch-children');
+      }
+    }
+
+    // 4. Nothing found — create a new family-branch for this parent
+    if (!childrenRow) {
       const branch = document.createElement('div');
       branch.className = 'family-branch';
       branch.style.marginTop = '16px';
 
-      // Ghost parent label
       const ghostParent = document.createElement('div');
       ghostParent.className = 'branch-parent';
-      ghostParent.innerHTML = `<div class="person" style="opacity:0.55;pointer-events:none;min-width:110px;max-width:130px;padding:8px 10px;"><div class="person-name" style="font-size:0.9rem;">${data.name ? relKey.split(' (')[0] : ''}</div></div><div class="branch-arrow">→</div>`;
+      const parentDisplayName = relKey.split(' (')[0];
+      ghostParent.innerHTML = `<div class="person" style="opacity:0.55;pointer-events:none;min-width:110px;max-width:130px;padding:8px 10px;"><div class="person-name" style="font-size:0.9rem;">${parentDisplayName}</div></div><div class="branch-arrow">→</div>`;
 
-      // Children container
       childrenRow = document.createElement('div');
       childrenRow.className = 'branch-children';
       childrenRow.dataset.parent = relKey;
@@ -2945,13 +2953,14 @@ function renderNewCard(key, data, relType, relKey) {
       branch.appendChild(ghostParent);
       branch.appendChild(childrenRow);
 
-      // Find or create a family-branches wrapper near the parent
+      // Find or create a family-branches wrapper near the parent card
+      const parentContainer = relCard.closest('.child-col, .branch-children') || relCard.parentElement;
+      const parentSection = parentContainer.closest('.col, .family-branch, .tree-section') || parentContainer.parentElement;
       let branchesWrap = parentSection?.querySelector('.family-branches');
       if (!branchesWrap) {
         branchesWrap = document.createElement('div');
         branchesWrap.className = 'family-branches';
         branchesWrap.style.marginTop = '12px';
-        // Insert after the parent's containing element
         parentContainer.after(branchesWrap);
       }
       branchesWrap.appendChild(branch);
@@ -2962,7 +2971,6 @@ function renderNewCard(key, data, relType, relKey) {
   } else if (relType === 'spouse' && relCard) {
     relCard.after(card);
   } else {
-    // Fallback: append after the last person card in the tree
     const allCards = document.querySelectorAll('.person');
     (allCards[allCards.length - 1] || document.querySelector('.tree-section')).after(card);
   }
