@@ -1663,6 +1663,28 @@ function updateCardMeta() {
   document.querySelectorAll('.person[data-pkey]').forEach(card => {
     const key = card.dataset.pkey;
     const d = PEOPLE[key] || {};
+
+    // ── Refresh the dates line from live PEOPLE data ──
+    // Some cards (e.g. Ida) have no person-dates div at all — create one if needed
+    if (d.born || d.died) {
+      const parts = [];
+      if (d.born) parts.push('b. ' + d.born);
+      if (d.died) parts.push('d. ' + d.died);
+      const dateStr = parts.join('  ·  ');
+      let datesEl = card.querySelector('.person-dates');
+      if (!datesEl) {
+        // Create and insert after person-name
+        datesEl = document.createElement('div');
+        datesEl.className = 'person-dates';
+        const nameEl = card.querySelector('.person-name');
+        if (nameEl) nameEl.after(datesEl); else card.appendChild(datesEl);
+      }
+      // Only overwrite if currently blank (don't clobber hand-crafted static dates)
+      if (!datesEl.textContent.trim()) {
+        datesEl.textContent = dateStr;
+      }
+    }
+
     // Remove existing meta
     card.querySelectorAll('.person-meta').forEach(el => el.remove());
     const age = calcAge(d.born, d.died);
@@ -1674,7 +1696,6 @@ function updateCardMeta() {
     if (d.married) lines.push(`<span class="meta-occ">m. ${d.married}</span>`);
     if (d.location) lines.push(`<span class="meta-loc">📍 ${d.location}</span>`);
     if (d.occupation) lines.push(`<span class="meta-occ">${d.occupation}</span>`);
-    if (d.married) lines.push(`<span class="meta-occ">💍 m. ${d.married}</span>`);
     if (lines.length) {
       const meta = document.createElement('div');
       meta.className = 'person-meta';
