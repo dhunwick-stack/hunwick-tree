@@ -378,6 +378,249 @@
   /* tree section left-aligned so bracket chains read left-to-right */
   .tree-section { display: flex; flex-direction: column; align-items: flex-start; padding-left: 80px; }
 
+  /* ── REVIEW MODE ── */
+  #review-toggle {
+    position: fixed;
+    bottom: 24px;
+    left: 168px;
+    z-index: 800;
+    background: var(--accent);
+    color: #fdf8f0;
+    border: none;
+    border-radius: 24px;
+    padding: 10px 18px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 4px 16px rgba(122,59,30,0.35);
+    transition: background 0.2s, transform 0.15s;
+  }
+  #review-toggle:hover { background: #5c2e15; transform: translateY(-1px); }
+
+  #review-panel {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1200;
+    width: 480px;
+    max-width: 92vw;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(92,71,48,0.35);
+    font-family: 'Crimson Pro', serif;
+    overflow: hidden;
+  }
+  #review-header {
+    background: linear-gradient(135deg, var(--sepia-dark), var(--accent));
+    padding: 18px 20px 14px;
+    color: #fdf8f0;
+  }
+  #review-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  #review-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+  #review-close {
+    background: rgba(255,255,255,0.15);
+    border: none;
+    color: #fdf8f0;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  #review-close:hover { background: rgba(255,255,255,0.3); }
+  #review-progress-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  #review-progress-bar {
+    flex: 1;
+    height: 5px;
+    background: rgba(255,255,255,0.25);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  #review-progress-fill {
+    height: 100%;
+    background: #f5d98e;
+    border-radius: 3px;
+    transition: width 0.4s ease;
+  }
+  #review-progress-label {
+    font-size: 0.72rem;
+    opacity: 0.85;
+    white-space: nowrap;
+  }
+  #review-nav-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  #review-nav-row button {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: #fdf8f0;
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  #review-nav-row button:hover { background: rgba(255,255,255,0.28); }
+  #review-nav-row button:disabled { opacity: 0.35; cursor: default; }
+  #review-person-count {
+    font-size: 0.78rem;
+    opacity: 0.8;
+  }
+  #review-body { padding: 20px 22px 18px; }
+  #review-person-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--sepia-dark);
+    margin-bottom: 2px;
+  }
+  #review-person-born {
+    font-size: 0.8rem;
+    color: var(--sepia-light);
+    font-style: italic;
+    margin-bottom: 14px;
+  }
+  #review-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .rv-field {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .rv-field.full-width { grid-column: 1 / -1; }
+  .rv-label {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--sepia-light);
+    font-family: 'Crimson Pro', serif;
+  }
+  .rv-input {
+    background: var(--parchment);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    padding: 7px 10px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.9rem;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .rv-input:focus { border-color: var(--sepia); }
+  .rv-missing { border-color: #d4875a !important; background: #fff9f5 !important; }
+  .rv-missing-badge {
+    font-size: 0.62rem;
+    color: #b85c30;
+    font-style: italic;
+  }
+  .rv-section-label {
+    grid-column: 1 / -1;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--sepia);
+    border-bottom: 1px solid var(--card-border);
+    padding-bottom: 4px;
+    margin-top: 4px;
+  }
+  #review-children-list {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 4px;
+  }
+  .rv-child-chip {
+    background: var(--parchment);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 0.78rem;
+    color: var(--sepia-dark);
+  }
+  .rv-add-child-btn {
+    background: none;
+    border: 1px dashed var(--sepia-light);
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 0.78rem;
+    color: var(--sepia);
+    cursor: pointer;
+    font-family: 'Crimson Pro', serif;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .rv-add-child-btn:hover { border-color: var(--accent); color: var(--accent); }
+  #review-save-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    border-top: 1px solid var(--card-border);
+    padding-top: 14px;
+  }
+  #review-saved-msg {
+    font-size: 0.8rem;
+    color: #4a8a5a;
+    font-style: italic;
+    margin-right: auto;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  #review-saved-msg.show { opacity: 1; }
+  #review-skip {
+    background: none;
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    padding: 7px 16px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.85rem;
+    color: var(--sepia);
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  #review-skip:hover { border-color: var(--sepia); }
+  #review-save {
+    background: var(--accent);
+    border: none;
+    border-radius: 20px;
+    padding: 7px 20px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #fdf8f0;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  #review-save:hover { background: var(--sepia-dark); }
+
   /* footnote */
   footer {
     text-align: center;
@@ -1588,6 +1831,9 @@
 <button id="stats-toggle" onclick="toggleStats()" aria-label="Family statistics">
   <span>📊</span><span>Family Stats</span>
 </button>
+<button id="review-toggle" onclick="openReviewMode()" aria-label="Complete the tree">
+  <span>✏️</span><span>Complete Tree</span>
+</button>
 <div id="stats-panel" role="complementary" aria-label="Family statistics">
   <div class="stats-header">
     <div>
@@ -1600,6 +1846,36 @@
 
 
 
+
+<!-- ── REVIEW MODE PANEL ── -->
+<div id="review-overlay" onclick="closeReviewMode()" style="display:none;position:fixed;inset:0;background:rgba(26,18,8,0.45);z-index:1100;"></div>
+<div id="review-panel" style="display:none;">
+  <div id="review-header">
+    <div id="review-title-row">
+      <div id="review-title">Complete the Tree</div>
+      <button id="review-close" onclick="closeReviewMode()">✕</button>
+    </div>
+    <div id="review-progress-row">
+      <div id="review-progress-bar"><div id="review-progress-fill"></div></div>
+      <div id="review-progress-label"></div>
+    </div>
+    <div id="review-nav-row">
+      <button id="review-prev" onclick="reviewStep(-1)">← Prev</button>
+      <div id="review-person-count"></div>
+      <button id="review-next" onclick="reviewStep(1)">Next →</button>
+    </div>
+  </div>
+  <div id="review-body">
+    <div id="review-person-name"></div>
+    <div id="review-person-born"></div>
+    <div id="review-fields"></div>
+    <div id="review-save-row">
+      <div id="review-saved-msg">✓ Saved</div>
+      <button id="review-skip" onclick="reviewStep(1)">Skip</button>
+      <button id="review-save" onclick="reviewSave()">Save & Next →</button>
+    </div>
+  </div>
+</div>
 
 <!-- ── DETAIL PANEL ── -->
 <div id="overlay"></div>
@@ -1825,9 +2101,28 @@ async function apiLoad() {
   } catch(e) { console.warn('Server load failed, using defaults', e); }
 }
 
+// ── Serialised save queue — prevents race conditions on the edits blob ──
+let _saveQueue = Promise.resolve();
 async function apiSaveEdit(key, patch) {
-  try { await fetch('/api/edit', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key,patch})}); }
-  catch(e) { console.warn('Save failed',e); }
+  _saveQueue = _saveQueue.then(async () => {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const res = await fetch('/api/edit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key, patch })
+        });
+        if (res.ok) return;
+        console.warn('Save returned', res.status, 'for key:', key);
+        if (res.status < 500) return; // client error — don't retry
+      } catch(e) {
+        console.warn('Save attempt', attempt + 1, 'failed:', e);
+      }
+      await new Promise(r => setTimeout(r, 300 * (attempt + 1)));
+    }
+    console.error('Save failed after 3 attempts for key:', key);
+  });
+  return _saveQueue;
 }
 
 async function resizeToBlob(dataUrl, maxWidth=1200, quality=0.82) {
@@ -3173,6 +3468,207 @@ if (apLinkSection) {
 }
 
 // Also add checklist in add-person modal for spouse flow
+
+// ════════════════════════════════════════════
+//  REVIEW MODE
+// ════════════════════════════════════════════
+
+const REVIEW_BIRTH_CUTOFF = 1950;
+
+// Fields shown per person in review mode
+const REVIEW_FIELDS = [
+  { id: 'rv-location',   label: 'Current Location', key: 'location' },
+  { id: 'rv-occupation', label: 'Occupation',        key: 'occupation' },
+  { id: 'rv-spouse',     label: 'Spouse / Partner',  key: 'spouse' },
+  { id: 'rv-married',    label: 'Date of Marriage',  key: 'married' },
+  { id: 'rv-pob',        label: 'Place of Birth',    key: 'pob' },
+  { id: 'rv-born',       label: 'Birth Date',        key: 'born' },
+  { id: 'rv-pod',        label: 'Place of Death',    key: 'pod' },
+  { id: 'rv-died',       label: 'Date of Death',     key: 'died' },
+  { id: 'rv-notes',      label: 'Notes',             key: 'notes', fullWidth: true },
+];
+
+let reviewList = [];   // ordered list of pkeys to review
+let reviewIdx  = 0;
+
+function buildReviewList() {
+  // All people born >= REVIEW_BIRTH_CUTOFF, ordered by birth year
+  const entries = Object.entries(PEOPLE).map(([key, d]) => {
+    const raw = d.born || '';
+    const m = raw.match(/(1[89]\d\d|20\d\d)/);
+    return { key, year: m ? parseInt(m[1]) : null, d };
+  });
+  return entries
+    .filter(e => e.year && e.year >= REVIEW_BIRTH_CUTOFF)
+    .sort((a, b) => a.year - b.year)
+    .map(e => e.key);
+}
+
+function openReviewMode() {
+  reviewList = buildReviewList();
+  reviewIdx = 0;
+  document.getElementById('review-overlay').style.display = 'block';
+  document.getElementById('review-panel').style.display  = 'block';
+  renderReviewCard();
+}
+
+function closeReviewMode() {
+  document.getElementById('review-overlay').style.display = 'none';
+  document.getElementById('review-panel').style.display   = 'none';
+}
+
+function reviewStep(dir) {
+  reviewIdx = Math.max(0, Math.min(reviewList.length - 1, reviewIdx + dir));
+  renderReviewCard();
+}
+
+function renderReviewCard() {
+  const total = reviewList.length;
+  const key   = reviewList[reviewIdx];
+  const d     = PEOPLE[key] || {};
+  const displayName = key.split(' (')[0];
+
+  // Progress
+  const pct = total > 1 ? Math.round((reviewIdx / (total - 1)) * 100) : 100;
+  document.getElementById('review-progress-fill').style.width = pct + '%';
+  document.getElementById('review-progress-label').textContent =
+    reviewIdx + 1 + ' of ' + total;
+  document.getElementById('review-person-count').textContent =
+    (reviewIdx + 1) + ' / ' + total;
+
+  // Nav buttons
+  document.getElementById('review-prev').disabled = reviewIdx === 0;
+  document.getElementById('review-next').disabled = reviewIdx === total - 1;
+
+  // Name + born
+  document.getElementById('review-person-name').textContent = displayName;
+  const bornYear = (d.born || '').match(/(1[89]\d\d|20\d\d)/)?.[1];
+  document.getElementById('review-person-born').textContent =
+    'b. ' + (d.born || '?') + (bornYear ? '  ·  age ' + (new Date().getFullYear() - bornYear) : '');
+
+  // Count missing fields to guide the user
+  const missingFields = REVIEW_FIELDS.filter(f => !d[f.key]);
+
+  // Build fields
+  const fieldsEl = document.getElementById('review-fields');
+  fieldsEl.innerHTML = '';
+
+  // Missing fields banner
+  if (missingFields.length > 0) {
+    const banner = document.createElement('div');
+    banner.className = 'rv-section-label';
+    banner.textContent = '⚠ ' + missingFields.length + ' field' +
+      (missingFields.length > 1 ? 's' : '') + ' missing';
+    fieldsEl.appendChild(banner);
+  } else {
+    const banner = document.createElement('div');
+    banner.className = 'rv-section-label';
+    banner.style.color = '#4a8a5a';
+    banner.textContent = '✓ All fields complete';
+    fieldsEl.appendChild(banner);
+  }
+
+  REVIEW_FIELDS.forEach(f => {
+    const wrap = document.createElement('div');
+    wrap.className = 'rv-field' + (f.fullWidth ? ' full-width' : '');
+
+    const isMissing = !d[f.key];
+    const label = document.createElement('div');
+    label.className = 'rv-label';
+    label.innerHTML = f.label + (isMissing
+      ? ' <span class="rv-missing-badge">missing</span>'
+      : '');
+
+    const input = f.fullWidth ? document.createElement('textarea') : document.createElement('input');
+    input.id = f.id;
+    input.className = 'rv-input' + (isMissing ? ' rv-missing' : '');
+    input.value = d[f.key] || '';
+    input.placeholder = isMissing ? 'Add ' + f.label.toLowerCase() + '…' : '';
+    if (f.fullWidth) { input.rows = 2; input.style.resize = 'vertical'; }
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !f.fullWidth) { e.preventDefault(); reviewSave(); }
+    });
+
+    wrap.appendChild(label);
+    wrap.appendChild(input);
+    fieldsEl.appendChild(wrap);
+  });
+
+  // Children section
+  const childrenSection = document.createElement('div');
+  childrenSection.className = 'rv-section-label';
+  childrenSection.textContent = 'Children (' + (d.children?.length || 0) + ')';
+  fieldsEl.appendChild(childrenSection);
+
+  const childList = document.createElement('div');
+  childList.id = 'review-children-list';
+
+  (d.children || []).forEach(ck => {
+    const chip = document.createElement('div');
+    chip.className = 'rv-child-chip';
+    chip.textContent = ck.split(' (')[0];
+    childList.appendChild(chip);
+  });
+
+  // Add child button
+  const addChildBtn = document.createElement('button');
+  addChildBtn.className = 'rv-add-child-btn';
+  addChildBtn.textContent = '+ Add child';
+  addChildBtn.onclick = () => {
+    closeReviewMode();
+    // Open the add-person modal pre-set to this parent
+    setTimeout(() => {
+      addRelKey  = key;
+      addRelType = 'child';
+      document.getElementById('add-person-modal').style.display = 'flex';
+      document.getElementById('ap-title').textContent = 'Add child for ' + displayName;
+    }, 150);
+  };
+  childList.appendChild(addChildBtn);
+  fieldsEl.appendChild(childList);
+
+  // Hide saved msg
+  document.getElementById('review-saved-msg').classList.remove('show');
+}
+
+async function reviewSave() {
+  const key = reviewList[reviewIdx];
+  const d   = PEOPLE[key] || {};
+  if (!key) return;
+
+  const patch = {};
+  REVIEW_FIELDS.forEach(f => {
+    const el = document.getElementById(f.id);
+    if (el) patch[f.key] = el.value.trim() || null;
+  });
+
+  // Apply locally
+  if (!PEOPLE[key]) PEOPLE[key] = {};
+  Object.assign(PEOPLE[key], patch);
+  updateCardMeta();
+
+  // Save to server
+  await apiSaveEdit(key, patch);
+
+  // Flash saved
+  const msg = document.getElementById('review-saved-msg');
+  msg.classList.add('show');
+  setTimeout(() => msg.classList.remove('show'), 1800);
+
+  // Auto-advance after brief pause
+  setTimeout(() => {
+    if (reviewIdx < reviewList.length - 1) reviewStep(1);
+    else {
+      // Done!
+      document.getElementById('review-person-name').textContent = '🎉 All done!';
+      document.getElementById('review-person-born').textContent =
+        'All ' + reviewList.length + ' people reviewed.';
+      document.getElementById('review-fields').innerHTML =
+        '<div style="grid-column:1/-1;text-align:center;padding:20px 0;color:var(--sepia);font-style:italic;">The tree is up to date.</div>';
+    }
+  }, 900);
+}
+
 </script>
 </body>
 </html>
