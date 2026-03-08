@@ -1277,6 +1277,7 @@
     <div class="dp-edit-row"><label>Generation / Role</label><input class="dp-edit-input" id="ef-generation" type="text" placeholder="e.g. 11th"></div>
     <div class="dp-edit-row"><label>Current Location</label><input class="dp-edit-input" id="ef-location" type="text" placeholder="e.g. Evanston, IL, USA"></div>
     <div class="dp-edit-row"><label>Occupation</label><input class="dp-edit-input" id="ef-occupation" type="text" placeholder="e.g. Apple Consultant, Photographer"></div>
+    <div class="dp-edit-row"><label>Website / URL</label><input class="dp-edit-input" id="ef-url" type="url" placeholder="e.g. https://dhcs.online"></div>
     <div class="dp-edit-row"><label>Notes</label><textarea class="dp-edit-input" id="ef-notes" rows="3" placeholder="Any additional information…" style="resize:vertical;"></textarea></div>
     <div class="dp-edit-actions">
       <button class="dp-btn-save" id="dp-edit-save">Save Changes</button>
@@ -1337,7 +1338,7 @@ const PEOPLE_DEFAULT = {
   "Maryam (b.1960)": { born: "1960", died: null, parents: ["John O. Hunwick", "Audrey Najer-Grant"], children: ["Natasha", "Ben"], spouse: null, notes: "", generation: "10th", isDirect: false },
   "Yvette (b.1969)": { born: "1969", died: null, pob: "Islington, London, UK", parents: ["John O. Hunwick", "Uwa Uldensi"], children: ["Laith (b.2000)"], spouse: null, notes: "", generation: "10th", isDirect: false },
   "Ann Clare (b.1971)": { born: "1971", died: null, pob: "Islington, London, UK", parents: ["John O. Hunwick", "Uwa Uldensi"], children: ["Jason (b.1990)", "Jessica (b.1991)", "Shawnine (b.1994)", "Maia (b.1999)"], spouse: null, notes: "", generation: "10th — Direct Line", isDirect: true },
-  "David (b.1973)": { born: "1973", died: null, pob: "Islington, London, UK", parents: ["John O. Hunwick", "Uwa Uldensi"], children: ["Johnny (b.2007)", "Sophia (b.2009)", "Sean (b.2013)"], spouse: null, notes: "Dave Hunwick — Apple ecosystem consultant, photographer, DJ.", generation: "10th — Direct Line", location: "Evanston, IL, USA", occupation: "Apple Consultant, Photographer, DJ", isDirect: true },
+  "David (b.1973)": { born: "1973", died: null, pob: "Islington, London, UK", parents: ["John O. Hunwick", "Uwa Uldensi"], children: ["Johnny (b.2007)", "Sophia (b.2009)", "Sean (b.2013)"], spouse: null, notes: "Dave Hunwick — Apple ecosystem consultant, photographer, DJ.", generation: "10th — Direct Line", location: "Evanston, IL, USA", occupation: "Apple Consultant, Photographer, DJ", url: "https://dhcs.online", isDirect: true },
   "Laith (b.2000)": { born: "25 January 2000", died: null, pob: "Chicago, IL, USA", parents: ["Yvette (b.1969)"], children: [], spouse: null, notes: "", generation: "11th", isDirect: false },
   "Jason (b.1990)": { born: "1990", died: null, pob: "England, UK", parents: ["Ann Clare (b.1971)"], children: [], spouse: null, notes: "", generation: "11th", isDirect: false },
   "Jessica (b.1991)": { born: "1991", died: null, pob: "England, UK", parents: ["Ann Clare (b.1971)"], children: [], spouse: null, notes: "", generation: "11th", isDirect: false },
@@ -1542,6 +1543,7 @@ function populateEditForm(key) {
   document.getElementById('ef-generation').value=d.generation||'';
   document.getElementById('ef-location').value=d.location||'';
   document.getElementById('ef-occupation').value=d.occupation||'';
+  document.getElementById('ef-url').value=d.url||'';
   document.getElementById('ef-notes').value=d.notes||'';
 }
 
@@ -1555,6 +1557,7 @@ async function saveEditForm() {
     generation:document.getElementById('ef-generation').value.trim()||null,
     location:document.getElementById('ef-location').value.trim()||null,
     occupation:document.getElementById('ef-occupation').value.trim()||null,
+    url:document.getElementById('ef-url').value.trim()||null,
     notes:document.getElementById('ef-notes').value.trim()
   };
   if(!PEOPLE[currentKey])PEOPLE[currentKey]={};
@@ -1599,7 +1602,8 @@ function openPanel(displayName, card, explicitKey) {
     {label:d.died?'Age at Death':'Current Age',val:age!==null?age+' years':'—'},
     {label:'Spouse / Partner',val:d.spouse||'—'},
     {label:'Current Location',val:d.location||'—'},
-    {label:'Occupation',val:d.occupation||'—'}
+    {label:'Occupation',val:d.occupation||'—'},
+    {label:'Website',val:d.url ? `<a href="${encodeURI(d.url)}" target="_blank" rel="noopener noreferrer" style="color:var(--sepia-dark);text-decoration:underline;word-break:break-all;">${d.url}</a>` : '—'}
   ].map(f=>`<div class="dp-field"><div class="dp-field-label">${f.label}</div><div class="dp-field-val">${f.val}</div></div>`).join('');
   const relDiv=document.getElementById('dp-relatives');relDiv.innerHTML='';
   const rels=[...(d.parents||[]).map(p=>({label:p,role:'Parent'})),...(d.children||[]).map(c=>({label:c,role:'Child'}))];
@@ -1710,6 +1714,7 @@ function showHoverCard(card, e) {
   if (d.pob) rows.push(`<div class="hover-card-row"><span class="hc-label">Born in</span><span>${d.pob}</span></div>`);
   if (d.location) rows.push(`<div class="hover-card-row"><span class="hc-label">Lives in</span><span>${d.location}</span></div>`);
   if (d.occupation) rows.push(`<div class="hover-card-row"><span class="hc-label">Work</span><span>${d.occupation}</span></div>`);
+  if (d.url) rows.push(`<div class="hover-card-row"><span class="hc-label">Web</span><span style="color:var(--sepia-dark);text-decoration:underline;word-break:break-all;">${d.url}</span></div>`);
   if (d.spouse) rows.push(`<div class="hover-card-row"><span class="hc-label">Spouse</span><span>${d.spouse}</span></div>`);
   if (d.generation) rows.push(`<div class="hover-card-row"><span class="hc-label">Gen.</span><span>${d.generation}</span></div>`);
   if (d.notes) rows.push(`<hr class="hover-card-divider"><div class="hover-card-row" style="font-style:italic;color:var(--sepia)">${d.notes}</div>`);
