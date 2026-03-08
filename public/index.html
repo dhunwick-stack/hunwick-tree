@@ -239,6 +239,7 @@
   .person-meta .meta-loc { font-style: italic; color: var(--sepia-light); }
   .person-meta .meta-occ { color: var(--sepia); }
 
+
   /* ── HOVER CARD ── */
   .hover-card {
     position: fixed;
@@ -1388,6 +1389,11 @@
       <div class="dp-row" id="dp-vitals"></div>
     </div>
     <div class="dp-divider"></div>
+    <div class="dp-section" id="dp-children-ages-section" style="display:none">
+      <div class="dp-label">Age When Children Born</div>
+      <div class="dp-row" id="dp-children-ages"></div>
+    </div>
+    <div class="dp-divider"></div>
     <div class="dp-section" id="dp-relatives-section">
       <div class="dp-label">Family Connections</div>
       <div class="dp-chips" id="dp-relatives"></div>
@@ -1408,6 +1414,8 @@
     <div class="dp-edit-row"><label>Date of Birth</label><input class="dp-edit-input" id="ef-born" type="text" placeholder="e.g. 10/29/1973 or 27 January 2007"></div>
     <div class="dp-edit-row"><label>Place of Birth</label><input class="dp-edit-input" id="ef-pob" type="text" placeholder="e.g. Skokie, IL, USA"></div>
     <div class="dp-edit-row"><label>Date of Death</label><input class="dp-edit-input" id="ef-died" type="text" placeholder="Leave blank if living"></div>
+    <div class="dp-edit-row"><label>Place of Death</label><input class="dp-edit-input" id="ef-pod" type="text" placeholder="e.g. London, UK"></div>
+    <div class="dp-edit-row"><label>Cause of Death</label><input class="dp-edit-input" id="ef-cod" type="text" placeholder="e.g. Heart failure, Cancer"></div>
     <div class="dp-edit-row"><label>Spouse / Partner</label><input class="dp-edit-input" id="ef-spouse" type="text" placeholder="e.g. Mary Greenham"></div>
     <div class="dp-edit-row"><label>Generation / Role</label><input class="dp-edit-input" id="ef-generation" type="text" placeholder="e.g. 11th"></div>
     <div class="dp-edit-row"><label>Current Location</label><input class="dp-edit-input" id="ef-location" type="text" placeholder="e.g. Evanston, IL, USA"></div>
@@ -1508,7 +1516,10 @@ async function apiLoad() {
     }));
     markEditedCards();
     updateCardMeta();
-    document.querySelectorAll('.avatar-wrap').forEach(w => { const n=w.dataset.personName; if(n&&photoCache[n]) applyPhoto(w,n); });
+    document.querySelectorAll('.person[data-pkey]').forEach(card => {
+      const key = card.dataset.pkey;
+      if (key && photoCache[key]) applyPhotoToKey(key);
+    });
   } catch(e) { console.warn('Server load failed, using defaults', e); }
 }
 
@@ -1557,31 +1568,42 @@ function getSilhouette(name) {
   return `<svg viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg"><rect width="52" height="52" fill="${bg}"/><ellipse cx="26" cy="${hy}" rx="${hr}" ry="${hr+1}" fill="${fg}"/><path d="M${26-bw} 52 Q${26-bw-3} 36 26 33 Q${26+bw+3} 36 ${26+bw} 52Z" fill="${fg}"/></svg>`;
 }
 
-function applyPhoto(wrap, name) {
-  if (!photoCache[name]) return;
+function applyPhoto(wrap, key) {
+  if (!photoCache[key]) return;
   let img = wrap.querySelector('img.photo');
   if (!img) { img=document.createElement('img'); img.className='photo'; wrap.appendChild(img); }
-  img.src = photoCache[name];
+  img.src = photoCache[key];
   const sil = wrap.querySelector('svg.silhouette');
   if (sil) sil.style.display='none';
+}
+
+// Apply a photo to ALL cards sharing the same pkey (e.g. ancestor shown multiple times)
+function applyPhotoToKey(key) {
+  document.querySelectorAll(`.person[data-pkey="${CSS.escape(key)}"] .avatar-wrap`).forEach(wrap => {
+    applyPhoto(wrap, key);
+  });
 }
 
 // ── Avatar init ──
 document.querySelectorAll('.avatar-wrap').forEach(wrap => {
   const nameEl = wrap.closest('.person')?.querySelector('.person-name');
-  const name = nameEl ? nameEl.textContent.trim() : 'x';
-  wrap.dataset.personName = name;
-  const tmp = document.createElement('div'); tmp.innerHTML = getSilhouette(name);
+  const displayName = nameEl ? nameEl.textContent.trim() : 'x';
+  // Store display name for silhouette gender — pkey resolved lazily at upload time
+  wrap.dataset.personName = displayName;
+  const tmp = document.createElement('div'); tmp.innerHTML = getSilhouette(displayName);
   const svg = tmp.firstElementChild; svg.classList.add('silhouette');
   wrap.insertBefore(svg, wrap.querySelector('.upload-hint'));
   wrap.addEventListener('click', e => { e.stopPropagation(); wrap.querySelector('.photo-input').click(); });
   wrap.querySelector('.photo-input').addEventListener('change', function() {
     if (!this.files[0]) return;
+    // Use pkey as the photo key (resolved after stampAllPkeys has run)
+    const photoKey = wrap.closest('.person')?.dataset?.pkey || displayName;
     const reader = new FileReader();
     reader.onload = async e => {
-      photoCache[name] = e.target.result; applyPhoto(wrap, name);
-      if (document.getElementById('dp-name')?.textContent === name) renderPanelAvatar(name);
-      await apiSavePhoto(name, e.target.result);
+      photoCache[photoKey] = e.target.result;
+      applyPhotoToKey(photoKey);
+      if (currentKey === photoKey) renderPanelAvatar(photoKey);
+      await apiSavePhoto(photoKey, e.target.result);
     };
     reader.readAsDataURL(this.files[0]);
   });
@@ -1659,6 +1681,50 @@ function updateCardMeta() {
   });
 }
 
+function getBirthYear(born) {
+  if (!born) return null;
+  // MM/DD/YYYY
+  const slash = born.match(/^\d{1,2}\/(\d{1,2})\/(\d{4})$/);
+  if (slash) return +slash[2];
+  // YYYY-MM-DD
+  const iso = born.match(/^(\d{4})-/);
+  if (iso) return +iso[1];
+  // year anywhere
+  const m = born.match(/\b(1[0-9]{3}|20[0-9]{2})\b/);
+  return m ? +m[1] : null;
+}
+
+function updateCardChildrenAges() {
+  document.querySelectorAll('.person[data-pkey]').forEach(card => {
+    card.querySelectorAll('.person-children-ages').forEach(el => el.remove());
+    const key = card.dataset.pkey;
+    const d = PEOPLE[key] || {};
+    if (!d.children || !d.children.length || !d.born) return;
+    const parentYear = getBirthYear(d.born);
+    if (!parentYear) return;
+
+    const items = d.children.map(childKey => {
+      const cd = PEOPLE[childKey] || {};
+      const childYear = getBirthYear(cd.born);
+      if (!childYear) return null;
+      const ageAtBirth = childYear - parentYear;
+      if (ageAtBirth < 10 || ageAtBirth > 80) return null; // sanity check
+      const shortName = childKey.split(' (')[0];
+      return { name: shortName, age: ageAtBirth };
+    }).filter(Boolean);
+
+    if (!items.length) return;
+
+    const wrap = document.createElement('div');
+    wrap.className = 'person-children-ages';
+    wrap.innerHTML = '<span class="ca-label">Age when children born</span>' +
+      items.map(i =>
+        `<div class="ca-item"><span class="ca-name">${i.name}</span><span class="ca-age">${i.age}</span></div>`
+      ).join('');
+    card.appendChild(wrap);
+  });
+}
+
 // ── Age ──
 function parseDate(s) {
   if (!s) return new Date();
@@ -1706,6 +1772,8 @@ function populateEditForm(key) {
   document.getElementById('ef-born').value=d.born||'';
   document.getElementById('ef-pob').value=d.pob||'';
   document.getElementById('ef-died').value=d.died||'';
+  document.getElementById('ef-pod').value=d.pod||'';
+  document.getElementById('ef-cod').value=d.cod||'';
   document.getElementById('ef-spouse').value=d.spouse||'';
   document.getElementById('ef-generation').value=d.generation||'';
   document.getElementById('ef-location').value=d.location||'';
@@ -1720,6 +1788,8 @@ async function saveEditForm() {
     born:document.getElementById('ef-born').value.trim()||null,
     pob:document.getElementById('ef-pob').value.trim()||null,
     died:document.getElementById('ef-died').value.trim()||null,
+    pod:document.getElementById('ef-pod').value.trim()||null,
+    cod:document.getElementById('ef-cod').value.trim()||null,
     spouse:document.getElementById('ef-spouse').value.trim()||null,
     generation:document.getElementById('ef-generation').value.trim()||null,
     location:document.getElementById('ef-location').value.trim()||null,
@@ -1744,11 +1814,13 @@ async function saveEditForm() {
   openPanel(document.getElementById('dp-name').textContent,currentCard,currentKey);
 }
 
-function renderPanelAvatar(name) {
+function renderPanelAvatar(key) {
+  // key is the pkey; use display name only for silhouette gender hint
   const lg=document.getElementById('dp-avatar-lg');
   lg.querySelectorAll('svg,img').forEach(el=>el.remove());
-  if(photoCache[name]){const img=document.createElement('img');img.src=photoCache[name];lg.insertBefore(img,lg.querySelector('.dp-avatar-hint'));}
-  else{const tmp=document.createElement('div');tmp.innerHTML=getSilhouette(name);lg.insertBefore(tmp.firstElementChild,lg.querySelector('.dp-avatar-hint'));}
+  const displayName = key.split(' (')[0];
+  if(photoCache[key]){const img=document.createElement('img');img.src=photoCache[key];lg.insertBefore(img,lg.querySelector('.dp-avatar-hint'));}
+  else{const tmp=document.createElement('div');tmp.innerHTML=getSilhouette(displayName);lg.insertBefore(tmp.firstElementChild,lg.querySelector('.dp-avatar-hint'));}
 }
 
 function openPanel(displayName, card, explicitKey) {
@@ -1761,17 +1833,44 @@ function openPanel(displayName, card, explicitKey) {
   document.getElementById('dp-name').textContent=displayName;
   document.getElementById('dp-dates').textContent=[d.born?'b. '+d.born:null,d.died?'d. '+d.died:null].filter(Boolean).join('  ·  ')||'Dates unknown';
   const badge=document.getElementById('dp-badge');badge.textContent=d.generation||'';badge.style.display=d.generation?'inline-block':'none';
-  renderPanelAvatar(displayName);
+  renderPanelAvatar(key);
   const age=calcAge(d.born,d.died);
   document.getElementById('dp-vitals').innerHTML=[
     {label:'Born',val:d.born||'—'},{label:'Place of Birth',val:d.pob||'—'},
     {label:'Died',val:d.died||(d.born?'Living':'—')},
+    {label:'Place of Death',val:d.pod||'—'},
+    {label:'Cause of Death',val:d.cod||'—'},
     {label:d.died?'Age at Death':'Current Age',val:age!==null?age+' years':'—'},
     {label:'Spouse / Partner',val:d.spouse||'—'},
     {label:'Current Location',val:d.location||'—'},
     {label:'Occupation',val:d.occupation||'—'},
     {label:'Website',val:d.url ? `<a href="${encodeURI(d.url)}" target="_blank" rel="noopener noreferrer" style="color:var(--sepia-dark);text-decoration:underline;word-break:break-all;">${d.url}</a>` : '—'}
   ].map(f=>`<div class="dp-field"><div class="dp-field-label">${f.label}</div><div class="dp-field-val">${f.val}</div></div>`).join('');
+  // Children ages section
+  const caSection = document.getElementById('dp-children-ages');
+  caSection.innerHTML = '';
+  const caParent = document.getElementById('dp-children-ages-section');
+  caParent.style.display = 'none';
+  if (d.children && d.children.length && d.born) {
+    const parentYear = getBirthYear(d.born);
+    if (parentYear) {
+      const items = d.children.map(ck => {
+        const cd = PEOPLE[ck] || {};
+        const cy = getBirthYear(cd.born);
+        if (!cy) return null;
+        const a = cy - parentYear;
+        if (a < 10 || a > 80) return null;
+        return { name: ck.split(' (')[0], age: a };
+      }).filter(Boolean);
+      if (items.length) {
+        caParent.style.display = '';
+        caSection.innerHTML = items.map(i =>
+          `<div class="dp-field"><div class="dp-field-label">${i.name}</div><div class="dp-field-val">age ${i.age}</div></div>`
+        ).join('');
+      }
+    }
+  }
+
   const relDiv=document.getElementById('dp-relatives');relDiv.innerHTML='';
   const rels=[...(d.parents||[]).map(p=>({label:p,role:'Parent'})),...(d.children||[]).map(c=>({label:c,role:'Child'}))];
   if(!rels.length){relDiv.innerHTML='<span style="font-size:0.85rem;color:var(--sepia-light);font-style:italic;">No linked relatives on record</span>';}
@@ -1824,9 +1923,9 @@ document.getElementById('dp-avatar-lg').addEventListener('click',()=>{
     const name=document.getElementById('dp-name').textContent;
     const reader=new FileReader();
     reader.onload=async e=>{
-      photoCache[name]=e.target.result;renderPanelAvatar(name);
-      document.querySelectorAll('.avatar-wrap').forEach(w=>{if(w.dataset.personName===name)applyPhoto(w,name);});
-      await apiSavePhoto(name,e.target.result);
+      photoCache[currentKey]=e.target.result;renderPanelAvatar(currentKey);
+      applyPhotoToKey(currentKey);
+      await apiSavePhoto(currentKey,e.target.result);
     };
     reader.readAsDataURL(this.files[0]);
   });
@@ -1878,6 +1977,8 @@ function showHoverCard(card, e) {
   if (age !== null) {
     rows.push(`<div class="hover-card-row"><span class="hc-label">Age</span><span>${d.died ? 'Died age ' + age : age + ' years old'}</span></div>`);
   }
+  if (d.pod) rows.push(`<div class="hover-card-row"><span class="hc-label">Died in</span><span>${d.pod}</span></div>`);
+  if (d.cod) rows.push(`<div class="hover-card-row"><span class="hc-label">Cause</span><span>${d.cod}</span></div>`);
   if (d.pob) rows.push(`<div class="hover-card-row"><span class="hc-label">Born in</span><span>${d.pob}</span></div>`);
   if (d.location) rows.push(`<div class="hover-card-row"><span class="hc-label">Lives in</span><span>${d.location}</span></div>`);
   if (d.occupation) rows.push(`<div class="hover-card-row"><span class="hc-label">Work</span><span>${d.occupation}</span></div>`);
@@ -1885,6 +1986,23 @@ function showHoverCard(card, e) {
   if (d.spouse) rows.push(`<div class="hover-card-row"><span class="hc-label">Spouse</span><span>${d.spouse}</span></div>`);
   if (d.generation) rows.push(`<div class="hover-card-row"><span class="hc-label">Gen.</span><span>${d.generation}</span></div>`);
   if (d.notes) rows.push(`<hr class="hover-card-divider"><div class="hover-card-row" style="font-style:italic;color:var(--sepia)">${d.notes}</div>`);
+  // Children ages
+  if (d.children && d.children.length && d.born) {
+    const py = getBirthYear(d.born);
+    if (py) {
+      const items = d.children.map(ck => {
+        const cd = PEOPLE[ck] || {};
+        const cy = getBirthYear(cd.born);
+        if (!cy) return null;
+        const a = cy - py;
+        if (a < 10 || a > 80) return null;
+        return `<span style="display:flex;justify-content:space-between;gap:12px;"><span>${ck.split(' (')[0]}</span><span style="font-family:'Playfair Display',serif;font-weight:600;">${a}</span></span>`;
+      }).filter(Boolean);
+      if (items.length) {
+        rows.push(`<hr class="hover-card-divider"><div class="hover-card-row" style="flex-direction:column;gap:2px;"><span style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--sepia-light);font-family:'Playfair Display',serif;">Age when children born</span>${items.join('')}</div>`);
+      }
+    }
+  }
 
   hoverCard.innerHTML = `
     <div class="hover-card-name">${name}</div>
@@ -2087,7 +2205,23 @@ function renderStats() {
   if (avgLifespan) longevityRows.push(
     row('Average lifespan', avgLifespan + ' years', 'among those with known dates')
   );
-  if (longevityRows.length) sections.push(section('Longevity', longevityRows));
+  // Cause of death breakdown
+  const codCounts = {};
+  deceased.forEach(([k, d]) => {
+    if (!d.cod) return;
+    // Normalise loosely
+    const c = d.cod.trim();
+    codCounts[c] = (codCounts[c] || 0) + 1;
+  });
+  const codList = Object.entries(codCounts).sort((a,b) => b[1]-a[1]);
+  if (codList.length) {
+    const maxCod = codList[0][1];
+    codList.forEach(([c, n]) => longevityRows.push(barRow(c, n, maxCod)));
+  }
+  const totalWithCod = Object.values(codCounts).reduce((s,n) => s+n, 0);
+  if (totalWithCod) longevityRows.push(row('Cause of death recorded', totalWithCod + ' people'));
+
+  if (longevityRows.length) sections.push(section('Longevity & Causes', longevityRows));
 
   // Where they live
   if (locationList.length) {
@@ -2096,9 +2230,28 @@ function renderStats() {
     )));
   }
 
+  // Average age at parenthood
+  const parentAges = [];
+  people.forEach(([k, d]) => {
+    if (!d.children || !d.children.length || !d.born) return;
+    const py = getBirthYear(d.born);
+    if (!py) return;
+    d.children.forEach(ck => {
+      const cd = PEOPLE[ck] || {};
+      const cy = getBirthYear(cd.born);
+      if (!cy) return;
+      const a = cy - py;
+      if (a >= 14 && a <= 60) parentAges.push(a);
+    });
+  });
+  const avgParentAge = parentAges.length
+    ? Math.round(parentAges.reduce((s,a) => s+a, 0) / parentAges.length)
+    : null;
+
   // Fun facts
   const funRows = [];
   if (peakMonth) funRows.push(row('Most common birth month', peakMonth));
+  if (avgParentAge) funRows.push(row('Avg. age becoming a parent', avgParentAge + ' years'));
   if (occupations.length) funRows.push(row('Occupations recorded', occupations.length));
   const photoCount = Object.keys(photoCache).length;
   if (photoCount) funRows.push(row('Photos added', photoCount));
