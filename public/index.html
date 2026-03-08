@@ -1186,7 +1186,8 @@
   .family-branch {
     display: flex;
     flex-direction: row;
-    align-items: center;
+    align-items: flex-start;
+    flex-wrap: wrap;   /* allows sub-branches to drop to next row */
     gap: 0;
   }
 
@@ -1240,16 +1241,17 @@
     background: transparent;
   }
 
-  /* Nested sub-branch (e.g. Zion under Jason, Bella under Maia)
-     Must break to its own full row below the sibling cards */
+  /* Sub-branch: grandchildren row (e.g. Jason→Zion, Maia→Bella)
+     flex-basis:100% forces it below all sibling person cards in the parent family-branch */
   .family-branch.sub-branch {
+    flex-basis: 100%;
     flex-direction: row;
     align-items: center;
-    flex-basis: 100%;   /* force onto new row inside flex parent */
-    width: 100%;
-    margin-top: 8px;
-    padding-left: 14px;
-    border-left: 1px solid var(--line);
+    flex-wrap: wrap;
+    margin-top: 10px;
+    padding-left: 28px;
+    border-left: 2px solid var(--card-border);
+    gap: 0;
   }
   .family-branch.sub-branch .branch-parent .person {
     min-width: 90px !important;
@@ -3267,10 +3269,14 @@ function renderNewCard(key, data, relType, relKey) {
       branch.appendChild(childrenRow);
 
       if (parentIsInBranch) {
-        // Insert as a flex-wrapped row INSIDE the parent's branch-children
-        // so it sits below the sibling cards on its own line
-        const parentBranchChildren = relCard.closest('.branch-children');
-        parentBranchChildren.appendChild(branch);
+        // Append to the family-branch that contains branch-children
+        // flex-basis:100% on .sub-branch makes it wrap below all sibling cards
+        const parentFamilyBranch = relCard.closest('.family-branch');
+        if (parentFamilyBranch) {
+          parentFamilyBranch.appendChild(branch);
+        } else {
+          relCard.closest('.branch-children').appendChild(branch);
+        }
       } else {
         // Top-level: insert after the parent card's wrapper
         const parentWrapper = relCard.closest('.child-col') || relCard.parentElement;
