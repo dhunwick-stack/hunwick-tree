@@ -1417,6 +1417,7 @@
     <div class="dp-edit-row"><label>Place of Death</label><input class="dp-edit-input" id="ef-pod" type="text" placeholder="e.g. London, UK"></div>
     <div class="dp-edit-row"><label>Cause of Death</label><input class="dp-edit-input" id="ef-cod" type="text" placeholder="e.g. Heart failure, Cancer"></div>
     <div class="dp-edit-row"><label>Spouse / Partner</label><input class="dp-edit-input" id="ef-spouse" type="text" placeholder="e.g. Mary Greenham"></div>
+    <div class="dp-edit-row"><label>Date of Marriage</label><input class="dp-edit-input" id="ef-married" type="text" placeholder="e.g. 06/14/1997 or 14 June 1997"></div>
     <div class="dp-edit-row"><label>Generation / Role</label><input class="dp-edit-input" id="ef-generation" type="text" placeholder="e.g. 11th"></div>
     <div class="dp-edit-row"><label>Current Location</label><input class="dp-edit-input" id="ef-location" type="text" placeholder="e.g. Evanston, IL, USA"></div>
     <div class="dp-edit-row"><label>Occupation</label><input class="dp-edit-input" id="ef-occupation" type="text" placeholder="e.g. Apple Consultant, Photographer"></div>
@@ -1670,8 +1671,10 @@ function updateCardMeta() {
       const ageLabel = d.died ? `d. age ${age}` : `age ${age}`;
       lines.push(`<span class="meta-age">${ageLabel}</span>`);
     }
+    if (d.married) lines.push(`<span class="meta-occ">m. ${d.married}</span>`);
     if (d.location) lines.push(`<span class="meta-loc">📍 ${d.location}</span>`);
     if (d.occupation) lines.push(`<span class="meta-occ">${d.occupation}</span>`);
+    if (d.married) lines.push(`<span class="meta-occ">💍 m. ${d.married}</span>`);
     if (lines.length) {
       const meta = document.createElement('div');
       meta.className = 'person-meta';
@@ -1775,6 +1778,7 @@ function populateEditForm(key) {
   document.getElementById('ef-pod').value=d.pod||'';
   document.getElementById('ef-cod').value=d.cod||'';
   document.getElementById('ef-spouse').value=d.spouse||'';
+  document.getElementById('ef-married').value=d.married||'';
   document.getElementById('ef-generation').value=d.generation||'';
   document.getElementById('ef-location').value=d.location||'';
   document.getElementById('ef-occupation').value=d.occupation||'';
@@ -1791,6 +1795,7 @@ async function saveEditForm() {
     pod:document.getElementById('ef-pod').value.trim()||null,
     cod:document.getElementById('ef-cod').value.trim()||null,
     spouse:document.getElementById('ef-spouse').value.trim()||null,
+    married:document.getElementById('ef-married').value.trim()||null,
     generation:document.getElementById('ef-generation').value.trim()||null,
     location:document.getElementById('ef-location').value.trim()||null,
     occupation:document.getElementById('ef-occupation').value.trim()||null,
@@ -1842,6 +1847,7 @@ function openPanel(displayName, card, explicitKey) {
     {label:'Cause of Death',val:d.cod||'—'},
     {label:d.died?'Age at Death':'Current Age',val:age!==null?age+' years':'—'},
     {label:'Spouse / Partner',val:d.spouse||'—'},
+    {label:'Date of Marriage',val:d.married||'—'},
     {label:'Current Location',val:d.location||'—'},
     {label:'Occupation',val:d.occupation||'—'},
     {label:'Website',val:d.url ? `<a href="${encodeURI(d.url)}" target="_blank" rel="noopener noreferrer" style="color:var(--sepia-dark);text-decoration:underline;word-break:break-all;">${d.url}</a>` : '—'}
@@ -1984,6 +1990,8 @@ function showHoverCard(card, e) {
   if (d.occupation) rows.push(`<div class="hover-card-row"><span class="hc-label">Work</span><span>${d.occupation}</span></div>`);
   if (d.url) rows.push(`<div class="hover-card-row"><span class="hc-label">Web</span><span style="color:var(--sepia-dark);text-decoration:underline;word-break:break-all;">${d.url}</span></div>`);
   if (d.spouse) rows.push(`<div class="hover-card-row"><span class="hc-label">Spouse</span><span>${d.spouse}</span></div>`);
+  if (d.married) rows.push(`<div class="hover-card-row"><span class="hc-label">Married</span><span>${d.married}</span></div>`);
+  if (d.married) rows.push(`<div class="hover-card-row"><span class="hc-label">Married</span><span>${d.married}</span></div>`);
   if (d.generation) rows.push(`<div class="hover-card-row"><span class="hc-label">Gen.</span><span>${d.generation}</span></div>`);
   if (d.notes) rows.push(`<hr class="hover-card-divider"><div class="hover-card-row" style="font-style:italic;color:var(--sepia)">${d.notes}</div>`);
   // Children ages
@@ -2250,6 +2258,8 @@ function renderStats() {
 
   // Fun facts
   const funRows = [];
+  const marriageCount = people.filter(([k,d]) => d.married).length;
+  if (marriageCount) funRows.push(row('Marriages recorded', marriageCount));
   if (peakMonth) funRows.push(row('Most common birth month', peakMonth));
   if (avgParentAge) funRows.push(row('Avg. age becoming a parent', avgParentAge + ' years'));
   if (occupations.length) funRows.push(row('Occupations recorded', occupations.length));
