@@ -1284,7 +1284,10 @@ async function apiLoad() {
     await Promise.all(Object.entries(photos||{}).map(async ([name, key]) => {
       try {
         const r = await fetch(`/api/photo-get?key=${encodeURIComponent(key)}`);
-        if (r.ok) { const { dataUrl } = await r.json(); photoCache[name] = dataUrl; }
+        if (r.ok) {
+          const blob = await r.blob();
+          photoCache[name] = URL.createObjectURL(blob);
+        }
       } catch {}
     }));
     markEditedCards();
@@ -1297,7 +1300,7 @@ async function apiSaveEdit(key, patch) {
   catch(e) { console.warn('Save failed',e); }
 }
 
-async function compressImage(dataUrl, maxWidth=800, quality=0.75) {
+async function resizeToBlob(dataUrl, maxWidth=1200, quality=0.82) {
   return new Promise(resolve => {
     const img = new Image();
     img.onload = () => {
@@ -1306,7 +1309,7 @@ async function compressImage(dataUrl, maxWidth=800, quality=0.75) {
       canvas.width = Math.round(img.width * scale);
       canvas.height = Math.round(img.height * scale);
       canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-      resolve(canvas.toDataURL('image/jpeg', quality));
+      canvas.toBlob(resolve, 'image/jpeg', quality);
     };
     img.src = dataUrl;
   });
@@ -1314,11 +1317,19 @@ async function compressImage(dataUrl, maxWidth=800, quality=0.75) {
 
 async function apiSavePhoto(name, dataUrl) {
   try {
-    const compressed = await compressImage(dataUrl);
-    const res = await fetch('/api/photo', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,dataUrl:compressed})});
+    const blob = await resizeToBlob(dataUrl);
+    const res = await fetch(`/api/photo?name=${encodeURIComponent(name)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': blob.type },
+      body: blob
+    });
     if (!res.ok) console.warn('Photo save returned', res.status);
+    else {
+      // cache a local object URL so it displays immediately
+      photoCache[name] = URL.createObjectURL(blob);
+    }
   }
-  catch(e) { console.warn('Photo save failed',e); }
+  catch(e) { console.warn('Photo save failed', e); }
 }
 
 // ── Silhouette ──
