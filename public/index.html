@@ -3048,8 +3048,15 @@ apiLoad().then(() => {
   // Restore dynamically added people after DOM is stamped and painted
   requestAnimationFrame(() => {
     const added = window._pendingAdded || {};
+    // Also build a set of base names from static data to catch key mismatches (e.g. "Ben" vs "Ben Hughes")
+    const _staticBaseNames = new Set(
+      Object.keys(PEOPLE_DEFAULT).map(k => k.split(' (')[0].toLowerCase().trim())
+    );
     Object.entries(added).forEach(([key, data]) => {
-      if (PEOPLE_DEFAULT[key]) return;
+      if (PEOPLE_DEFAULT[key]) return; // exact key match
+      // Also skip if base name matches a static person (prevents "Ben Hughes" overriding "Ben")
+      const baseName = (data.name || key.split(' (')[0]).toLowerCase().trim();
+      if (_staticBaseNames.has(baseName)) return;
       if (document.querySelector(`.person[data-pkey="${CSS.escape(key)}"]`)) return; // already in DOM
       // Set base data first, then immediately overlay any saved edits
       // This prevents the original blob data from overwriting edits on reload
