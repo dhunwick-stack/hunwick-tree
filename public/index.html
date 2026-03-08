@@ -2103,11 +2103,12 @@ function renderStats() {
     .filter(x => x.a !== null)
     .sort((a,b) => b.a - a.a)[0];
 
-  // Average lifespan (deceased with known age)
-  const deceasedAges = deceased.map(([k,d]) => age(d)).filter(a => a !== null && a > 0);
+  // Average lifespan (adults only — exclude child deaths under 18 which skew the figure)
+  const deceasedAges = deceased.map(([k,d]) => age(d)).filter(a => a !== null && a >= 18);
   const avgLifespan = deceasedAges.length
     ? Math.round(deceasedAges.reduce((s,a) => s+a, 0) / deceasedAges.length)
     : null;
+  const childDeaths = deceased.filter(([k,d]) => { const a = age(d); return a !== null && a < 18; }).length;
 
   // Generations
   const genNums = people.map(([k,d]) => {
@@ -2211,7 +2212,10 @@ function renderStats() {
       longestLived.key.split(' (')[0])
   );
   if (avgLifespan) longevityRows.push(
-    row('Average lifespan', avgLifespan + ' years', 'among those with known dates')
+    row('Avg. lifespan (adults)', avgLifespan + ' years', 'among those who reached 18')
+  );
+  if (childDeaths) longevityRows.push(
+    row('Died in childhood', childDeaths + (childDeaths === 1 ? ' person' : ' people'), 'under 18')
   );
   // Cause of death breakdown
   const codCounts = {};
