@@ -1801,7 +1801,10 @@ async function apiLoad() {
     const res = await fetch('/api/data');
     if (!res.ok) return;
     const { edits, photos, added } = await res.json();
-    Object.entries(edits||{}).forEach(([k,v]) => { if (!PEOPLE[k]) PEOPLE[k]={}; Object.assign(PEOPLE[k], v); });
+    // Store edits globally — re-applied AFTER added people are restored
+    // so Cara Eme's edits don't get overwritten by her original blob data
+    window._serverEdits = edits || {};
+    Object.entries(window._serverEdits).forEach(([k,v]) => { if (!PEOPLE[k]) PEOPLE[k]={}; Object.assign(PEOPLE[k], v); });
     // Restore dynamically added people — defer until after stamp/updateCardMeta
     window._pendingAdded = added || {};
     await Promise.all(Object.entries(photos||{}).map(async ([name, key]) => {
@@ -2736,13 +2739,19 @@ apiLoad().then(() => {
     Object.entries(added).forEach(([key, data]) => {
       if (PEOPLE_DEFAULT[key]) return;
       if (document.querySelector(`.person[data-pkey="${CSS.escape(key)}"]`)) return; // already in DOM
-      PEOPLE[key] = data;
+      // Set base data first, then immediately overlay any saved edits
+      // This prevents the original blob data from overwriting edits on reload
+      PEOPLE[key] = Object.assign({}, data, window._serverEdits?.[key] || {});
       if (data._added && data.name) {
         const parentKey = (data.parents || [])[0] || null;
         const relKey = parentKey || null;
         const relType = parentKey ? 'child' : 'child';
-        renderNewCard(key, data, relType, relKey);
+        renderNewCard(key, PEOPLE[key], relType, relKey);
       }
+    });
+    // Re-apply all edits once more to catch any added-person fields
+    Object.entries(window._serverEdits || {}).forEach(([k,v]) => {
+      if (PEOPLE[k]) Object.assign(PEOPLE[k], v);
     });
     updateCardMeta();
     injectAddButtonsAll();
