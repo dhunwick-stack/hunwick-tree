@@ -598,16 +598,35 @@
   /* relatives chips */
   .dp-chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .dp-chip {
-    background: var(--parchment);
-    border: 1px solid var(--card-border);
     border-radius: 20px;
-    padding: 3px 12px;
-    font-size: 0.8rem;
-    color: var(--sepia-dark);
+    padding: 3px 10px 3px 8px;
+    font-size: 0.78rem;
     cursor: pointer;
-    transition: background 0.15s, border-color 0.15s;
+    transition: filter 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    border: none;
+    font-family: 'Crimson Pro', serif;
   }
-  .dp-chip:hover { background: var(--card-border); border-color: var(--sepia); }
+  .dp-chip:hover { filter: brightness(0.92); }
+  .dp-chip .chip-role {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    opacity: 0.75;
+    font-weight: 600;
+  }
+  /* colour palette per relation */
+  .dp-chip-father   { background: #fde8e8; color: #8a1a1a; }
+  .dp-chip-mother   { background: #fce8f3; color: #7a1a55; }
+  .dp-chip-son      { background: #d9f0e8; color: #1a5c3a; }
+  .dp-chip-daughter { background: #fef3d9; color: #7a4e00; }
+  .dp-chip-brother  { background: #e3eafd; color: #2a3a8a; }
+  .dp-chip-sister   { background: #fce8f7; color: #6a1a6a; }
+  .dp-chip-spouse   { background: #fdeaea; color: #8a1a1a; }
+  .dp-chip-parent   { background: #e8e8e8; color: #444; }
+  .dp-chip-child    { background: #eaf2ea; color: #2a4a2a; }
 
   /* notes textarea */
   .dp-notes {
@@ -2063,20 +2082,106 @@ function openPanel(displayName, card, explicitKey) {
   }
 
   const relDiv=document.getElementById('dp-relatives');relDiv.innerHTML='';
-  const rels=[...(d.parents||[]).map(p=>({label:p,role:'Parent'})),...(d.children||[]).map(c=>({label:c,role:'Child'}))];
-  if(!rels.length){relDiv.innerHTML='<span style="font-size:0.85rem;color:var(--sepia-light);font-style:italic;">No linked relatives on record</span>';}
-  else{rels.forEach(r=>{const chip=document.createElement('span');chip.className='dp-chip';chip.title=r.role;chip.textContent=r.label.replace(/ \(.*/,'');chip.addEventListener('click',()=>{
-    // Find card by exact data-pkey match first, then fall back to name text
-    let target = document.querySelector(`.person[data-pkey="${CSS.escape(r.label)}"]`);
-    if (!target) {
-      target = [...document.querySelectorAll('.person')].find(card => {
-        const pkey = card.dataset.pkey;
-        const nameEl = card.querySelector('.person-name');
-        return pkey === r.label || (nameEl && nameEl.textContent.trim() === r.label);
-      });
+
+  // ── Infer gender from first name ──
+  const femaleNames = new Set([
+    // Names present in the Hunwick tree
+    'mary','elizabeth','ann','anne','eliza','lucy','esther','catherine','carola',
+    'ida','sophia','jane','sarah','margaret','alice','emily','emma','florence',
+    'grace','helen','isabel','isabella','joan','julia','laura','lisa','louise',
+    'maria','martha','patricia','rachel','rose','ruth','susan','victoria','virginia',
+    'dorothy','edith','ethel','evelyn','frances','gertrude','harriet','irene',
+    'josephine','katherine','lillian','mabel','mildred','miriam','norma','pauline',
+    'phyllis','thelma','winifred','barbara','betty','beverly','brenda','carol',
+    'carolyn','charlotte','cheryl','diana','donna','eileen','eleanor','ellen',
+    'gloria','gwendolyn','jacqueline','janet','jean','jennifer','joyce','judith',
+    'julie','kathleen','kelly','kimberly','linda','lorraine','lynda','marilyn',
+    'marlene','nancy','pamela','peggy','rita','roberta','sandra','sharon',
+    'sheila','shirley','teresa','vivian','wendy','yvonne',
+    // Additional names from this tree
+    'jessica','maia','shawnine','ella','gillian','muriel','yvette','maryam',
+    'sapphire','agnes','natasha','lydia','leila','layla','fatima','amina',
+    'zainab','aisha','hafsa','khadija','nadia','lena','clara','anna','sofia',
+    'doris','audrey','uwa',
+    'olivia','chloe','hannah','abigail','madison','ashley','alexis','brianna',
+    'taylor','samantha','lauren','amber','courtney','danielle','stephanie',
+    'melissa','nicole','michelle','christina','amanda','heather','tiffany',
+    'brittany','megan','kayla','holly','paige','autumn','summer','faith',
+    'destiny','sierra','shelby','kelsey','lacey','brooke','callie','hailey',
+    'katie','kylie','leah','morgan','reagan','riley','rylee','sage','violet'
+  ]);
+
+  function inferGender(nameKey) {
+    const first = (nameKey||'').split(' ')[0].toLowerCase().replace(/[^a-z]/g,'');
+    return femaleNames.has(first) ? 'f' : 'm';
+  }
+
+  // ── Determine specific relation type ──
+  function getRelationType(relKey, subjectKey, role) {
+    if (role === 'Parent') {
+      return inferGender(relKey) === 'f' ? 'mother' : 'father';
     }
-    if(target){closePanel();setTimeout(()=>{target.scrollIntoView({behavior:'smooth',block:'center'});openPanel(target.querySelector('.person-name').textContent.trim(),target,target.dataset.pkey||findKey(r.label));},280);}
-  });relDiv.appendChild(chip);});}
+    if (role === 'Child') {
+      // Check if subject and relKey share the same parents (sibling detection handled separately)
+      return inferGender(relKey) === 'f' ? 'daughter' : 'son';
+    }
+    if (role === 'Sibling') {
+      return inferGender(relKey) === 'f' ? 'sister' : 'brother';
+    }
+    if (role === 'Spouse') return 'spouse';
+    return role.toLowerCase();
+  }
+
+  // ── Build relation list including siblings and spouse ──
+  const rawRels = [];
+  // Parents
+  (d.parents||[]).forEach(p => rawRels.push({label:p, role:'Parent'}));
+  // Spouse (from data field — match to a key if possible)
+  if (d.spouse) {
+    const spouseKey = Object.keys(PEOPLE).find(k => {
+      const n = k.split(' (')[0].trim();
+      return n.toLowerCase() === d.spouse.toLowerCase();
+    }) || d.spouse;
+    rawRels.push({label: spouseKey, role:'Spouse'});
+  }
+  // Children
+  (d.children||[]).forEach(c => rawRels.push({label:c, role:'Child'}));
+  // Siblings — people who share at least one parent with the current person
+  if ((d.parents||[]).length) {
+    const siblings = new Set();
+    (d.parents||[]).forEach(pKey => {
+      const pd = PEOPLE[pKey] || {};
+      (pd.children||[]).forEach(sibKey => {
+        if (sibKey !== key) siblings.add(sibKey);
+      });
+    });
+    siblings.forEach(s => rawRels.push({label:s, role:'Sibling'}));
+  }
+
+  if(!rawRels.length){
+    relDiv.innerHTML='<span style="font-size:0.85rem;color:var(--sepia-light);font-style:italic;">No linked relatives on record</span>';
+  } else {
+    rawRels.forEach(r => {
+      const relType = getRelationType(r.label, key, r.role);
+      const chip = document.createElement('span');
+      chip.className = `dp-chip dp-chip-${relType}`;
+      const displayName = r.label.split(' (')[0].replace(/ b\..*/, '');
+      chip.innerHTML = `<span class="chip-role">${relType}</span>${displayName}`;
+      chip.title = `${relType} — click to view`;
+      chip.addEventListener('click', () => {
+        let target = document.querySelector(`.person[data-pkey="${CSS.escape(r.label)}"]`);
+        if (!target) {
+          target = [...document.querySelectorAll('.person')].find(card => {
+            const pkey = card.dataset.pkey;
+            const nameEl = card.querySelector('.person-name');
+            return pkey === r.label || (nameEl && nameEl.textContent.trim() === r.label);
+          });
+        }
+        if(target){closePanel();setTimeout(()=>{target.scrollIntoView({behavior:'smooth',block:'center'});openPanel(target.querySelector('.person-name').textContent.trim(),target,target.dataset.pkey||findKey(r.label));},280);}
+      });
+      relDiv.appendChild(chip);
+    });
+  }
   document.getElementById('dp-notes').value=d.notes||'';
   document.getElementById('overlay').classList.add('open');
   document.getElementById('detail-panel').classList.add('open');
