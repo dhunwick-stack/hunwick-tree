@@ -239,6 +239,71 @@
   .person-meta .meta-loc { font-style: italic; color: var(--sepia-light); }
   .person-meta .meta-occ { color: var(--sepia); }
 
+  /* ── HOVER CARD ── */
+  .hover-card {
+    position: fixed;
+    z-index: 999;
+    background: #fdf8f0;
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(92,71,48,0.22), 0 2px 8px rgba(92,71,48,0.12);
+    padding: 16px 18px;
+    min-width: 220px;
+    max-width: 280px;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.18s ease, transform 0.18s ease;
+    font-family: 'Crimson Pro', serif;
+  }
+  .hover-card.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .hover-card-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--sepia-dark);
+    margin-bottom: 4px;
+    line-height: 1.3;
+  }
+  .hover-card-dates {
+    font-size: 0.82rem;
+    color: var(--sepia);
+    font-style: italic;
+    margin-bottom: 8px;
+  }
+  .hover-card-row {
+    display: flex;
+    gap: 6px;
+    font-size: 0.8rem;
+    color: var(--ink);
+    margin-bottom: 4px;
+    line-height: 1.4;
+  }
+  .hover-card-row .hc-label {
+    color: var(--sepia-light);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-family: 'Playfair Display', serif;
+    min-width: 60px;
+    padding-top: 1px;
+  }
+  .hover-card-divider {
+    border: none;
+    border-top: 1px solid var(--card-border);
+    margin: 8px 0;
+  }
+  .hover-card-hint {
+    font-size: 0.7rem;
+    color: var(--sepia-light);
+    font-style: italic;
+    text-align: center;
+    margin-top: 6px;
+  }
+
   /* marriage equals sign */
   .marriage {
     display: flex;
@@ -1205,7 +1270,7 @@
   <!-- EDIT MODE FORM -->
   <div id="dp-edit-form">
     <div class="dp-edit-row"><label>First / Full Name</label><input class="dp-edit-input" id="ef-name" type="text" placeholder="e.g. John"></div>
-    <div class="dp-edit-row"><label>Date of Birth</label><input class="dp-edit-input" id="ef-born" type="text" placeholder="e.g. 27 January 2007"></div>
+    <div class="dp-edit-row"><label>Date of Birth</label><input class="dp-edit-input" id="ef-born" type="text" placeholder="e.g. 10/29/1973 or 27 January 2007"></div>
     <div class="dp-edit-row"><label>Place of Birth</label><input class="dp-edit-input" id="ef-pob" type="text" placeholder="e.g. Skokie, IL, USA"></div>
     <div class="dp-edit-row"><label>Date of Death</label><input class="dp-edit-input" id="ef-died" type="text" placeholder="Leave blank if living"></div>
     <div class="dp-edit-row"><label>Spouse / Partner</label><input class="dp-edit-input" id="ef-spouse" type="text" placeholder="e.g. Mary Greenham"></div>
@@ -1222,6 +1287,7 @@
   </div>
 </div>
 
+<div id="hover-card" class="hover-card" aria-hidden="true"></div>
 <script>
 const PEOPLE_DEFAULT = {
   "William (patriarch)": { born: null, died: null, spouse: "Mary", children: ["Mary (bap.1701)", "William (bap.1706)", "Francis (bap.1749)"], parents: [], notes: "", generation: "1st — Patriarch", isDirect: false },
@@ -1426,17 +1492,31 @@ function updateCardMeta() {
 }
 
 // ── Age ──
+function parseDate(s) {
+  if (!s) return new Date();
+  const str = s.trim();
+  // MM/DD/YYYY or M/D/YYYY
+  const slash = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (slash) return new Date(+slash[3], +slash[1]-1, +slash[2]);
+  // YYYY-MM-DD
+  const iso = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (iso) return new Date(+iso[1], +iso[2]-1, +iso[3]);
+  // existing word formats: "27 January 2007", "bap. 1706", "April 2009", "1860"
+  const mths={january:0,february:1,march:2,april:3,may:4,june:5,july:6,august:7,september:8,october:9,november:10,december:11};
+  const p = str.toLowerCase().replace(/bap\.\s*/,'').trim().split(/\s+/);
+  let y, m=0, d=1;
+  if (p.length===3) { d=+p[0]; m=mths[p[1]]||0; y=+p[2]; }
+  else if (p.length===2) { m=mths[p[0]]||0; y=+p[1]; }
+  else { y=+p[0]; }
+  return y ? new Date(y, m, d) : new Date();
+}
+
 function calcAge(born, died) {
   if (!born) return null;
-  const mths={january:0,february:1,march:2,april:3,may:4,june:5,july:6,august:7,september:8,october:9,november:10,december:11};
-  const parse = s => {
-    if (!s) return new Date();
-    const p=s.toLowerCase().replace(/bap\.\s*/,'').trim().split(/\s+/); let y,m=0,d=1;
-    if(p.length===3){d=+p[0];m=mths[p[1]]||0;y=+p[2];}else if(p.length===2){m=mths[p[0]]||0;y=+p[1];}else{y=+p[0];}
-    return y?new Date(y,m,d):new Date();
-  };
-  const b=parse(born), e=parse(died); let age=e.getFullYear()-b.getFullYear();
-  if(e<new Date(e.getFullYear(),b.getMonth(),b.getDate()))age--;
+  const b = parseDate(born);
+  const e = died ? parseDate(died) : new Date();
+  let age = e.getFullYear() - b.getFullYear();
+  if (e < new Date(e.getFullYear(), b.getMonth(), b.getDate())) age--;
   return age;
 }
 
@@ -1607,6 +1687,75 @@ function findKey(displayName) {
   }
   return displayName;
 }
+
+// ── HOVER CARD ──
+const hoverCard = document.getElementById('hover-card');
+let hoverTimeout = null;
+
+function showHoverCard(card, e) {
+  const key = card.dataset.pkey;
+  if (!key) return;
+  const d = PEOPLE[key] || {};
+  const name = card.querySelector('.person-name')?.textContent?.trim() || key;
+  const age = calcAge(d.born, d.died);
+
+  const rows = [];
+  if (d.born || d.died) {
+    const dateStr = [d.born ? 'b. ' + d.born : null, d.died ? 'd. ' + d.died : null].filter(Boolean).join('  ·  ');
+    rows.push(`<div class="hover-card-dates">${dateStr}</div>`);
+  }
+  if (age !== null) {
+    rows.push(`<div class="hover-card-row"><span class="hc-label">Age</span><span>${d.died ? 'Died age ' + age : age + ' years old'}</span></div>`);
+  }
+  if (d.pob) rows.push(`<div class="hover-card-row"><span class="hc-label">Born in</span><span>${d.pob}</span></div>`);
+  if (d.location) rows.push(`<div class="hover-card-row"><span class="hc-label">Lives in</span><span>${d.location}</span></div>`);
+  if (d.occupation) rows.push(`<div class="hover-card-row"><span class="hc-label">Work</span><span>${d.occupation}</span></div>`);
+  if (d.spouse) rows.push(`<div class="hover-card-row"><span class="hc-label">Spouse</span><span>${d.spouse}</span></div>`);
+  if (d.generation) rows.push(`<div class="hover-card-row"><span class="hc-label">Gen.</span><span>${d.generation}</span></div>`);
+  if (d.notes) rows.push(`<hr class="hover-card-divider"><div class="hover-card-row" style="font-style:italic;color:var(--sepia)">${d.notes}</div>`);
+
+  hoverCard.innerHTML = `
+    <div class="hover-card-name">${name}</div>
+    ${rows.join('')}
+    <div class="hover-card-hint">Click for full details</div>
+  `;
+
+  positionHoverCard(e);
+  hoverCard.classList.add('visible');
+}
+
+function positionHoverCard(e) {
+  const pad = 14;
+  const cw = hoverCard.offsetWidth || 260;
+  const ch = hoverCard.offsetHeight || 200;
+  let x = e.clientX + pad;
+  let y = e.clientY + pad;
+  if (x + cw > window.innerWidth - pad) x = e.clientX - cw - pad;
+  if (y + ch > window.innerHeight - pad) y = e.clientY - ch - pad;
+  hoverCard.style.left = x + 'px';
+  hoverCard.style.top = y + 'px';
+}
+
+function hideHoverCard() {
+  hoverCard.classList.remove('visible');
+}
+
+document.querySelectorAll('.person').forEach(card => {
+  card.addEventListener('mouseenter', e => {
+    hoverTimeout = setTimeout(() => showHoverCard(card, e), 320);
+  });
+  card.addEventListener('mousemove', e => {
+    if (hoverCard.classList.contains('visible')) positionHoverCard(e);
+  });
+  card.addEventListener('mouseleave', () => {
+    clearTimeout(hoverTimeout);
+    hideHoverCard();
+  });
+  card.addEventListener('click', () => {
+    clearTimeout(hoverTimeout);
+    hideHoverCard();
+  });
+});
 
 apiLoad();
 updateCardMeta();
