@@ -1792,24 +1792,8 @@ async function apiLoad() {
     if (!res.ok) return;
     const { edits, photos, added } = await res.json();
     Object.entries(edits||{}).forEach(([k,v]) => { if (!PEOPLE[k]) PEOPLE[k]={}; Object.assign(PEOPLE[k], v); });
-    // Restore dynamically added people — render their cards into the tree
-    Object.entries(added||{}).forEach(([key, data]) => {
-      if (PEOPLE_DEFAULT[key]) return; // already in static tree
-      PEOPLE[key] = data;
-      if (data._added && data.name) {
-        // Find which existing person they relate to
-        const parentKey = (data.parents || [])[0] || null;
-        const spouseKey = data.spouse ? Object.keys(PEOPLE).find(k => {
-          const pd = PEOPLE_DEFAULT[k] || {};
-          return (pd.spouse || PEOPLE[k]?.spouse) === data.name && k !== key;
-        }) : null;
-        const relKey = parentKey || spouseKey;
-        const relType = parentKey ? 'child' : spouseKey ? 'spouse' : 'child';
-        if (relKey || !parentKey) {
-          const card = renderNewCard(key, data, relType, relKey);
-        }
-      }
-    });
+    // Restore dynamically added people — defer until after stamp/updateCardMeta
+    window._pendingAdded = added || {};
     await Promise.all(Object.entries(photos||{}).map(async ([name, key]) => {
       try {
         const r = await fetch(`/api/photo-get?key=${encodeURIComponent(key)}`);
@@ -2735,7 +2719,26 @@ document.addEventListener('click', e => {
   }
 });
 
-apiLoad();
+apiLoad().then(() => {
+  // Restore dynamically added people after DOM is stamped and painted
+  requestAnimationFrame(() => {
+    const added = window._pendingAdded || {};
+    Object.entries(added).forEach(([key, data]) => {
+      if (PEOPLE_DEFAULT[key]) return;
+      if (document.querySelector(`.person[data-pkey="${CSS.escape(key)}"]`)) return; // already in DOM
+      PEOPLE[key] = data;
+      if (data._added && data.name) {
+        const parentKey = (data.parents || [])[0] || null;
+        const relKey = parentKey || null;
+        const relType = parentKey ? 'child' : 'child';
+        renderNewCard(key, data, relType, relKey);
+      }
+    });
+    updateCardMeta();
+    injectAddButtonsAll();
+    requestAnimationFrame(drawSpineConnectors);
+  });
+});
 updateCardMeta();
 
 // ════════════════════════════════════════════
@@ -2773,6 +2776,10 @@ function injectAddButtons(card) {
 }
 
 document.querySelectorAll('.person[data-pkey]').forEach(injectAddButtons);
+
+function injectAddButtonsAll() {
+  document.querySelectorAll('.person[data-pkey]').forEach(injectAddButtons);
+}
 
 // ── State for current add operation ──
 let addRelType = null;    // 'child' | 'spouse'
@@ -2909,27 +2916,55 @@ function renderNewCard(key, data, relType, relKey) {
 
   // ── Place the card in the tree ──
   const relCard = document.querySelector(`.person[data-pkey="${CSS.escape(relKey)}"]`);
-  if (relType === 'child' && relCard) {
-    // Try to find a sibling children container first
-    let childCol = relCard.closest('.family-row, .generation')
-      ?.querySelector('.child-col, .children-col');
 
-    // Fall back: create a simple floated container after the parent's column
-    if (!childCol) {
-      // Find the column/wrapper the parent card lives in
-      const parentCol = relCard.closest('.person-col, .col, .direct-col') || relCard.parentElement;
-      childCol = document.createElement('div');
-      childCol.className = 'child-col';
-      parentCol.after(childCol);
+  if (relType === 'child' && relCard) {
+    // Look for an existing children-row immediately after the parent's containing element
+    // The parent card may be inside: .child-col, .branch-children, .branch-parent, or bare in .col
+    const parentContainer = relCard.closest('.child-col, .branch-children, .branch-parent') || relCard.parentElement;
+    const parentSection   = parentContainer.closest('.col, .branch, .family-branch, .tree-section') || parentContainer.parentElement;
+
+    // Check if there's already a children-row associated with this parent
+    let childrenRow = parentSection?.querySelector(`.children-row[data-parent="${CSS.escape(relKey)}"]`);
+
+    if (!childrenRow) {
+      // Create a new family-branch: ghost parent label + children-row bracket
+      const branch = document.createElement('div');
+      branch.className = 'family-branch';
+      branch.style.marginTop = '16px';
+
+      // Ghost parent label
+      const ghostParent = document.createElement('div');
+      ghostParent.className = 'branch-parent';
+      ghostParent.innerHTML = `<div class="person" style="opacity:0.55;pointer-events:none;min-width:110px;max-width:130px;padding:8px 10px;"><div class="person-name" style="font-size:0.9rem;">${data.name ? relKey.split(' (')[0] : ''}</div></div><div class="branch-arrow">→</div>`;
+
+      // Children container
+      childrenRow = document.createElement('div');
+      childrenRow.className = 'branch-children';
+      childrenRow.dataset.parent = relKey;
+
+      branch.appendChild(ghostParent);
+      branch.appendChild(childrenRow);
+
+      // Find or create a family-branches wrapper near the parent
+      let branchesWrap = parentSection?.querySelector('.family-branches');
+      if (!branchesWrap) {
+        branchesWrap = document.createElement('div');
+        branchesWrap.className = 'family-branches';
+        branchesWrap.style.marginTop = '12px';
+        // Insert after the parent's containing element
+        parentContainer.after(branchesWrap);
+      }
+      branchesWrap.appendChild(branch);
     }
-    childCol.appendChild(card);
+
+    childrenRow.appendChild(card);
+
   } else if (relType === 'spouse' && relCard) {
-    // Place immediately after the spouse's card element
     relCard.after(card);
   } else {
-    // Fallback: append to last generation row
-    const rows = document.querySelectorAll('.generation');
-    (rows[rows.length - 1] || document.querySelector('.tree')).appendChild(card);
+    // Fallback: append after the last person card in the tree
+    const allCards = document.querySelectorAll('.person');
+    (allCards[allCards.length - 1] || document.querySelector('.tree-section')).after(card);
   }
 
   return card;
