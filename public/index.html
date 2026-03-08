@@ -885,6 +885,113 @@
     transition: width 0.6s ease;
   }
 
+
+  /* ── Add Person buttons on cards ── */
+  .card-add-btns {
+    display: none;
+    position: absolute;
+    bottom: -28px;
+    left: 50%;
+    transform: translateX(-50%);
+    gap: 4px;
+    z-index: 10;
+    white-space: nowrap;
+  }
+  .person:hover .card-add-btns { display: flex; }
+  .card-add-btn {
+    font-size: 0.65rem;
+    padding: 2px 7px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-family: 'Crimson Pro', serif;
+    letter-spacing: 0.03em;
+    opacity: 0.85;
+    transition: opacity 0.15s;
+  }
+  .card-add-btn:hover { opacity: 1; }
+
+  /* ── Add Person modal ── */
+  #add-person-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 3000;
+    background: rgba(26,18,8,0.55);
+    align-items: center;
+    justify-content: center;
+  }
+  #add-person-modal.open { display: flex; }
+  #add-person-box {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 28px 32px;
+    width: min(460px, 92vw);
+    box-shadow: 0 8px 40px rgba(90,60,20,0.22);
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  #add-person-box h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.15rem;
+    color: var(--sepia-dark);
+    margin-bottom: 4px;
+  }
+  #add-person-box .ap-sub {
+    font-size: 0.82rem;
+    color: var(--sepia-light);
+    margin-bottom: 18px;
+    font-style: italic;
+  }
+  .ap-row { margin-bottom: 12px; }
+  .ap-row label {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--sepia);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 4px;
+  }
+  .ap-row input, .ap-row select {
+    width: 100%;
+    padding: 7px 10px;
+    border: 1px solid var(--card-border);
+    border-radius: 6px;
+    background: var(--parchment);
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.95rem;
+    color: var(--ink);
+  }
+  .ap-row input:focus, .ap-row select:focus {
+    outline: none;
+    border-color: var(--sepia);
+  }
+  .ap-btns { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+  .ap-btn-save {
+    padding: 8px 22px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+  .ap-btn-save:hover { background: var(--sepia-dark); }
+  .ap-btn-cancel {
+    padding: 8px 16px;
+    background: transparent;
+    color: var(--sepia);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+  .ap-err { color: #b00; font-size: 0.85rem; margin-top: 8px; display: none; }
 </style>
 </head>
 <body>
@@ -1433,6 +1540,44 @@
 </div>
 
 <div id="hover-card" class="hover-card" aria-hidden="true"></div>
+
+<!-- Add Person Modal -->
+<div id="add-person-modal">
+  <div id="add-person-box">
+    <h3 id="ap-title">Add Person</h3>
+    <div class="ap-sub" id="ap-sub"></div>
+    <div class="ap-row">
+      <label>Full Name *</label>
+      <input id="ap-name" type="text" placeholder="e.g. Elizabeth Hunwick">
+    </div>
+    <div class="ap-row">
+      <label>Date of Birth</label>
+      <input id="ap-born" type="text" placeholder="e.g. 1884 or 12 March 1884">
+    </div>
+    <div class="ap-row">
+      <label>Date of Death</label>
+      <input id="ap-died" type="text" placeholder="Leave blank if living">
+    </div>
+    <div class="ap-row">
+      <label>Place of Birth</label>
+      <input id="ap-pob" type="text" placeholder="e.g. Birmingham, England">
+    </div>
+    <div class="ap-row">
+      <label>Occupation</label>
+      <input id="ap-occ" type="text" placeholder="e.g. Teacher">
+    </div>
+    <div class="ap-row">
+      <label>Notes</label>
+      <input id="ap-notes" type="text" placeholder="Any additional details">
+    </div>
+    <div class="ap-err" id="ap-err"></div>
+    <div class="ap-btns">
+      <button class="ap-btn-cancel" id="ap-cancel">Cancel</button>
+      <button class="ap-btn-save" id="ap-save">Add to Tree</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const PEOPLE_DEFAULT = {
   "William (patriarch)": { born: null, died: null, spouse: "Mary", children: ["Mary (bap.1701)", "William (bap.1706)", "Francis (bap.1749)"], parents: [], notes: "", generation: "1st — Patriarch", isDirect: false },
@@ -1504,8 +1649,26 @@ async function apiLoad() {
   try {
     const res = await fetch('/api/data');
     if (!res.ok) return;
-    const { edits, photos } = await res.json();
+    const { edits, photos, added } = await res.json();
     Object.entries(edits||{}).forEach(([k,v]) => { if (!PEOPLE[k]) PEOPLE[k]={}; Object.assign(PEOPLE[k], v); });
+    // Restore dynamically added people — render their cards into the tree
+    Object.entries(added||{}).forEach(([key, data]) => {
+      if (PEOPLE_DEFAULT[key]) return; // already in static tree
+      PEOPLE[key] = data;
+      if (data._added && data.name) {
+        // Find which existing person they relate to
+        const parentKey = (data.parents || [])[0] || null;
+        const spouseKey = data.spouse ? Object.keys(PEOPLE).find(k => {
+          const pd = PEOPLE_DEFAULT[k] || {};
+          return (pd.spouse || PEOPLE[k]?.spouse) === data.name && k !== key;
+        }) : null;
+        const relKey = parentKey || spouseKey;
+        const relType = parentKey ? 'child' : spouseKey ? 'spouse' : 'child';
+        if (relKey || !parentKey) {
+          const card = renderNewCard(key, data, relType, relKey);
+        }
+      }
+    });
     await Promise.all(Object.entries(photos||{}).map(async ([name, key]) => {
       try {
         const r = await fetch(`/api/photo-get?key=${encodeURIComponent(key)}`);
@@ -2306,6 +2469,242 @@ document.addEventListener('click', e => {
 
 apiLoad();
 updateCardMeta();
+
+// ════════════════════════════════════════════
+//  ADD PERSON
+// ════════════════════════════════════════════
+
+// ── Inject + Child / + Spouse buttons on every static card ──
+function injectAddButtons(card) {
+  if (card.querySelector('.card-add-btns')) return; // already done
+  card.style.position = 'relative';
+  const wrap = document.createElement('div');
+  wrap.className = 'card-add-btns';
+
+  const btnChild = document.createElement('button');
+  btnChild.className = 'card-add-btn';
+  btnChild.textContent = '+ Child';
+  btnChild.title = 'Add a child to this person';
+  btnChild.addEventListener('click', e => {
+    e.stopPropagation();
+    openAddModal('child', card);
+  });
+
+  const btnSpouse = document.createElement('button');
+  btnSpouse.className = 'card-add-btn';
+  btnSpouse.textContent = '+ Spouse';
+  btnSpouse.title = 'Add a spouse/partner to this person';
+  btnSpouse.addEventListener('click', e => {
+    e.stopPropagation();
+    openAddModal('spouse', card);
+  });
+
+  wrap.appendChild(btnChild);
+  wrap.appendChild(btnSpouse);
+  card.appendChild(wrap);
+}
+
+document.querySelectorAll('.person[data-pkey]').forEach(injectAddButtons);
+
+// ── State for current add operation ──
+let addRelType = null;    // 'child' | 'spouse'
+let addRelCard = null;    // the card being related to
+let addRelKey = null;     // the pkey of that card
+
+function openAddModal(relType, card) {
+  addRelType = relType;
+  addRelCard = card;
+  addRelKey = card.dataset.pkey;
+  const personName = card.querySelector('.person-name')?.textContent.trim() || addRelKey;
+
+  document.getElementById('ap-title').textContent =
+    relType === 'child' ? 'Add a Child' : 'Add a Spouse / Partner';
+  document.getElementById('ap-sub').textContent =
+    relType === 'child'
+      ? `Adding a child of ${personName}`
+      : `Adding a spouse or partner of ${personName}`;
+
+  // Clear fields
+  ['ap-name','ap-born','ap-died','ap-pob','ap-occ','ap-notes'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('ap-err').style.display = 'none';
+  document.getElementById('add-person-modal').classList.add('open');
+  document.getElementById('ap-name').focus();
+}
+
+function closeAddModal() {
+  document.getElementById('add-person-modal').classList.remove('open');
+  addRelType = addRelCard = addRelKey = null;
+}
+
+document.getElementById('ap-cancel').addEventListener('click', closeAddModal);
+document.getElementById('add-person-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('add-person-modal')) closeAddModal();
+});
+
+// ── Build a unique key for the new person ──
+function buildNewKey(name, born) {
+  const base = name.trim();
+  if (born) {
+    const m = born.match(/\b(1[0-9]{3}|20[0-9]{2})\b/);
+    if (m) return `${base} (b.${m[1]})`;
+  }
+  // Avoid collisions with existing keys
+  let candidate = base;
+  let i = 2;
+  while (PEOPLE[candidate]) { candidate = `${base} (${i++})`; }
+  return candidate;
+}
+
+// ── Render a brand-new card in the DOM ──
+function renderNewCard(key, data, relType, relKey) {
+  // Build card HTML
+  const card = document.createElement('div');
+  card.className = 'person new-person';
+  card.dataset.pkey = key;
+  card.style.position = 'relative';
+
+  const dateStr = [data.born ? 'b. ' + data.born : null, data.died ? 'd. ' + data.died : null]
+    .filter(Boolean).join('  ·  ');
+
+  card.innerHTML = `
+    <div class="avatar-wrap">
+      <span class="upload-hint">add photo</span>
+      <input type="file" class="photo-input" accept="image/*">
+    </div>
+    <div class="person-name">${data.name}</div>
+    ${dateStr ? `<div class="person-dates">${dateStr}</div>` : ''}
+  `;
+
+  // Wire up avatar upload for new card
+  const wrap = card.querySelector('.avatar-wrap');
+  const displayName = data.name;
+  wrap.dataset.personName = displayName;
+  const tmp = document.createElement('div'); tmp.innerHTML = getSilhouette(displayName);
+  const svg = tmp.firstElementChild; svg.classList.add('silhouette');
+  wrap.insertBefore(svg, wrap.querySelector('.upload-hint'));
+  wrap.addEventListener('click', e => { e.stopPropagation(); wrap.querySelector('.photo-input').click(); });
+  wrap.querySelector('.photo-input').addEventListener('change', function() {
+    if (!this.files[0]) return;
+    const photoKey = card.dataset.pkey || displayName;
+    const reader = new FileReader();
+    reader.onload = async e => {
+      photoCache[photoKey] = e.target.result;
+      applyPhotoToKey(photoKey);
+      await apiSavePhoto(photoKey, e.target.result);
+    };
+    reader.readAsDataURL(this.files[0]);
+  });
+
+  // Wire up card click
+  card.style.cursor = 'pointer';
+  card.addEventListener('click', function(e) {
+    if (e.target.closest('.avatar-wrap')) return;
+    openPanel(data.name, card, key);
+  });
+
+  // Inject add buttons on the new card too
+  injectAddButtons(card);
+
+  // ── Place the card in the tree ──
+  const relCard = document.querySelector(`.person[data-pkey="${CSS.escape(relKey)}"]`);
+  if (relType === 'child' && relCard) {
+    // Try to find a sibling children container first
+    let childCol = relCard.closest('.family-row, .generation')
+      ?.querySelector('.child-col, .children-col');
+
+    // Fall back: create a simple floated container after the parent's column
+    if (!childCol) {
+      // Find the column/wrapper the parent card lives in
+      const parentCol = relCard.closest('.person-col, .col, .direct-col') || relCard.parentElement;
+      childCol = document.createElement('div');
+      childCol.className = 'child-col';
+      parentCol.after(childCol);
+    }
+    childCol.appendChild(card);
+  } else if (relType === 'spouse' && relCard) {
+    // Place immediately after the spouse's card element
+    relCard.after(card);
+  } else {
+    // Fallback: append to last generation row
+    const rows = document.querySelectorAll('.generation');
+    (rows[rows.length - 1] || document.querySelector('.tree')).appendChild(card);
+  }
+
+  return card;
+}
+
+// ── Save and render ──
+document.getElementById('ap-save').addEventListener('click', async () => {
+  const nameVal = document.getElementById('ap-name').value.trim();
+  if (!nameVal) {
+    const err = document.getElementById('ap-err');
+    err.textContent = 'Please enter a name.';
+    err.style.display = 'block';
+    return;
+  }
+
+  const born   = document.getElementById('ap-born').value.trim() || null;
+  const died   = document.getElementById('ap-died').value.trim() || null;
+  const pob    = document.getElementById('ap-pob').value.trim() || null;
+  const occ    = document.getElementById('ap-occ').value.trim() || null;
+  const notes  = document.getElementById('ap-notes').value.trim() || null;
+
+  const key = buildNewKey(nameVal, born);
+  const relData = PEOPLE[addRelKey] || {};
+
+  // Build relationship links
+  const newParents  = addRelType === 'child'  ? [addRelKey] : [];
+  const newSpouse   = addRelType === 'spouse' ? addRelKey : null;
+
+  const data = {
+    name: nameVal,
+    born, died, pob,
+    occupation: occ,
+    notes: notes || '',
+    spouse: newSpouse,
+    parents: newParents,
+    children: [],
+    generation: null,
+    isDirect: false,
+    _added: true,
+  };
+
+  // Register in PEOPLE
+  PEOPLE[key] = data;
+
+  // Update the related person's data
+  if (addRelType === 'child') {
+    if (!PEOPLE[addRelKey]) PEOPLE[addRelKey] = {};
+    const existingChildren = PEOPLE[addRelKey].children || relData.children || [];
+    const updatedChildren = [...existingChildren, key];
+    PEOPLE[addRelKey].children = updatedChildren;
+    await apiSaveEdit(addRelKey, { children: updatedChildren });
+  } else if (addRelType === 'spouse') {
+    if (!PEOPLE[addRelKey]) PEOPLE[addRelKey] = {};
+    PEOPLE[addRelKey].spouse = nameVal;
+    await apiSaveEdit(addRelKey, { spouse: nameVal });
+  }
+
+  // Save new person to server
+  try {
+    await fetch('/api/add-person', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key, data })
+    });
+  } catch (e) {
+    console.warn('Add-person save failed', e);
+  }
+
+  // Render card
+  renderNewCard(key, data, addRelType, addRelKey);
+  updateCardMeta();
+  markEditedCards();
+
+  closeAddModal();
+});
 </script>
 </body>
 </html>
