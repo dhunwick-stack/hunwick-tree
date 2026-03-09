@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -9,1432 +8,1435 @@
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-:root {
-–ink: #1a1208;
-–parchment: #f5efe2;
-–sepia: #8b6f47;
-–sepia-light: #c4a47a;
-–sepia-dark: #5c4730;
-–accent: #7a3b1e;
-–line: #b89a6e;
-–card-bg: #fdf8f0;
-–card-border: #d4b896;
-–shadow: rgba(90,60,20,0.15);
-}
-
-body {
-background: var(–parchment);
-background-image:
-radial-gradient(ellipse at 20% 20%, rgba(180,140,80,0.08) 0%, transparent 60%),
-radial-gradient(ellipse at 80% 80%, rgba(120,80,40,0.06) 0%, transparent 60%),
-url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘400’ height=‘400’%3E%3Cfilter id=‘n’%3E%3CfeTurbulence type=‘fractalNoise’ baseFrequency=‘0.65’ numOctaves=‘3’ stitchTiles=‘stitch’/%3E%3C/filter%3E%3Crect width=‘400’ height=‘400’ filter=‘url(%23n)’ opacity=‘0.03’/%3E%3C/svg%3E”);
-font-family: ‘Crimson Pro’, Georgia, serif;
-color: var(–ink);
-min-height: 100vh;
-padding: 60px 40px;
-}
-
-header {
-text-align: center;
-margin-bottom: 70px;
-position: relative;
-}
-
-header::after {
-content: ‘’;
-display: block;
-width: 200px;
-height: 1px;
-background: linear-gradient(to right, transparent, var(–sepia-light), transparent);
-margin: 20px auto 0;
-}
-
-.family-name {
-font-family: ‘Playfair Display’, serif;
-font-size: clamp(2.2rem, 5vw, 3.8rem);
-font-weight: 600;
-letter-spacing: 0.12em;
-color: var(–sepia-dark);
-text-transform: uppercase;
-}
-
-.subtitle {
-font-family: ‘Crimson Pro’, serif;
-font-style: italic;
-font-size: 1.15rem;
-color: var(–sepia);
-margin-top: 8px;
-letter-spacing: 0.04em;
-}
-
-/* ── GENERATION BLOCK ── */
-.generation {
-margin-bottom: 0;
-position: relative;
-}
-
-.gen-label {
-font-family: ‘Playfair Display’, serif;
-font-size: 0.72rem;
-letter-spacing: 0.18em;
-text-transform: uppercase;
-color: var(–sepia-light);
-position: absolute;
-left: 0;
-top: 50%;
-transform: translateY(-50%) rotate(-90deg);
-transform-origin: center center;
-white-space: nowrap;
-width: 40px;
-text-align: center;
-}
-
-.gen-row {
-display: flex;
-justify-content: flex-start;
-align-items: flex-start;
-gap: 16px;
-flex-wrap: wrap;
-padding: 0 60px;
-position: relative;
-}
-
-/* connector lines */
-.connector {
-display: flex;
-flex-direction: column;
-align-items: center;
-margin: 0 auto 0;
-width: 100%;
-}
-
-.connector-down {
-width: 1px;
-height: 36px;
-background: var(–line);
-margin: 0 auto;
-}
-
-.connector-branch {
-display: flex;
-justify-content: center;
-align-items: flex-start;
-width: 100%;
-position: relative;
-margin: 0 auto;
-}
-
-.h-line {
-height: 1px;
-background: var(–line);
-flex: 1;
-margin-top: 0;
-align-self: flex-start;
-margin-top: 0px;
-}
-
-/* ── PERSON CARD ── */
-.person {
-background: var(–card-bg);
-border: 1px solid var(–card-border);
-border-radius: 14px;
-padding: 14px 14px 14px;
-min-width: 148px;
-max-width: 180px;
-text-align: center;
-position: relative;
-box-shadow: 0 2px 8px var(–shadow), inset 0 1px 0 rgba(255,255,255,0.7);
-transition: transform 0.2s, box-shadow 0.2s;
-cursor: default;
-flex-shrink: 0;
-}
-
-/* ── AVATAR ── */
-.avatar-wrap {
-width: 72px;
-height: 72px;
-border-radius: 10px;
-margin: 0 auto 9px;
-border: 2px solid var(–card-border);
-overflow: hidden;
-background: var(–parchment);
-position: relative;
-cursor: pointer;
-transition: border-color 0.2s;
-}
-.avatar-wrap:hover { border-color: var(–sepia); }
-.avatar-wrap:hover .upload-hint { opacity: 1; }
-
-.avatar-wrap img.photo {
-width: 100%; height: 100%;
-object-fit: cover;
-display: block;
-position: absolute; inset: 0;
-}
-.avatar-wrap svg.silhouette {
-width: 100%; height: 100%;
-display: block;
-}
-.upload-hint {
-position: absolute; inset: 0;
-background: rgba(92,71,48,0.6);
-color: #fdf8f0;
-font-size: 0.58rem;
-letter-spacing: 0.04em;
-display: flex; align-items: center; justify-content: center;
-opacity: 0;
-transition: opacity 0.2s;
-border-radius: 10px;
-font-family: ‘Crimson Pro’, serif;
-text-transform: uppercase;
-}
-input.photo-input { display: none; }
-
-.person:hover {
-transform: translateY(-2px);
-box-shadow: 0 6px 18px var(–shadow);
-border-color: var(–sepia);
-}
-
-.person.ancestor {
-border-color: var(–sepia);
-background: linear-gradient(135deg, #fdf8f0 0%, #f7edda 100%);
-}
-
-.person.direct {
-border-left: 3px solid var(–accent);
-}
-
-.person-name {
-font-family: ‘Playfair Display’, serif;
-font-size: 0.95rem;
-font-weight: 600;
-color: var(–sepia-dark);
-line-height: 1.3;
-}
-
-.person-dates {
-font-size: 0.78rem;
-color: var(–sepia);
-margin-top: 4px;
-font-style: italic;
-line-height: 1.4;
-}
-
-.person-note {
-font-size: 0.72rem;
-color: var(–sepia-light);
-margin-top: 3px;
-line-height: 1.3;
-}
-
-.person-meta {
-font-size: 0.7rem;
-color: var(–sepia);
-margin-top: 5px;
-line-height: 1.4;
-border-top: 1px solid var(–card-border);
-padding-top: 5px;
-}
-.person-meta .meta-age { font-weight: 600; }
-.person-meta .meta-loc { font-style: italic; color: var(–sepia-light); }
-.person-meta .meta-occ { color: var(–sepia); }
-
-/* ── HOVER CARD ── */
-.hover-card {
-position: fixed;
-z-index: 999;
-background: #fdf8f0;
-border: 1px solid var(–card-border);
-border-radius: 16px;
-box-shadow: 0 16px 48px rgba(92,71,48,0.28), 0 4px 12px rgba(92,71,48,0.14);
-min-width: 340px;
-max-width: 400px;
-pointer-events: none;
-opacity: 0;
-transform: translateY(8px) scale(0.98);
-transition: opacity 0.2s ease, transform 0.2s ease;
-font-family: ‘Crimson Pro’, serif;
-overflow: hidden;
-}
-.hover-card.visible {
-opacity: 1;
-transform: translateY(0) scale(1);
-}
-/* Two-column layout: photo left, details right */
-.hc-inner {
-display: flex;
-align-items: stretch;
-min-height: 160px;
-}
-.hc-photo-col {
-width: 130px;
-flex-shrink: 0;
-background: var(–parchment);
-display: flex;
-align-items: center;
-justify-content: center;
-overflow: hidden;
-position: relative;
-}
-.hc-photo-col img {
-width: 100%;
-height: 100%;
-object-fit: cover;
-display: block;
-}
-.hc-photo-col svg.silhouette {
-width: 72px;
-height: 72px;
-opacity: 0.35;
-}
-.hc-photo-col .hc-presumed-badge {
-position: absolute;
-bottom: 6px;
-left: 0; right: 0;
-text-align: center;
-font-size: 0.6rem;
-color: var(–sepia-light);
-font-style: italic;
-background: rgba(245,239,226,0.85);
-padding: 2px 4px;
-}
-.hc-details-col {
-flex: 1;
-padding: 14px 16px 12px;
-display: flex;
-flex-direction: column;
-gap: 0;
-overflow: hidden;
-}
-.hover-card-name {
-font-family: ‘Playfair Display’, serif;
-font-size: 1.1rem;
-font-weight: 700;
-color: var(–sepia-dark);
-margin-bottom: 2px;
-line-height: 1.25;
-}
-.hover-card-dates {
-font-size: 0.78rem;
-color: var(–sepia);
-font-style: italic;
-margin-bottom: 8px;
-padding-bottom: 8px;
-border-bottom: 1px solid var(–card-border);
-}
-.hover-card-row {
-display: flex;
-gap: 6px;
-font-size: 0.78rem;
-color: var(–ink);
-margin-bottom: 3px;
-line-height: 1.35;
-}
-.hover-card-row .hc-label {
-color: var(–sepia-light);
-font-size: 0.65rem;
-text-transform: uppercase;
-letter-spacing: 0.08em;
-font-family: ‘Playfair Display’, serif;
-min-width: 52px;
-padding-top: 2px;
-flex-shrink: 0;
-}
-.hover-card-divider {
-border: none;
-border-top: 1px solid var(–card-border);
-margin: 6px 0;
-}
-/* Hint bar at bottom */
-.hc-hint-bar {
-background: var(–parchment);
-border-top: 1px solid var(–card-border);
-padding: 5px 14px;
-font-size: 0.67rem;
-color: var(–sepia-light);
-font-style: italic;
-text-align: right;
-letter-spacing: 0.02em;
-}
-
-/* marriage equals sign */
-.marriage {
-display: flex;
-align-items: center;
-gap: 8px;
-justify-content: center;
-flex-wrap: wrap;
-}
-
-.equals {
-font-family: ‘Playfair Display’, serif;
-color: var(–sepia-light);
-font-size: 1.3rem;
-line-height: 1;
-margin: 0 2px;
-align-self: center;
-padding-top: 4px;
-}
-
-/* ── SECTION WRAPPER ── */
-.tree-section {
-max-width: 1100px;
-margin: 0 auto;
-}
-
-.section-divider {
-text-align: center;
-margin: 10px 0 10px;
-position: relative;
-}
-
-.section-divider::before {
-content: ‘’;
-position: absolute;
-left: 10%;
-right: 10%;
-top: 50%;
-height: 1px;
-background: linear-gradient(to right, transparent, var(–line), transparent);
-}
-
-.section-divider span {
-background: var(–parchment);
-padding: 0 16px;
-font-size: 0.72rem;
-letter-spacing: 0.14em;
-text-transform: uppercase;
-color: var(–sepia-light);
-position: relative;
-}
-
-/* vertical connector between sections */
-.v-connector {
-display: flex;
-flex-direction: column;
-align-items: center;
-gap: 0;
-}
-
-.v-line { width: 1px; background: var(–line); }
-
-.marriage-note {
-font-family: ‘Crimson Pro’, serif;
-font-style: italic;
-font-size: 0.82rem;
-color: var(–sepia);
-text-align: center;
-margin: 4px 0;
-}
-
-/* tree section left-aligned so bracket chains read left-to-right */
-.tree-section { display: flex; flex-direction: column; align-items: flex-start; padding-left: 80px; }
-
-/* ── REVIEW MODE ── */
-#review-toggle {
-position: fixed;
-bottom: 24px;
-left: 168px;
-z-index: 800;
-background: var(–accent);
-color: #fdf8f0;
-border: none;
-border-radius: 24px;
-padding: 10px 18px;
-font-family: ‘Crimson Pro’, serif;
-font-size: 0.9rem;
-font-weight: 600;
-cursor: pointer;
-display: flex;
-align-items: center;
-gap: 6px;
-box-shadow: 0 4px 16px rgba(122,59,30,0.35);
-transition: background 0.2s, transform 0.15s;
-}
-#review-toggle:hover { background: #5c2e15; transform: translateY(-1px); }
-
-#review-panel {
-position: fixed;
-top: 50%;
-left: 50%;
-transform: translate(-50%, -50%);
-z-index: 1200;
-width: 480px;
-max-width: 92vw;
-background: var(–card-bg);
-border: 1px solid var(–card-border);
-border-radius: 20px;
-box-shadow: 0 20px 60px rgba(92,71,48,0.35);
-font-family: ‘Crimson Pro’, serif;
-overflow: hidden;
-}
-#review-header {
-background: linear-gradient(135deg, var(–sepia-dark), var(–accent));
-padding: 18px 20px 14px;
-color: #fdf8f0;
-}
-#review-title-row {
-display: flex;
-justify-content: space-between;
-align-items: center;
-margin-bottom: 10px;
-}
-#review-title {
-font-family: ‘Playfair Display’, serif;
-font-size: 1.15rem;
-font-weight: 700;
-letter-spacing: 0.01em;
-}
-#review-close {
-background: rgba(255,255,255,0.15);
-border: none;
-color: #fdf8f0;
-width: 28px; height: 28px;
-border-radius: 50%;
-cursor: pointer;
-font-size: 0.85rem;
-display: flex; align-items: center; justify-content: center;
-}
-#review-close:hover { background: rgba(255,255,255,0.3); }
-#review-progress-row {
-display: flex;
-align-items: center;
-gap: 10px;
-margin-bottom: 10px;
-}
-#review-progress-bar {
-flex: 1;
-height: 5px;
-background: rgba(255,255,255,0.25);
-border-radius: 3px;
-overflow: hidden;
-}
-#review-progress-fill {
-height: 100%;
-background: #f5d98e;
-border-radius: 3px;
-transition: width 0.4s ease;
-}
-#review-progress-label {
-font-size: 0.72rem;
-opacity: 0.85;
-white-space: nowrap;
-}
-#review-nav-row {
-display: flex;
-align-items: center;
-justify-content: space-between;
-}
-#review-nav-row button {
-background: rgba(255,255,255,0.15);
-border: 1px solid rgba(255,255,255,0.3);
-color: #fdf8f0;
-padding: 5px 14px;
-border-radius: 20px;
-font-family: ‘Crimson Pro’, serif;
-font-size: 0.82rem;
-cursor: pointer;
-transition: background 0.15s;
-}
-#review-nav-row button:hover { background: rgba(255,255,255,0.28); }
-#review-nav-row button:disabled { opacity: 0.35; cursor: default; }
-#review-person-count {
-font-size: 0.78rem;
-opacity: 0.8;
-}
-#review-body { padding: 20px 22px 18px; }
-#review-person-name {
-font-family: ‘Playfair Display’, serif;
-font-size: 1.5rem;
-font-weight: 700;
-color: var(–sepia-dark);
-margin-bottom: 2px;
-}
-#review-person-born {
-font-size: 0.8rem;
-color: var(–sepia-light);
-font-style: italic;
-margin-bottom: 14px;
-}
-#review-fields {
-display: grid;
-grid-template-columns: 1fr 1fr;
-gap: 10px;
-margin-bottom: 14px;
-}
-.rv-field {
-display: flex;
-flex-direction: column;
-gap: 3px;
-}
-.rv-field.full-width { grid-column: 1 / -1; }
-.rv-label {
-font-size: 0.68rem;
-text-transform: uppercase;
-letter-spacing: 0.07em;
-color: var(–sepia-light);
-font-family: ‘Crimson Pro’, serif;
-}
-.rv-input {
-background: var(–parchment);
-border: 1px solid var(–card-border);
-border-radius: 8px;
-padding: 7px 10px;
-font-family: ‘Crimson Pro’, serif;
-font-size: 0.9rem;
-color: var(–ink);
-outline: none;
-transition: border-color 0.15s;
-}
-.rv-input:focus { border-color: var(–sepia); }
-.rv-missing { border-color: #d4875a !important; background: #fff9f5 !important; }
-.rv-missing-badge {
-font-size: 0.62rem;
-color: #b85c30;
-font-style: italic;
-}
-.rv-section-label {
-grid-column: 1 / -1;
-font-size: 0.7rem;
-text-transform: uppercase;
-letter-spacing: 0.08em;
-color: var(–sepia);
-border-bottom: 1px solid var(–card-border);
-padding-bottom: 4px;
-margin-top: 4px;
-}
-#review-children-list {
-grid-column: 1 / -1;
-display: flex;
-flex-wrap: wrap;
-gap: 6px;
-margin-bottom: 4px;
-}
-.rv-child-chip {
-background: var(–parchment);
-border: 1px solid var(–card-border);
-border-radius: 20px;
-padding: 3px 10px;
-font-size: 0.78rem;
-color: var(–sepia-dark);
-}
-.rv-add-child-btn {
-background: none;
-border: 1px dashed var(–sepia-light);
-border-radius: 20px;
-padding: 3px 10px;
-font-size: 0.78rem;
-color: var(–sepia);
-cursor: pointer;
-font-family: ‘Crimson Pro’, serif;
-transition: border-color 0.15s, color 0.15s;
-}
-.rv-add-child-btn:hover { border-color: var(–accent); color: var(–accent); }
-#review-save-row {
-display: flex;
-align-items: center;
-justify-content: flex-end;
-gap: 8px;
-border-top: 1px solid var(–card-border);
-padding-top: 14px;
-}
-#review-saved-msg {
-font-size: 0.8rem;
-color: #4a8a5a;
-font-style: italic;
-margin-right: auto;
-opacity: 0;
-transition: opacity 0.3s;
-}
-#review-saved-msg.show { opacity: 1; }
-#review-skip {
-background: none;
-border: 1px solid var(–card-border);
-border-radius: 20px;
-padding: 7px 16px;
-font-family: ‘Crimson Pro’, serif;
-font-size: 0.85rem;
-color: var(–sepia);
-cursor: pointer;
-transition: border-color 0.15s;
-}
-#review-skip:hover { border-color: var(–sepia); }
-#review-save {
-background: var(–accent);
-border: none;
-border-radius: 20px;
-padding: 7px 20px;
-font-family: ‘Crimson Pro’, serif;
-font-size: 0.85rem;
-font-weight: 600;
-color: #fdf8f0;
-cursor: pointer;
-transition: background 0.15s;
-}
-#review-save:hover { background: var(–sepia-dark); }
-
-/* footnote */
-footer {
-text-align: center;
-margin-top: 80px;
-padding-top: 30px;
-border-top: 1px solid var(–card-border);
-font-size: 0.8rem;
-color: var(–sepia-light);
-font-style: italic;
-}
-
-/* ── TOOLTIP ── */
-.person[data-tip]:hover::after {
-content: attr(data-tip);
-position: absolute;
-bottom: calc(100% + 8px);
-left: 50%;
-transform: translateX(-50%);
-background: var(–sepia-dark);
-color: #fdf8f0;
-font-size: 0.75rem;
-padding: 5px 10px;
-border-radius: 3px;
-white-space: nowrap;
-pointer-events: none;
-z-index: 10;
-font-family: ‘Crimson Pro’, serif;
-font-style: italic;
-}
-
-@media (max-width: 700px) {
-body { padding: 40px 16px; }
-.gen-row { gap: 10px; padding: 0 10px; }
-.person { min-width: 90px; padding: 10px 10px; }
-.person-name { font-size: 0.85rem; }
-}
-
-/* ─── layout helpers ─── */
-.center { display:flex; justify-content:center; }
-.col { display:flex; flex-direction:column; align-items:flex-start; }
-.row { display:flex; flex-direction:row; align-items:flex-start; justify-content:center; gap:12px; flex-wrap:wrap; }
-
-.branch-container {
-display: flex;
-flex-direction: column;
-align-items: center;
-}
-
-/* ── children-row: horizontal bracket layout ── */
-.children-row {
-display: flex;
-flex-direction: row;
-align-items: center;
-justify-content: flex-start;
-flex-wrap: wrap;
-gap: 12px;
-position: relative;
-/* Left bracket line */
-border-left: 1px solid var(–line);
-padding: 12px 0 12px 28px;
-margin-left: 0;
-}
-
-/* Horizontal tick from left bracket to each card */
-.child-col {
-display: flex;
-flex-direction: column;
-align-items: center;
-position: relative;
-}
-
-.child-col::before {
-content: ‘’;
-position: absolute;
-top: 50%;
-left: -30px;
-width: 28px;
-height: 1px;
-background: var(–line);
-}
-
-/* spine-hbar no longer needed */
-.spine-hbar { display: none; }
-
-.top-bar {
-display: flex;
-justify-content: center;
-}
-
-/* ── PERSON CARD CLICKABLE ── */
-.person { cursor: pointer; }
-.person.selected {
-outline: 2px solid var(–accent);
-outline-offset: 2px;
-transform: translateY(-3px);
-box-shadow: 0 8px 24px var(–shadow);
-}
-
-/* ── OVERLAY ── */
-#overlay {
-position: fixed; inset: 0;
-background: rgba(26,18,8,0.45);
-backdrop-filter: blur(3px);
-z-index: 100;
-opacity: 0;
-pointer-events: none;
-transition: opacity 0.25s;
-}
-#overlay.open { opacity: 1; pointer-events: all; }
-
-/* ── DETAIL PANEL ── */
-#detail-panel {
-position: fixed;
-top: 50%; left: 50%;
-transform: translate(-50%, -48%) scale(0.96);
-z-index: 101;
-width: min(560px, 94vw);
-max-height: 88vh;
-overflow-y: auto;
-background: var(–card-bg);
-border: 1px solid var(–card-border);
-border-radius: 8px;
-box-shadow: 0 20px 60px rgba(26,18,8,0.35), 0 4px 16px rgba(26,18,8,0.15);
-opacity: 0;
-pointer-events: none;
-transition: opacity 0.28s cubic-bezier(.4,0,.2,1), transform 0.28s cubic-bezier(.4,0,.2,1);
-font-family: ‘Crimson Pro’, serif;
-}
-#detail-panel.open {
-opacity: 1;
-pointer-events: all;
-transform: translate(-50%, -50%) scale(1);
-}
-
-/* panel header band */
-.dp-header {
-background: linear-gradient(135deg, var(–sepia-dark) 0%, #3d2a18 100%);
-padding: 24px 24px 20px;
-display: flex;
-gap: 18px;
-align-items: flex-start;
-position: relative;
-border-radius: 7px 7px 0 0;
-}
-
-.dp-close {
-position: absolute; top: 14px; right: 16px;
-background: none; border: none; cursor: pointer;
-color: rgba(253,248,240,0.6);
-font-size: 1.4rem; line-height: 1;
-transition: color 0.15s;
-padding: 4px;
-}
-.dp-close:hover { color: #fdf8f0; }
-
-/* large avatar in panel */
-.dp-avatar {
-width: 80px; height: 80px;
-border-radius: 50%;
-border: 3px solid rgba(253,248,240,0.25);
-overflow: hidden;
-flex-shrink: 0;
-cursor: pointer;
-position: relative;
-transition: border-color 0.2s;
-}
-.dp-avatar:hover { border-color: rgba(253,248,240,0.7); }
-.dp-avatar:hover .dp-avatar-hint { opacity: 1; }
-.dp-avatar svg, .dp-avatar img {
-width: 100%; height: 100%; object-fit: cover; display: block;
-}
-.dp-avatar-hint {
-position: absolute; inset: 0;
-background: rgba(26,18,8,0.55);
-color: #fdf8f0;
-font-size: 0.62rem;
-text-transform: uppercase;
-letter-spacing: 0.05em;
-display: flex; align-items: center; justify-content: center;
-opacity: 0;
-transition: opacity 0.2s;
-border-radius: 50%;
-}
-
-.dp-header-text { flex: 1; min-width: 0; }
-.dp-name {
-font-family: ‘Playfair Display’, serif;
-font-size: 1.45rem;
-font-weight: 600;
-color: #fdf8f0;
-line-height: 1.2;
-}
-.dp-dates {
-font-size: 0.9rem;
-color: rgba(253,248,240,0.7);
-font-style: italic;
-margin-top: 4px;
-}
-.dp-badge {
-display: inline-block;
-margin-top: 8px;
-padding: 2px 10px;
-border-radius: 20px;
-font-size: 0.68rem;
-letter-spacing: 0.1em;
-text-transform: uppercase;
-border: 1px solid rgba(253,248,240,0.3);
-color: rgba(253,248,240,0.75);
-}
-
-/* panel body */
-.dp-body { padding: 20px 24px 24px; }
-
-.dp-section { margin-bottom: 18px; }
-.dp-section:last-child { margin-bottom: 0; }
-
-.dp-label {
-font-size: 0.68rem;
-letter-spacing: 0.14em;
-text-transform: uppercase;
-color: var(–sepia-light);
-margin-bottom: 6px;
-font-family: ‘Playfair Display’, serif;
-}
-
-.dp-row {
-display: flex; gap: 12px; flex-wrap: wrap;
-}
-.dp-field {
-flex: 1; min-width: 120px;
-}
-.dp-field-label {
-font-size: 0.72rem;
-color: var(–sepia-light);
-margin-bottom: 2px;
-}
-.dp-field-val {
-font-size: 0.95rem;
-color: var(–ink);
-}
-
-/* relatives chips */
-.dp-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.dp-chip {
-border-radius: 20px;
-padding: 3px 10px 3px 8px;
-font-size: 0.78rem;
-cursor: pointer;
-transition: filter 0.15s;
-display: inline-flex;
-align-items: center;
-gap: 5px;
-border: none;
-font-family: ‘Crimson Pro’, serif;
-}
-.dp-chip:hover { filter: brightness(0.92); }
-.dp-chip .chip-role {
-font-size: 0.65rem;
-text-transform: uppercase;
-letter-spacing: 0.06em;
-opacity: 0.75;
-font-weight: 600;
-}
-/* colour palette per relation */
-.dp-chip-father   { background: #fde8e8; color: #8a1a1a; }
-.dp-chip-mother   { background: #fce8f3; color: #7a1a55; }
-.dp-chip-son      { background: #d9f0e8; color: #1a5c3a; }
-.dp-chip-daughter { background: #fef3d9; color: #7a4e00; }
-.dp-chip-brother  { background: #e3eafd; color: #2a3a8a; }
-.dp-chip-sister   { background: #fce8f7; color: #6a1a6a; }
-.dp-chip-spouse   { background: #fdeaea; color: #8a1a1a; }
-.dp-chip-parent   { background: #e8e8e8; color: #444; }
-.dp-chip-child    { background: #eaf2ea; color: #2a4a2a; }
-
-/* notes textarea */
-.dp-notes {
-width: 100%;
-background: var(–parchment);
-border: 1px solid var(–card-border);
-border-radius: 4px;
-padding: 10px 12px;
-font-family: ‘Crimson Pro’, serif;
-font-size: 0.9rem;
-color: var(–ink);
-resize: vertical;
-min-height: 72px;
-transition: border-color 0.2s;
-line-height: 1.5;
-}
-.dp-notes:focus { outline: none; border-color: var(–sepia); }
-.dp-notes::placeholder { color: var(–sepia-light); font-style: italic; }
-
-.dp-save-btn {
-margin-top: 8px;
-background: var(–sepia-dark);
-color: #fdf8f0;
-border: none;
-border-radius: 4px;
-padding: 7px 18px;
-font-family: ‘Crimson Pro’, serif;
-font-size: 0.85rem;
-cursor: pointer;
-letter-spacing: 0.06em;
-transition: background 0.15s;
-}
-.dp-save-btn:hover { background: var(–accent); }
-.dp-saved-msg {
-display: inline-block;
-margin-left: 10px;
-font-size: 0.8rem;
-color: var(–sepia);
-font-style: italic;
-opacity: 0;
-transition: opacity 0.4s;
-}
-.dp-saved-msg.show { opacity: 1; }
-
-/* divider inside panel */
-.dp-divider {
-height: 1px;
-background: linear-gradient(to right, transparent, var(–card-border), transparent);
-margin: 18px 0;
-}
-
-/* ── EDIT MODE ── */
-.dp-edit-btn {
-position: absolute; top: 14px; right: 46px;
-background: rgba(255,255,255,0.12);
-border: 1px solid rgba(255,255,255,0.2);
-border-radius: 4px;
-color: rgba(253,248,240,0.75);
-font-family: ‘Crimson Pro’, serif;
-font-size: 0.75rem;
-letter-spacing: 0.08em;
-text-transform: uppercase;
-padding: 4px 12px;
-cursor: pointer;
-transition: background 0.15s, color 0.15s;
-}
-.dp-edit-btn:hover { background: rgba(255,255,255,0.22); color: #fdf8f0; }
-.dp-edit-btn.active { background: var(–accent); border-color: var(–accent); color: #fdf8f0; }
-
-/* editable field */
-.dp-edit-input {
-width: 100%;
-background: var(–parchment);
-border: 1px solid var(–card-border);
-border-radius: 3px;
-padding: 5px 8px;
-font-family: ‘Crimson Pro’, serif;
-font-size: 0.92rem;
-color: var(–ink);
-margin-top: 2px;
-transition: border-color 0.15s;
-}
-.dp-edit-input:focus { outline: none; border-color: var(–sepia); }
-
-.dp-edit-row { margin-bottom: 12px; }
-.dp-edit-row label {
-display: block;
-font-size: 0.68rem;
-letter-spacing: 0.12em;
-text-transform: uppercase;
-color: var(–sepia-light);
-font-family: ‘Playfair Display’, serif;
-margin-bottom: 3px;
-}
-
-#dp-edit-form { display: none; padding: 20px 24px 24px; }
-#dp-edit-form.visible { display: block; }
-#dp-view-body.hidden { display: none; }
-
-.dp-edit-actions {
-display: flex; gap: 10px; align-items: center;
-margin-top: 20px; padding-top: 16px;
-border-top: 1px solid var(–card-border);
-}
-.dp-btn-save {
-background: var(–sepia-dark); color: #fdf8f0;
-border: none; border-radius: 4px;
-padding: 8px 22px;
-font-family: ‘Crimson Pro’, serif; font-size: 0.88rem;
-cursor: pointer; letter-spacing: 0.06em;
-transition: background 0.15s;
-}
-.dp-btn-save:hover { background: var(–accent); }
-.dp-btn-cancel {
-background: none; color: var(–sepia);
-border: 1px solid var(–card-border); border-radius: 4px;
-padding: 8px 18px;
-font-family: ‘Crimson Pro’, serif; font-size: 0.88rem;
-cursor: pointer;
-transition: border-color 0.15s, color 0.15s;
-}
-.dp-btn-cancel:hover { border-color: var(–sepia); color: var(–sepia-dark); }
-.dp-edit-saved {
-font-size: 0.8rem; color: var(–sepia);
-font-style: italic; opacity: 0; transition: opacity 0.4s;
-}
-.dp-edit-saved.show { opacity: 1; }
-
-/* export button in footer */
-.dp-export-btn {
-display: block; width: 100%;
-margin-top: 14px;
-background: none;
-border: 1px solid var(–card-border);
-border-radius: 4px;
-padding: 7px;
-font-family: ‘Crimson Pro’, serif;
-font-size: 0.8rem;
-color: var(–sepia-light);
-letter-spacing: 0.06em;
-cursor: pointer;
-transition: border-color 0.15s, color 0.15s;
-text-align: center;
-}
-.dp-export-btn:hover { border-color: var(–sepia); color: var(–sepia-dark); }
-
-/* unsaved indicator dot on card */
-.person.edited::after {
-content: ‘’;
-position: absolute; top: 6px; right: 6px;
-width: 6px; height: 6px;
-background: var(–accent);
-border-radius: 50%;
-}
-
-/* ── STATS PANEL ── */
-#stats-toggle {
-position: fixed;
-bottom: 28px;
-left: 24px;
-z-index: 800;
-background: var(–sepia-dark);
-color: #fdf8f0;
-border: none;
-border-radius: 50px;
-padding: 10px 18px;
-font-family: ‘Crimson Pro’, serif;
-font-size: 0.88rem;
-letter-spacing: 0.06em;
-cursor: pointer;
-box-shadow: 0 4px 16px rgba(92,71,48,0.28);
-transition: background 0.15s, transform 0.15s;
-display: flex;
-align-items: center;
-gap: 7px;
-}
-#stats-toggle:hover { background: var(–accent); transform: translateY(-2px); }
-
-#stats-panel {
-position: fixed;
-bottom: 80px;
-left: 24px;
-z-index: 799;
-width: 290px;
-max-height: 70vh;
-overflow-y: auto;
-background: #fdf8f0;
-border: 1px solid var(–card-border);
-border-radius: 16px;
-box-shadow: 0 12px 40px rgba(92,71,48,0.22);
-font-family: ‘Crimson Pro’, serif;
-transform: translateY(20px);
-opacity: 0;
-pointer-events: none;
-transition: opacity 0.22s ease, transform 0.22s ease;
-}
-#stats-panel.open {
-opacity: 1;
-transform: translateY(0);
-pointer-events: all;
-}
-.stats-header {
-padding: 16px 18px 12px;
-border-bottom: 1px solid var(–card-border);
-display: flex;
-align-items: center;
-gap: 10px;
-}
-.stats-header-title {
-font-family: ‘Playfair Display’, serif;
-font-size: 1rem;
-font-weight: 700;
-color: var(–sepia-dark);
-}
-.stats-header-sub {
-font-size: 0.75rem;
-color: var(–sepia-light);
-font-style: italic;
-}
-.stats-section {
-padding: 12px 18px 8px;
-border-bottom: 1px solid var(–card-border);
-}
-.stats-section:last-child { border-bottom: none; padding-bottom: 16px; }
-.stats-section-title {
-font-size: 0.65rem;
-letter-spacing: 0.14em;
-text-transform: uppercase;
-color: var(–sepia-light);
-font-family: ‘Playfair Display’, serif;
-margin-bottom: 8px;
-}
-.stat-row {
-display: flex;
-align-items: baseline;
-justify-content: space-between;
-margin-bottom: 6px;
-gap: 8px;
-}
-.stat-label {
-font-size: 0.85rem;
-color: var(–ink);
-line-height: 1.3;
-flex: 1;
-}
-.stat-val {
-font-family: ‘Playfair Display’, serif;
-font-size: 1.05rem;
-font-weight: 700;
-color: var(–sepia-dark);
-white-space: nowrap;
-}
-.stat-highlight {
-font-size: 0.78rem;
-color: var(–sepia);
-font-style: italic;
-margin-top: -4px;
-margin-bottom: 8px;
-line-height: 1.3;
-}
-.stat-bar-wrap {
-background: var(–parchment);
-border-radius: 4px;
-height: 6px;
-margin-top: 3px;
-overflow: hidden;
-flex-shrink: 0;
-width: 60px;
-}
-.stat-bar {
-height: 100%;
-background: var(–sepia);
-border-radius: 4px;
-transition: width 0.6s ease;
-}
-
-/* ── Horizontal family branches ── */
-.family-branches {
-display: flex;
-flex-direction: column;
-gap: 20px;
-align-items: flex-start;
-padding-left: 20px;
-border-left: 1px solid var(–line);
-margin-left: 0;
-}
-
-.family-branch {
-display: flex;
-flex-direction: row;
-align-items: flex-start;
-flex-wrap: wrap;   /* allows sub-branches to drop to next row */
-gap: 0;
-}
-
-.branch-parent {
-display: flex;
-flex-direction: row;
-align-items: center;
-gap: 0;
-flex-shrink: 0;
-}
-
-/* Ghost parent card — smaller, dimmed, non-interactive */
-.branch-parent .person {
-min-width: 110px !important;
-max-width: 130px !important;
-padding: 8px 10px 10px !important;
-opacity: 0.55;
-font-size: 0.85em;
-pointer-events: none;
-}
-.branch-parent .person .avatar-wrap { display: none; }
-.branch-parent .person-name { font-size: 0.9rem; }
-.branch-parent .person-dates { font-size: 0.72rem; }
-
-.branch-arrow {
-color: var(–line);
-font-size: 1.1rem;
-padding: 0 8px;
-flex-shrink: 0;
-line-height: 1;
-}
-
-.branch-children {
-display: flex;
-flex-direction: row;
-flex-wrap: wrap;
-gap: 10px;
-align-items: flex-start;
-align-content: flex-start;
-position: relative;
-}
-
-/* Horizontal connector bar across children in a branch */
-.branch-children::before {
-content: ‘’;
-position: absolute;
-top: -10px;
-left: 0;
-right: 0;
-height: 1px;
-background: transparent;
-}
-
-/* Sub-branch: grandchildren row (e.g. Jason→Zion, Maia→Bella)
-flex-basis:100% forces it below all sibling person cards in the parent family-branch */
-.family-branch.sub-branch {
-flex-basis: 100%;
-flex-direction: row;
-align-items: center;
-flex-wrap: wrap;
-margin-top: 10px;
-padding-left: 28px;
-border-left: 2px solid var(–card-border);
-gap: 0;
-}
-.family-branch.sub-branch .branch-parent .person {
-min-width: 90px !important;
-max-width: 110px !important;
-padding: 5px 8px !important;
-font-size: 0.8em;
-opacity: 0.5;
-}
-
-/* Presumed deceased — no confirmed death date but born before threshold */
-.person.presumed-deceased .person-dates::after {
-content: ’ · d. ?’;
-color: var(–sepia-light);
-font-style: italic;
-font-size: 0.85em;
-opacity: 0.7;
-}
-.person.presumed-deceased {
-opacity: 0.82;
-}
-.person.presumed-deceased .avatar-wrap {
-filter: grayscale(35%);
-}
-
-.person { padding-bottom: 28px; } /* extend hover area to cover buttons */
-.card-add-btns {
-display: none;
-position: absolute;
-bottom: 4px;
-left: 50%;
-transform: translateX(-50%);
-gap: 4px;
-z-index: 10;
-white-space: nowrap;
-}
-.person:hover .card-add-btns { display: flex; }
-.card-add-btn {
-font-size: 0.65rem;
-padding: 2px 7px;
-background: var(–accent);
-color: #fff;
-border: none;
-border-radius: 10px;
-cursor: pointer;
-font-family: ‘Crimson Pro’, serif;
-letter-spacing: 0.03em;
-opacity: 0.85;
-transition: opacity 0.15s;
-}
-.card-add-btn:hover { opacity: 1; }
-
-/* ── Add Person modal ── */
-#add-person-modal {
-display: none;
-position: fixed;
-inset: 0;
-z-index: 3000;
-background: rgba(26,18,8,0.55);
-align-items: center;
-justify-content: center;
-}
-#add-person-modal.open { display: flex; }
-#add-person-box {
-background: var(–card-bg);
-border: 1px solid var(–card-border);
-border-radius: 12px;
-padding: 28px 32px;
-width: min(460px, 92vw);
-box-shadow: 0 8px 40px rgba(90,60,20,0.22);
-max-height: 90vh;
-overflow-y: auto;
-}
-#add-person-box h3 {
-font-family: ‘Playfair Display’, serif;
-font-size: 1.15rem;
-color: var(–sepia-dark);
-margin-bottom: 4px;
-}
-#add-person-box .ap-sub {
-font-size: 0.82rem;
-color: var(–sepia-light);
-margin-bottom: 18px;
-font-style: italic;
-}
-.ap-row { margin-bottom: 12px; }
-.ap-row label {
-display: block;
-font-size: 0.78rem;
-color: var(–sepia);
-text-transform: uppercase;
-letter-spacing: 0.08em;
-margin-bottom: 4px;
-}
-.ap-row input, .ap-row select {
-width: 100%;
-padding: 7px 10px;
-border: 1px solid var(–card-border);
-border-radius: 6px;
-background: var(–parchment);
-font-family: ‘Crimson Pro’, serif;
-font-size: 0.95rem;
-color: var(–ink);
-}
-.ap-row input:focus, .ap-row select:focus {
-outline: none;
-border-color: var(–sepia);
-}
-.ap-btns { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
-.ap-btn-save {
-padding: 8px 22px;
-background: var(–accent);
-color: #fff;
-border: none;
-border-radius: 8px;
-font-family: ‘Crimson Pro’, serif;
-font-size: 1rem;
-cursor: pointer;
-}
-.ap-btn-save:hover { background: var(–sepia-dark); }
-.ap-btn-cancel {
-padding: 8px 16px;
-background: transparent;
-color: var(–sepia);
-border: 1px solid var(–card-border);
-border-radius: 8px;
-font-family: ‘Crimson Pro’, serif;
-font-size: 1rem;
-cursor: pointer;
-}
-.ap-err { color: #b00; font-size: 0.85rem; margin-top: 8px; display: none; }
+  :root {
+    --ink: #1a1208;
+    --parchment: #f5efe2;
+    --sepia: #8b6f47;
+    --sepia-light: #c4a47a;
+    --sepia-dark: #5c4730;
+    --accent: #7a3b1e;
+    --line: #b89a6e;
+    --card-bg: #fdf8f0;
+    --card-border: #d4b896;
+    --shadow: rgba(90,60,20,0.15);
+  }
+
+  body {
+    background: var(--parchment);
+    background-image: 
+      radial-gradient(ellipse at 20% 20%, rgba(180,140,80,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 80%, rgba(120,80,40,0.06) 0%, transparent 60%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    font-family: 'Crimson Pro', Georgia, serif;
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 60px 40px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 70px;
+    position: relative;
+  }
+
+  header::after {
+    content: '';
+    display: block;
+    width: 200px;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--sepia-light), transparent);
+    margin: 20px auto 0;
+  }
+
+  .family-name {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.2rem, 5vw, 3.8rem);
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    color: var(--sepia-dark);
+    text-transform: uppercase;
+  }
+
+  .subtitle {
+    font-family: 'Crimson Pro', serif;
+    font-style: italic;
+    font-size: 1.15rem;
+    color: var(--sepia);
+    margin-top: 8px;
+    letter-spacing: 0.04em;
+  }
+
+  /* ── GENERATION BLOCK ── */
+  .generation {
+    margin-bottom: 0;
+    position: relative;
+  }
+
+  .gen-label {
+    font-family: 'Playfair Display', serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--sepia-light);
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%) rotate(-90deg);
+    transform-origin: center center;
+    white-space: nowrap;
+    width: 40px;
+    text-align: center;
+  }
+
+  .gen-row {
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 0 60px;
+    position: relative;
+  }
+
+  /* connector lines */
+  .connector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0 auto 0;
+    width: 100%;
+  }
+
+  .connector-down {
+    width: 1px;
+    height: 36px;
+    background: var(--line);
+    margin: 0 auto;
+  }
+
+  .connector-branch {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    width: 100%;
+    position: relative;
+    margin: 0 auto;
+  }
+
+  .h-line {
+    height: 1px;
+    background: var(--line);
+    flex: 1;
+    margin-top: 0;
+    align-self: flex-start;
+    margin-top: 0px;
+  }
+
+  /* ── PERSON CARD ── */
+  .person {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    padding: 14px 14px 14px;
+    min-width: 148px;
+    max-width: 180px;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 2px 8px var(--shadow), inset 0 1px 0 rgba(255,255,255,0.7);
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: default;
+    flex-shrink: 0;
+  }
+
+  /* ── AVATAR ── */
+  .avatar-wrap {
+    width: 72px;
+    height: 72px;
+    border-radius: 10px;
+    margin: 0 auto 9px;
+    border: 2px solid var(--card-border);
+    overflow: hidden;
+    background: var(--parchment);
+    position: relative;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .avatar-wrap:hover { border-color: var(--sepia); }
+  .avatar-wrap:hover .upload-hint { opacity: 1; }
+
+  .avatar-wrap img.photo {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+    position: absolute; inset: 0;
+  }
+  .avatar-wrap svg.silhouette {
+    width: 100%; height: 100%;
+    display: block;
+  }
+  .upload-hint {
+    position: absolute; inset: 0;
+    background: rgba(92,71,48,0.6);
+    color: #fdf8f0;
+    font-size: 0.58rem;
+    letter-spacing: 0.04em;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s;
+    border-radius: 10px;
+    font-family: 'Crimson Pro', serif;
+    text-transform: uppercase;
+  }
+  input.photo-input { display: none; }
+
+  .person:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px var(--shadow);
+    border-color: var(--sepia);
+  }
+
+  .person.ancestor {
+    border-color: var(--sepia);
+    background: linear-gradient(135deg, #fdf8f0 0%, #f7edda 100%);
+  }
+
+  .person.direct {
+    border-left: 3px solid var(--accent);
+  }
+
+  .person-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--sepia-dark);
+    line-height: 1.3;
+  }
+
+  .person-dates {
+    font-size: 0.78rem;
+    color: var(--sepia);
+    margin-top: 4px;
+    font-style: italic;
+    line-height: 1.4;
+  }
+
+  .person-note {
+    font-size: 0.72rem;
+    color: var(--sepia-light);
+    margin-top: 3px;
+    line-height: 1.3;
+  }
+
+  .person-meta {
+    font-size: 0.7rem;
+    color: var(--sepia);
+    margin-top: 5px;
+    line-height: 1.4;
+    border-top: 1px solid var(--card-border);
+    padding-top: 5px;
+  }
+  .person-meta .meta-age { font-weight: 600; }
+  .person-meta .meta-loc { font-style: italic; color: var(--sepia-light); }
+  .person-meta .meta-occ { color: var(--sepia); }
+
+
+  /* ── HOVER CARD ── */
+  .hover-card {
+    position: fixed;
+    z-index: 999;
+    background: #fdf8f0;
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    box-shadow: 0 16px 48px rgba(92,71,48,0.28), 0 4px 12px rgba(92,71,48,0.14);
+    min-width: 340px;
+    max-width: 400px;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    font-family: 'Crimson Pro', serif;
+    overflow: hidden;
+  }
+  .hover-card.visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  /* Two-column layout: photo left, details right */
+  .hc-inner {
+    display: flex;
+    align-items: stretch;
+    min-height: 160px;
+  }
+  .hc-photo-col {
+    width: 130px;
+    flex-shrink: 0;
+    background: var(--parchment);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+  }
+  .hc-photo-col img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .hc-photo-col svg.silhouette {
+    width: 72px;
+    height: 72px;
+    opacity: 0.35;
+  }
+  .hc-photo-col .hc-presumed-badge {
+    position: absolute;
+    bottom: 6px;
+    left: 0; right: 0;
+    text-align: center;
+    font-size: 0.6rem;
+    color: var(--sepia-light);
+    font-style: italic;
+    background: rgba(245,239,226,0.85);
+    padding: 2px 4px;
+  }
+  .hc-details-col {
+    flex: 1;
+    padding: 14px 16px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    overflow: hidden;
+  }
+  .hover-card-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--sepia-dark);
+    margin-bottom: 2px;
+    line-height: 1.25;
+  }
+  .hover-card-dates {
+    font-size: 0.78rem;
+    color: var(--sepia);
+    font-style: italic;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--card-border);
+  }
+  .hover-card-row {
+    display: flex;
+    gap: 6px;
+    font-size: 0.78rem;
+    color: var(--ink);
+    margin-bottom: 3px;
+    line-height: 1.35;
+  }
+  .hover-card-row .hc-label {
+    color: var(--sepia-light);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-family: 'Playfair Display', serif;
+    min-width: 52px;
+    padding-top: 2px;
+    flex-shrink: 0;
+  }
+  .hover-card-divider {
+    border: none;
+    border-top: 1px solid var(--card-border);
+    margin: 6px 0;
+  }
+  /* Hint bar at bottom */
+  .hc-hint-bar {
+    background: var(--parchment);
+    border-top: 1px solid var(--card-border);
+    padding: 5px 14px;
+    font-size: 0.67rem;
+    color: var(--sepia-light);
+    font-style: italic;
+    text-align: right;
+    letter-spacing: 0.02em;
+  }
+
+  /* marriage equals sign */
+  .marriage {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .equals {
+    font-family: 'Playfair Display', serif;
+    color: var(--sepia-light);
+    font-size: 1.3rem;
+    line-height: 1;
+    margin: 0 2px;
+    align-self: center;
+    padding-top: 4px;
+  }
+
+  /* ── SECTION WRAPPER ── */
+  .tree-section {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .section-divider {
+    text-align: center;
+    margin: 10px 0 10px;
+    position: relative;
+  }
+
+  .section-divider::before {
+    content: '';
+    position: absolute;
+    left: 10%;
+    right: 10%;
+    top: 50%;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--line), transparent);
+  }
+
+  .section-divider span {
+    background: var(--parchment);
+    padding: 0 16px;
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--sepia-light);
+    position: relative;
+  }
+
+  /* vertical connector between sections */
+  .v-connector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+
+  .v-line { width: 1px; background: var(--line); }
+
+  .marriage-note {
+    font-family: 'Crimson Pro', serif;
+    font-style: italic;
+    font-size: 0.82rem;
+    color: var(--sepia);
+    text-align: center;
+    margin: 4px 0;
+  }
+
+  /* tree section left-aligned so bracket chains read left-to-right */
+  .tree-section { display: flex; flex-direction: column; align-items: flex-start; padding-left: 80px; }
+
+  /* ── REVIEW MODE ── */
+  #review-toggle {
+    position: fixed;
+    bottom: 24px;
+    left: 168px;
+    z-index: 800;
+    background: var(--accent);
+    color: #fdf8f0;
+    border: none;
+    border-radius: 24px;
+    padding: 10px 18px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 4px 16px rgba(122,59,30,0.35);
+    transition: background 0.2s, transform 0.15s;
+  }
+  #review-toggle:hover { background: #5c2e15; transform: translateY(-1px); }
+
+  #review-panel {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1200;
+    width: 480px;
+    max-width: 92vw;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(92,71,48,0.35);
+    font-family: 'Crimson Pro', serif;
+    overflow: hidden;
+  }
+  #review-header {
+    background: linear-gradient(135deg, var(--sepia-dark), var(--accent));
+    padding: 18px 20px 14px;
+    color: #fdf8f0;
+  }
+  #review-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  #review-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+  #review-close {
+    background: rgba(255,255,255,0.15);
+    border: none;
+    color: #fdf8f0;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  #review-close:hover { background: rgba(255,255,255,0.3); }
+  #review-progress-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  #review-progress-bar {
+    flex: 1;
+    height: 5px;
+    background: rgba(255,255,255,0.25);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  #review-progress-fill {
+    height: 100%;
+    background: #f5d98e;
+    border-radius: 3px;
+    transition: width 0.4s ease;
+  }
+  #review-progress-label {
+    font-size: 0.72rem;
+    opacity: 0.85;
+    white-space: nowrap;
+  }
+  #review-nav-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  #review-nav-row button {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: #fdf8f0;
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  #review-nav-row button:hover { background: rgba(255,255,255,0.28); }
+  #review-nav-row button:disabled { opacity: 0.35; cursor: default; }
+  #review-person-count {
+    font-size: 0.78rem;
+    opacity: 0.8;
+  }
+  #review-body { padding: 20px 22px 18px; }
+  #review-person-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--sepia-dark);
+    margin-bottom: 2px;
+  }
+  #review-person-born {
+    font-size: 0.8rem;
+    color: var(--sepia-light);
+    font-style: italic;
+    margin-bottom: 14px;
+  }
+  #review-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .rv-field {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .rv-field.full-width { grid-column: 1 / -1; }
+  .rv-label {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--sepia-light);
+    font-family: 'Crimson Pro', serif;
+  }
+  .rv-input {
+    background: var(--parchment);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    padding: 7px 10px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.9rem;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .rv-input:focus { border-color: var(--sepia); }
+  .rv-missing { border-color: #d4875a !important; background: #fff9f5 !important; }
+  .rv-missing-badge {
+    font-size: 0.62rem;
+    color: #b85c30;
+    font-style: italic;
+  }
+  .rv-section-label {
+    grid-column: 1 / -1;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--sepia);
+    border-bottom: 1px solid var(--card-border);
+    padding-bottom: 4px;
+    margin-top: 4px;
+  }
+  #review-children-list {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 4px;
+  }
+  .rv-child-chip {
+    background: var(--parchment);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 0.78rem;
+    color: var(--sepia-dark);
+  }
+  .rv-add-child-btn {
+    background: none;
+    border: 1px dashed var(--sepia-light);
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 0.78rem;
+    color: var(--sepia);
+    cursor: pointer;
+    font-family: 'Crimson Pro', serif;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .rv-add-child-btn:hover { border-color: var(--accent); color: var(--accent); }
+  #review-save-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    border-top: 1px solid var(--card-border);
+    padding-top: 14px;
+  }
+  #review-saved-msg {
+    font-size: 0.8rem;
+    color: #4a8a5a;
+    font-style: italic;
+    margin-right: auto;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  #review-saved-msg.show { opacity: 1; }
+  #review-skip {
+    background: none;
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    padding: 7px 16px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.85rem;
+    color: var(--sepia);
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  #review-skip:hover { border-color: var(--sepia); }
+  #review-save {
+    background: var(--accent);
+    border: none;
+    border-radius: 20px;
+    padding: 7px 20px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #fdf8f0;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  #review-save:hover { background: var(--sepia-dark); }
+
+  /* footnote */
+  footer {
+    text-align: center;
+    margin-top: 80px;
+    padding-top: 30px;
+    border-top: 1px solid var(--card-border);
+    font-size: 0.8rem;
+    color: var(--sepia-light);
+    font-style: italic;
+  }
+
+  /* ── TOOLTIP ── */
+  .person[data-tip]:hover::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--sepia-dark);
+    color: #fdf8f0;
+    font-size: 0.75rem;
+    padding: 5px 10px;
+    border-radius: 3px;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 10;
+    font-family: 'Crimson Pro', serif;
+    font-style: italic;
+  }
+
+  @media (max-width: 700px) {
+    body { padding: 40px 16px; }
+    .gen-row { gap: 10px; padding: 0 10px; }
+    .person { min-width: 90px; padding: 10px 10px; }
+    .person-name { font-size: 0.85rem; }
+  }
+
+  /* ─── layout helpers ─── */
+  .center { display:flex; justify-content:center; }
+  .col { display:flex; flex-direction:column; align-items:flex-start; }
+  .row { display:flex; flex-direction:row; align-items:flex-start; justify-content:center; gap:12px; flex-wrap:wrap; }
+
+  .branch-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* ── children-row: horizontal bracket layout ── */
+  .children-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 12px;
+    position: relative;
+    /* Left bracket line */
+    border-left: 1px solid var(--line);
+    padding: 12px 0 12px 28px;
+    margin-left: 0;
+  }
+
+  /* Horizontal tick from left bracket to each card */
+  .child-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+  }
+
+  .child-col::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: -30px;
+    width: 28px;
+    height: 1px;
+    background: var(--line);
+  }
+
+  /* spine-hbar no longer needed */
+  .spine-hbar { display: none; }
+
+  .top-bar {
+    display: flex;
+    justify-content: center;
+  }
+
+  /* ── PERSON CARD CLICKABLE ── */
+  .person { cursor: pointer; }
+  .person.selected {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px var(--shadow);
+  }
+
+  /* ── OVERLAY ── */
+  #overlay {
+    position: fixed; inset: 0;
+    background: rgba(26,18,8,0.45);
+    backdrop-filter: blur(3px);
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+  }
+  #overlay.open { opacity: 1; pointer-events: all; }
+
+  /* ── DETAIL PANEL ── */
+  #detail-panel {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -48%) scale(0.96);
+    z-index: 101;
+    width: min(560px, 94vw);
+    max-height: 88vh;
+    overflow-y: auto;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    box-shadow: 0 20px 60px rgba(26,18,8,0.35), 0 4px 16px rgba(26,18,8,0.15);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.28s cubic-bezier(.4,0,.2,1), transform 0.28s cubic-bezier(.4,0,.2,1);
+    font-family: 'Crimson Pro', serif;
+  }
+  #detail-panel.open {
+    opacity: 1;
+    pointer-events: all;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  /* panel header band */
+  .dp-header {
+    background: linear-gradient(135deg, var(--sepia-dark) 0%, #3d2a18 100%);
+    padding: 24px 24px 20px;
+    display: flex;
+    gap: 18px;
+    align-items: flex-start;
+    position: relative;
+    border-radius: 7px 7px 0 0;
+  }
+
+  .dp-close {
+    position: absolute; top: 14px; right: 16px;
+    background: none; border: none; cursor: pointer;
+    color: rgba(253,248,240,0.6);
+    font-size: 1.4rem; line-height: 1;
+    transition: color 0.15s;
+    padding: 4px;
+  }
+  .dp-close:hover { color: #fdf8f0; }
+
+  /* large avatar in panel */
+  .dp-avatar {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    border: 3px solid rgba(253,248,240,0.25);
+    overflow: hidden;
+    flex-shrink: 0;
+    cursor: pointer;
+    position: relative;
+    transition: border-color 0.2s;
+  }
+  .dp-avatar:hover { border-color: rgba(253,248,240,0.7); }
+  .dp-avatar:hover .dp-avatar-hint { opacity: 1; }
+  .dp-avatar svg, .dp-avatar img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+  }
+  .dp-avatar-hint {
+    position: absolute; inset: 0;
+    background: rgba(26,18,8,0.55);
+    color: #fdf8f0;
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s;
+    border-radius: 50%;
+  }
+
+  .dp-header-text { flex: 1; min-width: 0; }
+  .dp-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.45rem;
+    font-weight: 600;
+    color: #fdf8f0;
+    line-height: 1.2;
+  }
+  .dp-dates {
+    font-size: 0.9rem;
+    color: rgba(253,248,240,0.7);
+    font-style: italic;
+    margin-top: 4px;
+  }
+  .dp-badge {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border: 1px solid rgba(253,248,240,0.3);
+    color: rgba(253,248,240,0.75);
+  }
+
+  /* panel body */
+  .dp-body { padding: 20px 24px 24px; }
+
+  .dp-section { margin-bottom: 18px; }
+  .dp-section:last-child { margin-bottom: 0; }
+
+  .dp-label {
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--sepia-light);
+    margin-bottom: 6px;
+    font-family: 'Playfair Display', serif;
+  }
+
+  .dp-row {
+    display: flex; gap: 12px; flex-wrap: wrap;
+  }
+  .dp-field {
+    flex: 1; min-width: 120px;
+  }
+  .dp-field-label {
+    font-size: 0.72rem;
+    color: var(--sepia-light);
+    margin-bottom: 2px;
+  }
+  .dp-field-val {
+    font-size: 0.95rem;
+    color: var(--ink);
+  }
+
+  /* relatives chips */
+  .dp-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .dp-chip {
+    border-radius: 20px;
+    padding: 3px 10px 3px 8px;
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: filter 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    border: none;
+    font-family: 'Crimson Pro', serif;
+  }
+  .dp-chip:hover { filter: brightness(0.92); }
+  .dp-chip .chip-role {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    opacity: 0.75;
+    font-weight: 600;
+  }
+  /* colour palette per relation */
+  .dp-chip-father   { background: #fde8e8; color: #8a1a1a; }
+  .dp-chip-mother   { background: #fce8f3; color: #7a1a55; }
+  .dp-chip-son      { background: #d9f0e8; color: #1a5c3a; }
+  .dp-chip-daughter { background: #fef3d9; color: #7a4e00; }
+  .dp-chip-brother  { background: #e3eafd; color: #2a3a8a; }
+  .dp-chip-sister   { background: #fce8f7; color: #6a1a6a; }
+  .dp-chip-spouse   { background: #fdeaea; color: #8a1a1a; }
+  .dp-chip-parent   { background: #e8e8e8; color: #444; }
+  .dp-chip-child    { background: #eaf2ea; color: #2a4a2a; }
+
+  /* notes textarea */
+  .dp-notes {
+    width: 100%;
+    background: var(--parchment);
+    border: 1px solid var(--card-border);
+    border-radius: 4px;
+    padding: 10px 12px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.9rem;
+    color: var(--ink);
+    resize: vertical;
+    min-height: 72px;
+    transition: border-color 0.2s;
+    line-height: 1.5;
+  }
+  .dp-notes:focus { outline: none; border-color: var(--sepia); }
+  .dp-notes::placeholder { color: var(--sepia-light); font-style: italic; }
+
+  .dp-save-btn {
+    margin-top: 8px;
+    background: var(--sepia-dark);
+    color: #fdf8f0;
+    border: none;
+    border-radius: 4px;
+    padding: 7px 18px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.85rem;
+    cursor: pointer;
+    letter-spacing: 0.06em;
+    transition: background 0.15s;
+  }
+  .dp-save-btn:hover { background: var(--accent); }
+  .dp-saved-msg {
+    display: inline-block;
+    margin-left: 10px;
+    font-size: 0.8rem;
+    color: var(--sepia);
+    font-style: italic;
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  .dp-saved-msg.show { opacity: 1; }
+
+  /* divider inside panel */
+  .dp-divider {
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--card-border), transparent);
+    margin: 18px 0;
+  }
+
+
+  /* ── EDIT MODE ── */
+  .dp-edit-btn {
+    position: absolute; top: 14px; right: 46px;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 4px;
+    color: rgba(253,248,240,0.75);
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .dp-edit-btn:hover { background: rgba(255,255,255,0.22); color: #fdf8f0; }
+  .dp-edit-btn.active { background: var(--accent); border-color: var(--accent); color: #fdf8f0; }
+
+  /* editable field */
+  .dp-edit-input {
+    width: 100%;
+    background: var(--parchment);
+    border: 1px solid var(--card-border);
+    border-radius: 3px;
+    padding: 5px 8px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.92rem;
+    color: var(--ink);
+    margin-top: 2px;
+    transition: border-color 0.15s;
+  }
+  .dp-edit-input:focus { outline: none; border-color: var(--sepia); }
+
+  .dp-edit-row { margin-bottom: 12px; }
+  .dp-edit-row label {
+    display: block;
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--sepia-light);
+    font-family: 'Playfair Display', serif;
+    margin-bottom: 3px;
+  }
+
+  #dp-edit-form { display: none; padding: 20px 24px 24px; }
+  #dp-edit-form.visible { display: block; }
+  #dp-view-body.hidden { display: none; }
+
+  .dp-edit-actions {
+    display: flex; gap: 10px; align-items: center;
+    margin-top: 20px; padding-top: 16px;
+    border-top: 1px solid var(--card-border);
+  }
+  .dp-btn-save {
+    background: var(--sepia-dark); color: #fdf8f0;
+    border: none; border-radius: 4px;
+    padding: 8px 22px;
+    font-family: 'Crimson Pro', serif; font-size: 0.88rem;
+    cursor: pointer; letter-spacing: 0.06em;
+    transition: background 0.15s;
+  }
+  .dp-btn-save:hover { background: var(--accent); }
+  .dp-btn-cancel {
+    background: none; color: var(--sepia);
+    border: 1px solid var(--card-border); border-radius: 4px;
+    padding: 8px 18px;
+    font-family: 'Crimson Pro', serif; font-size: 0.88rem;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .dp-btn-cancel:hover { border-color: var(--sepia); color: var(--sepia-dark); }
+  .dp-edit-saved {
+    font-size: 0.8rem; color: var(--sepia);
+    font-style: italic; opacity: 0; transition: opacity 0.4s;
+  }
+  .dp-edit-saved.show { opacity: 1; }
+
+  /* export button in footer */
+  .dp-export-btn {
+    display: block; width: 100%;
+    margin-top: 14px;
+    background: none;
+    border: 1px solid var(--card-border);
+    border-radius: 4px;
+    padding: 7px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.8rem;
+    color: var(--sepia-light);
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+    text-align: center;
+  }
+  .dp-export-btn:hover { border-color: var(--sepia); color: var(--sepia-dark); }
+
+  /* unsaved indicator dot on card */
+  .person.edited::after {
+    content: '';
+    position: absolute; top: 6px; right: 6px;
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+  }
+
+  /* ── STATS PANEL ── */
+  #stats-toggle {
+    position: fixed;
+    bottom: 28px;
+    left: 24px;
+    z-index: 800;
+    background: var(--sepia-dark);
+    color: #fdf8f0;
+    border: none;
+    border-radius: 50px;
+    padding: 10px 18px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.88rem;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(92,71,48,0.28);
+    transition: background 0.15s, transform 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  #stats-toggle:hover { background: var(--accent); transform: translateY(-2px); }
+
+  #stats-panel {
+    position: fixed;
+    bottom: 80px;
+    left: 24px;
+    z-index: 799;
+    width: 290px;
+    max-height: 70vh;
+    overflow-y: auto;
+    background: #fdf8f0;
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    box-shadow: 0 12px 40px rgba(92,71,48,0.22);
+    font-family: 'Crimson Pro', serif;
+    transform: translateY(20px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.22s ease, transform 0.22s ease;
+  }
+  #stats-panel.open {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: all;
+  }
+  .stats-header {
+    padding: 16px 18px 12px;
+    border-bottom: 1px solid var(--card-border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .stats-header-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--sepia-dark);
+  }
+  .stats-header-sub {
+    font-size: 0.75rem;
+    color: var(--sepia-light);
+    font-style: italic;
+  }
+  .stats-section {
+    padding: 12px 18px 8px;
+    border-bottom: 1px solid var(--card-border);
+  }
+  .stats-section:last-child { border-bottom: none; padding-bottom: 16px; }
+  .stats-section-title {
+    font-size: 0.65rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--sepia-light);
+    font-family: 'Playfair Display', serif;
+    margin-bottom: 8px;
+  }
+  .stat-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    gap: 8px;
+  }
+  .stat-label {
+    font-size: 0.85rem;
+    color: var(--ink);
+    line-height: 1.3;
+    flex: 1;
+  }
+  .stat-val {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--sepia-dark);
+    white-space: nowrap;
+  }
+  .stat-highlight {
+    font-size: 0.78rem;
+    color: var(--sepia);
+    font-style: italic;
+    margin-top: -4px;
+    margin-bottom: 8px;
+    line-height: 1.3;
+  }
+  .stat-bar-wrap {
+    background: var(--parchment);
+    border-radius: 4px;
+    height: 6px;
+    margin-top: 3px;
+    overflow: hidden;
+    flex-shrink: 0;
+    width: 60px;
+  }
+  .stat-bar {
+    height: 100%;
+    background: var(--sepia);
+    border-radius: 4px;
+    transition: width 0.6s ease;
+  }
+
+
+  /* ── Horizontal family branches ── */
+  .family-branches {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-items: flex-start;
+    padding-left: 20px;
+    border-left: 1px solid var(--line);
+    margin-left: 0;
+  }
+
+  .family-branch {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    flex-wrap: wrap;   /* allows sub-branches to drop to next row */
+    gap: 0;
+  }
+
+  .branch-parent {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0;
+    flex-shrink: 0;
+  }
+
+  /* Ghost parent card — smaller, dimmed, non-interactive */
+  .branch-parent .person {
+    min-width: 110px !important;
+    max-width: 130px !important;
+    padding: 8px 10px 10px !important;
+    opacity: 0.55;
+    font-size: 0.85em;
+    pointer-events: none;
+  }
+  .branch-parent .person .avatar-wrap { display: none; }
+  .branch-parent .person-name { font-size: 0.9rem; }
+  .branch-parent .person-dates { font-size: 0.72rem; }
+
+  .branch-arrow {
+    color: var(--line);
+    font-size: 1.1rem;
+    padding: 0 8px;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+
+  .branch-children {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: flex-start;
+    align-content: flex-start;
+    position: relative;
+  }
+
+  /* Horizontal connector bar across children in a branch */
+  .branch-children::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: transparent;
+  }
+
+  /* Sub-branch: grandchildren row (e.g. Jason→Zion, Maia→Bella)
+     flex-basis:100% forces it below all sibling person cards in the parent family-branch */
+  .family-branch.sub-branch {
+    flex-basis: 100%;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 10px;
+    padding-left: 28px;
+    border-left: 2px solid var(--card-border);
+    gap: 0;
+  }
+  .family-branch.sub-branch .branch-parent .person {
+    min-width: 90px !important;
+    max-width: 110px !important;
+    padding: 5px 8px !important;
+    font-size: 0.8em;
+    opacity: 0.5;
+  }
+
+
+  /* Presumed deceased — no confirmed death date but born before threshold */
+  .person.presumed-deceased .person-dates::after {
+    content: ' · d. ?';
+    color: var(--sepia-light);
+    font-style: italic;
+    font-size: 0.85em;
+    opacity: 0.7;
+  }
+  .person.presumed-deceased {
+    opacity: 0.82;
+  }
+  .person.presumed-deceased .avatar-wrap {
+    filter: grayscale(35%);
+  }
+
+  .person { padding-bottom: 28px; } /* extend hover area to cover buttons */
+  .card-add-btns {
+    display: none;
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    gap: 4px;
+    z-index: 10;
+    white-space: nowrap;
+  }
+  .person:hover .card-add-btns { display: flex; }
+  .card-add-btn {
+    font-size: 0.65rem;
+    padding: 2px 7px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-family: 'Crimson Pro', serif;
+    letter-spacing: 0.03em;
+    opacity: 0.85;
+    transition: opacity 0.15s;
+  }
+  .card-add-btn:hover { opacity: 1; }
+
+  /* ── Add Person modal ── */
+  #add-person-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 3000;
+    background: rgba(26,18,8,0.55);
+    align-items: center;
+    justify-content: center;
+  }
+  #add-person-modal.open { display: flex; }
+  #add-person-box {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 28px 32px;
+    width: min(460px, 92vw);
+    box-shadow: 0 8px 40px rgba(90,60,20,0.22);
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  #add-person-box h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.15rem;
+    color: var(--sepia-dark);
+    margin-bottom: 4px;
+  }
+  #add-person-box .ap-sub {
+    font-size: 0.82rem;
+    color: var(--sepia-light);
+    margin-bottom: 18px;
+    font-style: italic;
+  }
+  .ap-row { margin-bottom: 12px; }
+  .ap-row label {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--sepia);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 4px;
+  }
+  .ap-row input, .ap-row select {
+    width: 100%;
+    padding: 7px 10px;
+    border: 1px solid var(--card-border);
+    border-radius: 6px;
+    background: var(--parchment);
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.95rem;
+    color: var(--ink);
+  }
+  .ap-row input:focus, .ap-row select:focus {
+    outline: none;
+    border-color: var(--sepia);
+  }
+  .ap-btns { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+  .ap-btn-save {
+    padding: 8px 22px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+  .ap-btn-save:hover { background: var(--sepia-dark); }
+  .ap-btn-cancel {
+    padding: 8px 16px;
+    background: transparent;
+    color: var(--sepia);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+  .ap-err { color: #b00; font-size: 0.85rem; margin-top: 8px; display: none; }
 </style>
-
 </head>
 <body>
 
@@ -1446,7 +1448,6 @@ cursor: pointer;
 <div class="tree-section">
 
   <!-- GEN 1: William = Mary -->
-
   <div class="col">
     <div class="marriage">
       <div class="person ancestor" data-pkey="William (patriarch)">
@@ -1459,444 +1460,442 @@ cursor: pointer;
       </div>
     </div>
 
-```
-<div class="v-line" style="height:36px;"></div>
+    <div class="v-line" style="height:36px;"></div>
 
-<!-- GEN 2 children -->
-<div class="children-row">
-  <div class="child-col">
-    <div class="person" data-pkey="Mary (bap.1701)">
-  <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Mary</div>
-      <div class="person-dates">bap. 1701</div>
-    </div>
-  </div>
-  <div class="child-col">
-    <div class="person direct ancestor" data-tip="Direct line continues">
-      <div class="person-name">William</div>
-      <div class="person-dates">bap. 1706<br>d. 1744</div>
-    </div>
-  </div>
-  <div class="child-col">
-    <div class="person" data-pkey="Francis (bap.1749)">
-  <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Francis</div>
-      <div class="person-dates">bap. 1749</div>
-    </div>
-  </div>
-</div>
-
-<div class="marriage-note">m. Ann Sullens</div>
-<div class="v-line" style="height:20px;"></div>
-
-<!-- GEN 3 children of William & Ann Sullens -->
-<div class="children-row">
-  <div class="child-col">
-    <div class="person direct ancestor" data-pkey="William (bap.1732)">
-  <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">William</div>
-      <div class="person-dates">bap. 1732</div>
-      <div class="person-note">m. Elizabeth 1753</div>
-    </div>
-  </div>
-  <div class="child-col">
-    <div class="person" data-pkey="Ann (bap.1735)">
-  <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Ann</div>
-      <div class="person-dates">bap. 1735</div>
-    </div>
-  </div>
-  <div class="child-col">
-    <div class="person" data-pkey="Mary (bap.1738)">
-  <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Mary</div>
-      <div class="person-dates">bap. 1738</div>
-    </div>
-  </div>
-  <div class="child-col">
-    <div class="person" data-pkey="Charles (bap.1749)">
-  <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Charles</div>
-      <div class="person-dates">bap. 1749</div>
-    </div>
-  </div>
-  <div class="child-col">
-    <div class="person" data-pkey="Francis (bap.1749 ii)">
-  <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Francis</div>
-      <div class="person-dates">bap. 1749</div>
-    </div>
-  </div>
-</div>
-
-<div class="v-line" style="height:36px;"></div>
-
-<!-- GEN 4: children of William & Elizabeth -->
-<div class="children-row">
-  <div class="child-col">
-    <div class="person" data-pkey="William (bap.1755)">
-  <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">William</div>
-      <div class="person-dates">bap. 1755</div>
-    </div>
-  </div>
-  <div class="child-col">
-    <div class="person direct ancestor" data-pkey="Francis (bap.1763)">
-  <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Francis</div>
-      <div class="person-dates">bap. 1763<br>d. 1804</div>
-      <div class="person-note">m. Lydia 1787</div>
-    </div>
-  </div>
-</div>
-
-<div class="v-line" style="height:36px;"></div>
-
-<!-- GEN 5: children of Francis & Lydia -->
-<div class="children-row">
-  <div class="child-col">
-    <div class="person" data-pkey="Lydia (bap.1788)">
-  <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Lydia</div>
-      <div class="person-dates">bap. 1788</div>
-    </div>
-  </div>
-  <div class="child-col">
-    <div class="person" data-pkey="Francis (bap.1790)">
-  <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Francis</div>
-      <div class="person-dates">bap. 1790</div>
-    </div>
-  </div>
-  <div class="child-col">
-    <div class="person direct ancestor" data-pkey="John (b.1796)">
-  <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">John</div>
-      <div class="person-dates">b. 1796<br>d. 1860</div>
-      <div class="person-note">m. Mary Greenham</div>
-    </div>
-  </div>
-  <div class="child-col">
-    <div class="person" data-pkey="Mary (b.1799)">
-  <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Mary</div>
-      <div class="person-dates">b. 1799</div>
-    </div>
-  </div>
-  <div class="child-col">
-    <div class="person" data-pkey="William (s/o Francis)">
-  <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">William</div>
-    </div>
-  </div>
-</div>
-
-<div class="v-line" style="height:36px;"></div>
-
-<!-- GEN 6: children of John & Mary Greenham -->
-<div class="children-row">
-  <div class="child-col">
-    <div class="person direct ancestor" data-pkey="James (b.1828)">
-  <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">James</div>
-      <div class="person-dates">b. 1828<br>d. 1911</div>
-      <div class="person-note">m.(1) Martha<br>m.(2) Esther d.1911</div>
-    </div>
-  </div>
-  <div class="child-col">
-    <div class="person" data-pkey="Sarah (b.1836)">
-  <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Sarah</div>
-      <div class="person-dates">b. 1836</div>
-    </div>
-  </div>
-  <div class="child-col">
-    <div class="person" data-pkey="Ann (b.1839)">
-  <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Ann</div>
-      <div class="person-dates">b. 1839</div>
-    </div>
-  </div>
-  <div class="child-col">
-    <div class="person" data-pkey="Alfred (b.1842)">
-  <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Alfred</div>
-      <div class="person-dates">b. 1842</div>
-    </div>
-  </div>
-</div>
-
-<div class="marriage-note">Children of James — also Agnes (by Martha)</div>
-<div class="v-line" style="height:20px;"></div>
-
-<!-- GEN 7: children of James (by Esther) -->
-<div class="children-row">
-  <div class="child-col">
-    <div class="person" data-pkey="James (b.1863)">
-  <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">James</div>
-      <div class="person-dates">b. 1863</div>
-    </div>
-  </div>
-  <div class="child-col">
-    <div class="person" data-pkey="Ernest (b.1864)">
-  <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Ernest</div>
-      <div class="person-dates">b. 1864</div>
-    </div>
-  </div>
-  <div class="child-col">
-    <div class="person direct ancestor" data-pkey="Owen (b.1865)">
-  <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Owen</div>
-      <div class="person-dates">b. 1865</div>
-      <div class="person-note">m. Eliza Lucy Stevenson</div>
-    </div>
-  </div>
-  <div class="child-col">
-    <div class="person" data-pkey="Catherine (b.1868)">
-  <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Catherine</div>
-      <div class="person-dates">b. 1868<br>d. 1869</div>
-    </div>
-  </div>
-  <div class="child-col">
-    <div class="person" data-pkey="Ella (b.1870)">
-  <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Ella</div>
-      <div class="person-dates">b. 1870</div>
-    </div>
-  </div>
-  <div class="child-col">
-    <div class="person" data-pkey="Cyril (b.1871)">
-  <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Cyril</div>
-      <div class="person-dates">b. 1871<br>d. 1881</div>
-    </div>
-  </div>
-  <div class="child-col">
-    <div class="person" data-pkey="Bernard (b.1872)">
-  <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Bernard</div>
-      <div class="person-dates">b. 1872</div>
-    </div>
-  </div>
-  <div class="child-col">
-    <div class="person" data-pkey="Clayton (b.1874)">
-  <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Clayton</div>
-      <div class="person-dates">b. 1874</div>
-    </div>
-  </div>
-  <div class="child-col">
-    <div class="person" data-pkey="Gilbert (b.1876)">
-  <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Gilbert</div>
-      <div class="person-dates">b. 1876</div>
-    </div>
-  </div>
-  <div class="child-col">
-    <div class="person" data-pkey="Silas (b.1880)">
-  <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Silas</div>
-      <div class="person-dates">b. 1880</div>
-    </div>
-  </div>
-</div>
-
-<div class="v-line" style="height:36px;"></div>
-
-<!-- GEN 8: children of Owen & Eliza Lucy Stevenson -->
-<div class="children-row">
-  <div class="child-col">
-    <div class="person direct ancestor" data-pkey="Cyril Owen (b.1898)">
-  <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Cyril Owen</div>
-      <div class="person-dates">b. 1898<br>d. 1969</div>
-      <div class="person-note">m. Doris Miller 1928<br>(1900–1993)</div>
-    </div>
-  </div>
-  <div class="child-col">
-    <div class="person" data-pkey="Lucy">
-  <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Lucy</div>
-    </div>
-  </div>
-  <div class="child-col">
-    <div class="person" data-pkey="Ida">
-  <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Ida</div>
-    </div>
-  </div>
-  <div class="child-col">
-    <div class="person" data-pkey="Norman (b.1905)">
-  <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Norman</div>
-      <div class="person-dates">b. 1905<br>d. 1979</div>
-      <div class="person-note">m. Doris Taylor</div>
-    </div>
-  </div>
-  <div class="child-col">
-    <div class="person" data-pkey="George Braden">
-  <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">George Braden</div>
-    </div>
-  </div>
-</div>
-
-<!-- Norman's children (side branch) -->
-<div class="section-divider" style="margin:10px 0 6px"><span>Norman's children</span></div>
-<div class="children-row" style="justify-content:flex-end; padding-right:40px; margin-bottom:8px">
-  <div class="child-col">
-    <div class="person" data-pkey="Gillian (b.1936)">
-  <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Gillian</div>
-      <div class="person-dates">b. 1936</div>
-    </div>
-  </div>
-  <div class="child-col">
-    <div class="person" data-pkey="Carola (b.1938)">
-  <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Carola</div>
-      <div class="person-dates">b. 1938<br>d. 1978</div>
-    </div>
-  </div>
-  <div class="child-col">
-    <div class="person" data-pkey="Nicholas (b.1947)">
-  <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Nicholas</div>
-      <div class="person-dates">b. 1947</div>
-    </div>
-  </div>
-</div>
-
-<div class="section-divider"><span>Cyril Owen's children</span></div>
-<div class="v-line" style="height:20px;"></div>
-
-<!-- GEN 9: children of Cyril Owen & Doris Miller -->
-<div class="children-row">
-  <div class="child-col">
-    <div class="person" data-pkey="Muriel (b.1929)">
-  <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Muriel</div>
-      <div class="person-dates">b. 1929<br>d. (deceased)</div>
-    </div>
-  </div>
-  <div class="child-col">
-    <div class="person" data-pkey="Peter (b.1931)">
-  <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Peter</div>
-      <div class="person-dates">b. 1931<br>d. (deceased)</div>
-    </div>
-  </div>
-  <div class="child-col">
-    <div class="person direct ancestor" data-pkey="John O. Hunwick">
-  <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">John O. Hunwick</div>
-      <div class="person-dates">b. 1936<br>d. 1 Apr 2015</div>
-    </div>
-  </div>
-  <div class="child-col">
-    <div class="person" data-pkey="Mary (b.1938)">
-  <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Mary</div>
-      <div class="person-dates">b. 1938</div>
-    </div>
-  </div>
-</div>
-
-<div class="v-line" style="height:36px;"></div>
-
-<!-- GEN 10: John's two marriages -->
-<div class="row" style="gap:40px; align-items:flex-start;">
-
-  <!-- Branch A: John m. Audrey Najer-Grant 1957 -->
-  <div class="col">
-    <div class="marriage-note">m. Audrey Najer-Grant 1957</div>
-    <div class="v-line" style="height:20px;"></div>
+    <!-- GEN 2 children -->
     <div class="children-row">
       <div class="child-col">
-        <div class="person" data-pkey="Joseph (b.1959)">
-  <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Joseph</div>
-          <div class="person-dates">b. 1959</div>
-          <div class="person-note">↳ Sapphire</div>
+        <div class="person" data-pkey="Mary (bap.1701)">
+      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Mary</div>
+          <div class="person-dates">bap. 1701</div>
         </div>
       </div>
       <div class="child-col">
-        <div class="person" data-pkey="Maryam (b.1960)">
-  <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Maryam</div>
-          <div class="person-dates">b. 1960</div>
-          <div class="person-note">↳ Natasha, Ben</div>
+        <div class="person direct ancestor" data-tip="Direct line continues">
+          <div class="person-name">William</div>
+          <div class="person-dates">bap. 1706<br>d. 1744</div>
+        </div>
+      </div>
+      <div class="child-col">
+        <div class="person" data-pkey="Francis (bap.1749)">
+      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Francis</div>
+          <div class="person-dates">bap. 1749</div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Branch B: John m. Uwa Uldensi 1966 -->
-  <div class="col">
-    <div class="marriage-note">m. Uwa Uldensi 1966</div>
+    <div class="marriage-note">m. Ann Sullens</div>
     <div class="v-line" style="height:20px;"></div>
+
+    <!-- GEN 3 children of William & Ann Sullens -->
     <div class="children-row">
       <div class="child-col">
-        <div class="person direct" data-pkey="Yvette (b.1969)">
-  <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Yvette</div>
-          <div class="person-dates">b. 1969</div>
+        <div class="person direct ancestor" data-pkey="William (bap.1732)">
+      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">William</div>
+          <div class="person-dates">bap. 1732</div>
+          <div class="person-note">m. Elizabeth 1753</div>
         </div>
       </div>
       <div class="child-col">
-        <div class="person direct ancestor" data-pkey="Ann Clare (b.1971)">
-  <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Ann Clare</div>
-          <div class="person-dates">b. 1971</div>
+        <div class="person" data-pkey="Ann (bap.1735)">
+      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Ann</div>
+          <div class="person-dates">bap. 1735</div>
         </div>
       </div>
       <div class="child-col">
-        <div class="person direct" data-pkey="David (b.1973)">
-  <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">David</div>
-          <div class="person-dates">b. 1973</div>
+        <div class="person" data-pkey="Mary (bap.1738)">
+      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Mary</div>
+          <div class="person-dates">bap. 1738</div>
+        </div>
+      </div>
+      <div class="child-col">
+        <div class="person" data-pkey="Charles (bap.1749)">
+      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Charles</div>
+          <div class="person-dates">bap. 1749</div>
+        </div>
+      </div>
+      <div class="child-col">
+        <div class="person" data-pkey="Francis (bap.1749 ii)">
+      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Francis</div>
+          <div class="person-dates">bap. 1749</div>
         </div>
       </div>
     </div>
 
-    <!-- Generation branches: each parent inline with their children -->
-    <div class="v-line" style="height:24px;"></div>
-    <div class="family-branches">
+    <div class="v-line" style="height:36px;"></div>
 
-      <!-- Yvette -->
-      <div class="family-branch">
-        <div class="branch-parent">
-          <div class="person" data-pkey="Yvette (b.1969)" style="opacity:0.6;pointer-events:none;">
-            <div class="person-name">Yvette</div>
-            <div class="person-dates">b. 1969</div>
-          </div>
-          <div class="branch-arrow">→</div>
+    <!-- GEN 4: children of William & Elizabeth -->
+    <div class="children-row">
+      <div class="child-col">
+        <div class="person" data-pkey="William (bap.1755)">
+      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">William</div>
+          <div class="person-dates">bap. 1755</div>
         </div>
-        <div class="branch-children" data-parent="Yvette (b.1969)">
-          <div class="person" data-pkey="Laith (b.2000)">
-            <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Laith</div>
-            <div class="person-dates">b. 25 Jan 2000</div>
+      </div>
+      <div class="child-col">
+        <div class="person direct ancestor" data-pkey="Francis (bap.1763)">
+      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Francis</div>
+          <div class="person-dates">bap. 1763<br>d. 1804</div>
+          <div class="person-note">m. Lydia 1787</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="v-line" style="height:36px;"></div>
+
+    <!-- GEN 5: children of Francis & Lydia -->
+    <div class="children-row">
+      <div class="child-col">
+        <div class="person" data-pkey="Lydia (bap.1788)">
+      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Lydia</div>
+          <div class="person-dates">bap. 1788</div>
+        </div>
+      </div>
+      <div class="child-col">
+        <div class="person" data-pkey="Francis (bap.1790)">
+      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Francis</div>
+          <div class="person-dates">bap. 1790</div>
+        </div>
+      </div>
+      <div class="child-col">
+        <div class="person direct ancestor" data-pkey="John (b.1796)">
+      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">John</div>
+          <div class="person-dates">b. 1796<br>d. 1860</div>
+          <div class="person-note">m. Mary Greenham</div>
+        </div>
+      </div>
+      <div class="child-col">
+        <div class="person" data-pkey="Mary (b.1799)">
+      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Mary</div>
+          <div class="person-dates">b. 1799</div>
+        </div>
+      </div>
+      <div class="child-col">
+        <div class="person" data-pkey="William (s/o Francis)">
+      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">William</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="v-line" style="height:36px;"></div>
+
+    <!-- GEN 6: children of John & Mary Greenham -->
+    <div class="children-row">
+      <div class="child-col">
+        <div class="person direct ancestor" data-pkey="James (b.1828)">
+      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">James</div>
+          <div class="person-dates">b. 1828<br>d. 1911</div>
+          <div class="person-note">m.(1) Martha<br>m.(2) Esther d.1911</div>
+        </div>
+      </div>
+      <div class="child-col">
+        <div class="person" data-pkey="Sarah (b.1836)">
+      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Sarah</div>
+          <div class="person-dates">b. 1836</div>
+        </div>
+      </div>
+      <div class="child-col">
+        <div class="person" data-pkey="Ann (b.1839)">
+      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Ann</div>
+          <div class="person-dates">b. 1839</div>
+        </div>
+      </div>
+      <div class="child-col">
+        <div class="person" data-pkey="Alfred (b.1842)">
+      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Alfred</div>
+          <div class="person-dates">b. 1842</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="marriage-note">Children of James — also Agnes (by Martha)</div>
+    <div class="v-line" style="height:20px;"></div>
+
+    <!-- GEN 7: children of James (by Esther) -->
+    <div class="children-row">
+      <div class="child-col">
+        <div class="person" data-pkey="James (b.1863)">
+      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">James</div>
+          <div class="person-dates">b. 1863</div>
+        </div>
+      </div>
+      <div class="child-col">
+        <div class="person" data-pkey="Ernest (b.1864)">
+      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Ernest</div>
+          <div class="person-dates">b. 1864</div>
+        </div>
+      </div>
+      <div class="child-col">
+        <div class="person direct ancestor" data-pkey="Owen (b.1865)">
+      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Owen</div>
+          <div class="person-dates">b. 1865</div>
+          <div class="person-note">m. Eliza Lucy Stevenson</div>
+        </div>
+      </div>
+      <div class="child-col">
+        <div class="person" data-pkey="Catherine (b.1868)">
+      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Catherine</div>
+          <div class="person-dates">b. 1868<br>d. 1869</div>
+        </div>
+      </div>
+      <div class="child-col">
+        <div class="person" data-pkey="Ella (b.1870)">
+      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Ella</div>
+          <div class="person-dates">b. 1870</div>
+        </div>
+      </div>
+      <div class="child-col">
+        <div class="person" data-pkey="Cyril (b.1871)">
+      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Cyril</div>
+          <div class="person-dates">b. 1871<br>d. 1881</div>
+        </div>
+      </div>
+      <div class="child-col">
+        <div class="person" data-pkey="Bernard (b.1872)">
+      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Bernard</div>
+          <div class="person-dates">b. 1872</div>
+        </div>
+      </div>
+      <div class="child-col">
+        <div class="person" data-pkey="Clayton (b.1874)">
+      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Clayton</div>
+          <div class="person-dates">b. 1874</div>
+        </div>
+      </div>
+      <div class="child-col">
+        <div class="person" data-pkey="Gilbert (b.1876)">
+      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Gilbert</div>
+          <div class="person-dates">b. 1876</div>
+        </div>
+      </div>
+      <div class="child-col">
+        <div class="person" data-pkey="Silas (b.1880)">
+      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Silas</div>
+          <div class="person-dates">b. 1880</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="v-line" style="height:36px;"></div>
+
+    <!-- GEN 8: children of Owen & Eliza Lucy Stevenson -->
+    <div class="children-row">
+      <div class="child-col">
+        <div class="person direct ancestor" data-pkey="Cyril Owen (b.1898)">
+      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Cyril Owen</div>
+          <div class="person-dates">b. 1898<br>d. 1969</div>
+          <div class="person-note">m. Doris Miller 1928<br>(1900–1993)</div>
+        </div>
+      </div>
+      <div class="child-col">
+        <div class="person" data-pkey="Lucy">
+      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Lucy</div>
+        </div>
+      </div>
+      <div class="child-col">
+        <div class="person" data-pkey="Ida">
+      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Ida</div>
+        </div>
+      </div>
+      <div class="child-col">
+        <div class="person" data-pkey="Norman (b.1905)">
+      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Norman</div>
+          <div class="person-dates">b. 1905<br>d. 1979</div>
+          <div class="person-note">m. Doris Taylor</div>
+        </div>
+      </div>
+      <div class="child-col">
+        <div class="person" data-pkey="George Braden">
+      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">George Braden</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Norman's children (side branch) -->
+    <div class="section-divider" style="margin:10px 0 6px"><span>Norman's children</span></div>
+    <div class="children-row" style="justify-content:flex-end; padding-right:40px; margin-bottom:8px">
+      <div class="child-col">
+        <div class="person" data-pkey="Gillian (b.1936)">
+      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Gillian</div>
+          <div class="person-dates">b. 1936</div>
+        </div>
+      </div>
+      <div class="child-col">
+        <div class="person" data-pkey="Carola (b.1938)">
+      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Carola</div>
+          <div class="person-dates">b. 1938<br>d. 1978</div>
+        </div>
+      </div>
+      <div class="child-col">
+        <div class="person" data-pkey="Nicholas (b.1947)">
+      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Nicholas</div>
+          <div class="person-dates">b. 1947</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-divider"><span>Cyril Owen's children</span></div>
+    <div class="v-line" style="height:20px;"></div>
+
+    <!-- GEN 9: children of Cyril Owen & Doris Miller -->
+    <div class="children-row">
+      <div class="child-col">
+        <div class="person" data-pkey="Muriel (b.1929)">
+      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Muriel</div>
+          <div class="person-dates">b. 1929<br>d. (deceased)</div>
+        </div>
+      </div>
+      <div class="child-col">
+        <div class="person" data-pkey="Peter (b.1931)">
+      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Peter</div>
+          <div class="person-dates">b. 1931<br>d. (deceased)</div>
+        </div>
+      </div>
+      <div class="child-col">
+        <div class="person direct ancestor" data-pkey="John O. Hunwick">
+      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">John O. Hunwick</div>
+          <div class="person-dates">b. 1936<br>d. 1 Apr 2015</div>
+        </div>
+      </div>
+      <div class="child-col">
+        <div class="person" data-pkey="Mary (b.1938)">
+      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Mary</div>
+          <div class="person-dates">b. 1938</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="v-line" style="height:36px;"></div>
+
+    <!-- GEN 10: John's two marriages -->
+    <div class="row" style="gap:40px; align-items:flex-start;">
+
+      <!-- Branch A: John m. Audrey Najer-Grant 1957 -->
+      <div class="col">
+        <div class="marriage-note">m. Audrey Najer-Grant 1957</div>
+        <div class="v-line" style="height:20px;"></div>
+        <div class="children-row">
+          <div class="child-col">
+            <div class="person" data-pkey="Joseph (b.1959)">
+      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Joseph</div>
+              <div class="person-dates">b. 1959</div>
+              <div class="person-note">↳ Sapphire</div>
+            </div>
+          </div>
+          <div class="child-col">
+            <div class="person" data-pkey="Maryam (b.1960)">
+      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Maryam</div>
+              <div class="person-dates">b. 1960</div>
+              <div class="person-note">↳ Natasha, Ben</div>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Ann Clare -->
-      <div class="family-branch">
-        <div class="branch-parent">
-          <div class="person direct ancestor" data-pkey="Ann Clare (b.1971)" style="opacity:0.6;pointer-events:none;">
-            <div class="person-name">Ann Clare</div>
-            <div class="person-dates">b. 1971</div>
+      <!-- Branch B: John m. Uwa Uldensi 1966 -->
+      <div class="col">
+        <div class="marriage-note">m. Uwa Uldensi 1966</div>
+        <div class="v-line" style="height:20px;"></div>
+        <div class="children-row">
+          <div class="child-col">
+            <div class="person direct" data-pkey="Yvette (b.1969)">
+      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Yvette</div>
+              <div class="person-dates">b. 1969</div>
+            </div>
           </div>
-          <div class="branch-arrow">→</div>
-        </div>
-        <div class="branch-children" data-parent="Ann Clare (b.1971)">
-          <div class="person" data-pkey="Jason (b.1990)">
-            <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Jason</div>
-            <div class="person-dates">b. 1990</div>
+          <div class="child-col">
+            <div class="person direct ancestor" data-pkey="Ann Clare (b.1971)">
+      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Ann Clare</div>
+              <div class="person-dates">b. 1971</div>
+            </div>
           </div>
-          <div class="person" data-pkey="Jessica (b.1991)">
-            <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Jessica</div>
-            <div class="person-dates">b. 1991</div>
-          </div>
-          <div class="person" data-pkey="Shawnine (b.1994)">
-            <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Shawnine</div>
-            <div class="person-dates">b. 1994</div>
-          </div>
-          <div class="person" data-pkey="Maia (b.1999)">
-            <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Maia</div>
-            <div class="person-dates">b. 1999</div>
+          <div class="child-col">
+            <div class="person direct" data-pkey="David (b.1973)">
+      <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">David</div>
+              <div class="person-dates">b. 1973</div>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- David -->
-      <div class="family-branch">
-        <div class="branch-parent">
-          <div class="person direct" data-pkey="David (b.1973)" style="opacity:0.6;pointer-events:none;">
-            <div class="person-name">David</div>
-            <div class="person-dates">b. 1973</div>
+        <!-- Generation branches: each parent inline with their children -->
+        <div class="v-line" style="height:24px;"></div>
+        <div class="family-branches">
+
+          <!-- Yvette -->
+          <div class="family-branch">
+            <div class="branch-parent">
+              <div class="person" data-pkey="Yvette (b.1969)" style="opacity:0.6;pointer-events:none;">
+                <div class="person-name">Yvette</div>
+                <div class="person-dates">b. 1969</div>
+              </div>
+              <div class="branch-arrow">→</div>
+            </div>
+            <div class="branch-children" data-parent="Yvette (b.1969)">
+              <div class="person" data-pkey="Laith (b.2000)">
+                <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Laith</div>
+                <div class="person-dates">b. 25 Jan 2000</div>
+              </div>
+            </div>
           </div>
-          <div class="branch-arrow">→</div>
-        </div>
-        <div class="branch-children" data-parent="David (b.1973)">
-          <div class="person" data-pkey="Johnny (b.2007)">
-            <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Johnny</div>
-            <div class="person-dates">b. 27 Jan 2007</div>
+
+          <!-- Ann Clare -->
+          <div class="family-branch">
+            <div class="branch-parent">
+              <div class="person direct ancestor" data-pkey="Ann Clare (b.1971)" style="opacity:0.6;pointer-events:none;">
+                <div class="person-name">Ann Clare</div>
+                <div class="person-dates">b. 1971</div>
+              </div>
+              <div class="branch-arrow">→</div>
+            </div>
+            <div class="branch-children" data-parent="Ann Clare (b.1971)">
+              <div class="person" data-pkey="Jason (b.1990)">
+                <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Jason</div>
+                <div class="person-dates">b. 1990</div>
+              </div>
+              <div class="person" data-pkey="Jessica (b.1991)">
+                <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Jessica</div>
+                <div class="person-dates">b. 1991</div>
+              </div>
+              <div class="person" data-pkey="Shawnine (b.1994)">
+                <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Shawnine</div>
+                <div class="person-dates">b. 1994</div>
+              </div>
+              <div class="person" data-pkey="Maia (b.1999)">
+                <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Maia</div>
+                <div class="person-dates">b. 1999</div>
+              </div>
+            </div>
           </div>
-          <div class="person" data-pkey="Sophia (b.2009)">
-            <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Sophia</div>
-            <div class="person-dates">b. 28 Apr 2009</div>
+
+          <!-- David -->
+          <div class="family-branch">
+            <div class="branch-parent">
+              <div class="person direct" data-pkey="David (b.1973)" style="opacity:0.6;pointer-events:none;">
+                <div class="person-name">David</div>
+                <div class="person-dates">b. 1973</div>
+              </div>
+              <div class="branch-arrow">→</div>
+            </div>
+            <div class="branch-children" data-parent="David (b.1973)">
+              <div class="person" data-pkey="Johnny (b.2007)">
+                <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Johnny</div>
+                <div class="person-dates">b. 27 Jan 2007</div>
+              </div>
+              <div class="person" data-pkey="Sophia (b.2009)">
+                <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Sophia</div>
+                <div class="person-dates">b. 28 Apr 2009</div>
+              </div>
+              <div class="person" data-pkey="Sean (b.2013)">
+                <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Sean</div>
+                <div class="person-dates">b. 8 Feb 2013</div>
+              </div>
+            </div>
           </div>
-          <div class="person" data-pkey="Sean (b.2013)">
-            <div class="avatar-wrap"><span class="upload-hint">add photo</span><input type="file" class="photo-input" accept="image/*"></div><div class="person-name">Sean</div>
-            <div class="person-dates">b. 8 Feb 2013</div>
-          </div>
+
         </div>
       </div>
 
     </div>
-  </div>
-
-</div>
-```
 
   </div><!-- end .col root -->
 
@@ -1909,7 +1908,6 @@ cursor: pointer;
 </footer>
 
 <!-- ── STATS PANEL ── -->
-
 <button id="stats-toggle" onclick="toggleStats()" aria-label="Family statistics">
   <span>📊</span><span>Family Stats</span>
 </button>
@@ -1926,8 +1924,10 @@ cursor: pointer;
   <div id="stats-body"></div>
 </div>
 
-<!-- ── REVIEW MODE PANEL ── -->
 
+
+
+<!-- ── REVIEW MODE PANEL ── -->
 <div id="review-overlay" onclick="closeReviewMode()" style="display:none;position:fixed;inset:0;background:rgba(26,18,8,0.45);z-index:1100;"></div>
 <div id="review-panel" style="display:none;">
   <div id="review-header">
@@ -1958,7 +1958,6 @@ cursor: pointer;
 </div>
 
 <!-- ── DETAIL PANEL ── -->
-
 <div id="overlay"></div>
 <div id="detail-panel" role="dialog" aria-modal="true">
   <div class="dp-header">
@@ -1976,7 +1975,6 @@ cursor: pointer;
   <button class="dp-edit-btn" id="dp-edit-btn" title="Edit this person's details">✎ Edit</button>
 
   <!-- VIEW MODE -->
-
   <div id="dp-view-body" class="dp-body">
     <div class="dp-section" id="dp-vitals-section">
       <div class="dp-label">Vital Records</div>
@@ -2006,7 +2004,6 @@ cursor: pointer;
   </div>
 
   <!-- EDIT MODE FORM -->
-
   <div id="dp-edit-form">
     <div class="dp-edit-row"><label>First / Full Name</label><input class="dp-edit-input" id="ef-name" type="text" placeholder="e.g. John"></div>
     <div class="dp-edit-row"><label>Date of Birth</label><input class="dp-edit-input" id="ef-born" type="text" placeholder="e.g. 10/29/1973 or 27 January 2007"></div>
@@ -2033,7 +2030,6 @@ cursor: pointer;
 <div id="hover-card" class="hover-card" aria-hidden="true"></div>
 
 <!-- Add Person Modal -->
-
 <div id="add-person-modal">
   <div id="add-person-box">
     <h3 id="ap-title">Add Person</h3>
@@ -2074,8 +2070,8 @@ cursor: pointer;
   </div>
 </div>
 
-<!-- Link Existing Child Modal -->
 
+<!-- Link Existing Child Modal -->
 <div id="link-child-modal" style="display:none;position:fixed;inset:0;z-index:3001;background:rgba(26,18,8,0.55);align-items:center;justify-content:center;">
   <div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;padding:24px 28px;width:min(420px,92vw);max-height:80vh;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(90,60,20,0.22);">
     <h3 style="font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--sepia-dark);margin-bottom:4px;">Link Existing Child</h3>
@@ -3841,6 +3837,5 @@ async function reviewSave() {
 }
 
 </script>
-
 </body>
 </html>
