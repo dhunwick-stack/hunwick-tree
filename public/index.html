@@ -1369,6 +1369,8 @@
   }
   #add-person-modal.open { display: flex; }
   #add-person-box {
+    max-height: 90vh;
+    overflow-y: auto;
     background: var(--card-bg);
     border: 1px solid var(--card-border);
     border-radius: 12px;
@@ -2053,6 +2055,30 @@
     <div class="ap-row">
       <label>Occupation</label>
       <input id="ap-occ" type="text" placeholder="e.g. Teacher">
+    </div>
+    <div class="ap-row">
+      <label>Current Location</label>
+      <input id="ap-location" type="text" placeholder="e.g. Evanston, IL, USA">
+    </div>
+    <div class="ap-row" id="ap-spouse-row">
+      <label>Spouse / Partner <span style="font-weight:normal;font-size:0.8rem;color:var(--sepia-light);">(optional)</span></label>
+      <input id="ap-spouse" type="text" placeholder="e.g. Jane Smith">
+    </div>
+    <div class="ap-row">
+      <label>Date of Marriage</label>
+      <input id="ap-married" type="text" placeholder="e.g. 14 June 1997">
+    </div>
+    <div class="ap-row">
+      <label>Place of Death</label>
+      <input id="ap-pod" type="text" placeholder="e.g. London, UK">
+    </div>
+    <div class="ap-row">
+      <label>Cause of Death</label>
+      <input id="ap-cod" type="text" placeholder="e.g. Heart failure">
+    </div>
+    <div class="ap-row">
+      <label>Website / URL</label>
+      <input id="ap-url" type="url" placeholder="e.g. https://example.com">
     </div>
     <div class="ap-row">
       <label>Notes</label>
@@ -2915,12 +2941,26 @@ function hideHoverCard() {
   hoverCard.classList.remove('visible');
 }
 
-document.querySelectorAll('.person').forEach(card => {
-  card.addEventListener('mouseenter', e => {
-    hoverTimeout = setTimeout(() => showHoverCard(card, e), 320);
+// ── Inject add-buttons via delegation (catches all cards including late-rendered dynamic ones) ──
+document.body.addEventListener('mouseover', e => {
+  const card = e.target.closest('.person[data-pkey]');
+  if (card && !card.querySelector('.card-add-btns')) {
+    injectAddButtons(card);
+  }
+}, true); // capture phase so it fires before any card handlers
+
+// ── Hover card via event delegation (catches static + dynamically added cards) ──
+document.body.addEventListener('mouseover', e => {
+  const card = e.target.closest('.person[data-pkey]');
+  if (!card) return;
+  if (card.dataset.hoverBound) return; // already set up
+  card.dataset.hoverBound = '1';
+
+  card.addEventListener('mouseenter', ev => {
+    hoverTimeout = setTimeout(() => showHoverCard(card, ev), 320);
   });
-  card.addEventListener('mousemove', e => {
-    if (hoverCard.classList.contains('visible')) positionHoverCard(e);
+  card.addEventListener('mousemove', ev => {
+    if (hoverCard.classList.contains('visible')) positionHoverCard(ev);
   });
   card.addEventListener('mouseleave', () => {
     clearTimeout(hoverTimeout);
@@ -2930,6 +2970,10 @@ document.querySelectorAll('.person').forEach(card => {
     clearTimeout(hoverTimeout);
     hideHoverCard();
   });
+
+  // Trigger immediately for this first mouseover
+  clearTimeout(hoverTimeout);
+  hoverTimeout = setTimeout(() => showHoverCard(card, e), 320);
 });
 
 // ── STATS PANEL ──
@@ -3261,7 +3305,7 @@ function openAddModal(relType, card) {
       : `Adding a spouse or partner of ${personName}`;
 
   // Clear fields
-  ['ap-name','ap-born','ap-died','ap-pob','ap-occ','ap-notes'].forEach(id => {
+  ['ap-name','ap-born','ap-died','ap-pob','ap-occ','ap-location','ap-pod','ap-cod','ap-spouse','ap-married','ap-url','ap-notes'].forEach(id => {
     document.getElementById(id).value = '';
   });
   document.getElementById('ap-err').style.display = 'none';
@@ -3297,6 +3341,8 @@ function openAddModal(relType, card) {
     linkSection.style.display = 'none';
   }
 
+  // Hide spouse field when adding a spouse relationship (redundant)
+  document.getElementById('ap-spouse-row').style.display = relType === 'spouse' ? 'none' : '';
   document.getElementById('add-person-modal').classList.add('open');
   document.getElementById('ap-name').focus();
 }
@@ -3441,28 +3487,48 @@ document.getElementById('ap-save').addEventListener('click', async () => {
     return;
   }
 
-  const born   = document.getElementById('ap-born').value.trim() || null;
-  const died   = document.getElementById('ap-died').value.trim() || null;
-  const pob    = document.getElementById('ap-pob').value.trim() || null;
-  const occ    = document.getElementById('ap-occ').value.trim() || null;
-  const notes  = document.getElementById('ap-notes').value.trim() || null;
+  const born      = document.getElementById('ap-born').value.trim() || null;
+  const died      = document.getElementById('ap-died').value.trim() || null;
+  const pob       = document.getElementById('ap-pob').value.trim() || null;
+  const pod       = document.getElementById('ap-pod').value.trim() || null;
+  const cod       = document.getElementById('ap-cod').value.trim() || null;
+  const occ       = document.getElementById('ap-occ').value.trim() || null;
+  const location  = document.getElementById('ap-location').value.trim() || null;
+  const married   = document.getElementById('ap-married').value.trim() || null;
+  const url       = document.getElementById('ap-url').value.trim() || null;
+  const notes     = document.getElementById('ap-notes').value.trim() || null;
+  const spouseVal = document.getElementById('ap-spouse').value.trim() || null;
 
   const key = buildNewKey(nameVal, born);
   const relData = PEOPLE[addRelKey] || {};
 
+  // Auto-derive generation from parent's generation number
+  let generation = null;
+  if (addRelType === 'child' && relData.generation) {
+    const genMatch = relData.generation.match(/(\d+)/);
+    if (genMatch) {
+      const ordinals = ['','1st','2nd','3rd','4th','5th','6th','7th','8th','9th','10th','11th','12th','13th'];
+      const nextNum = parseInt(genMatch[1]) + 1;
+      generation = ordinals[nextNum] || (nextNum + 'th');
+    }
+  }
+
   // Build relationship links
   const newParents  = addRelType === 'child'  ? [addRelKey] : [];
-  const newSpouse   = addRelType === 'spouse' ? addRelKey : null;
+  const newSpouse   = addRelType === 'spouse' ? addRelKey   : (spouseVal || null);
 
   const data = {
     name: nameVal,
-    born, died, pob,
+    born, died, pob, pod, cod,
     occupation: occ,
+    location,
+    married,
+    url,
     notes: notes || '',
     spouse: newSpouse,
     parents: newParents,
     children: [],
-    generation: null,
+    generation,
     isDirect: false,
     _added: true,
   };
