@@ -2991,7 +2991,12 @@ function renderStats() {
 
   // ── Helpers ──
   function age(d) { return calcAge(d.born, d.died); }
-  function isLiving(d) { return d.born && !d.died; }
+  function isLiving(d) {
+    if (!d.born || d.died) return false;
+    const yr = birthYear(d);
+    if (yr && (today.getFullYear() - yr) > 100) return false; // no confirmed death but implausibly old
+    return true;
+  }
   function birthYear(d) {
     if (!d.born) return null;
     const m = d.born.match(/\b(1[0-9]{3}|20[0-9]{2})\b/);
