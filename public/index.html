@@ -3043,23 +3043,61 @@ function renderStats() {
   const earliestYear = years.length ? Math.min(...years) : null;
   const spanYears = earliestYear ? today.getFullYear() - earliestYear : null;
 
-  // Locations
+  // ── Current locations (living people) ──
+  function normaliseRegion(loc) {
+    const l = loc.toLowerCase();
+    // USA — specific cities first, then state/country fallback
+    if (/chicago|evanston|skokie|\bil\b|illinois/.test(l))     return '🇺🇸 Chicago / Illinois';
+    if (/new york|manhattan|brooklyn/.test(l))                   return '🇺🇸 New York';
+    if (/california|los angeles|san francisco|la\b|sf\b/.test(l)) return '🇺🇸 California';
+    if (/\busa\b|united states|u\.s\.a/.test(l))              return '🇺🇸 USA';
+    // UK — all nations
+    if (/edinburgh|glasgow|scotland/.test(l))                    return '🇬🇧 Scotland';
+    if (/wales|cardiff|swansea/.test(l))                         return '🇬🇧 Wales';
+    if (/belfast|northern ireland/.test(l))                      return '🇬🇧 Northern Ireland';
+    if (/london|birmingham|manchester|liverpool|england|\buk\b|united kingdom|u\.k\./.test(l)) return '🇬🇧 England / UK';
+    // Europe
+    if (/prague|brno|czech/.test(l))                             return '🇨🇿 Czech Republic';
+    if (/paris|france|french/.test(l))                           return '🇫🇷 France';
+    if (/berlin|munich|germany|german/.test(l))                  return '🇩🇪 Germany';
+    if (/amsterdam|netherlands|dutch|holland/.test(l))           return '🇳🇱 Netherlands';
+    if (/madrid|barcelona|spain|spanish/.test(l))                return '🇪🇸 Spain';
+    if (/rome|milan|italy|italian/.test(l))                      return '🇮🇹 Italy';
+    if (/ireland|dublin|cork/.test(l))                           return '🇮🇪 Ireland';
+    // Africa
+    if (/nigeria|lagos|abuja|ibadan/.test(l))                    return '🇳🇬 Nigeria';
+    if (/ghana|accra/.test(l))                                   return '🇬🇭 Ghana';
+    if (/south africa|johannesburg|cape town/.test(l))           return '🇿🇦 South Africa';
+    if (/timbuktu|mali/.test(l))                                 return '🇲🇱 Mali';
+    // Middle East & Asia
+    if (/iraq|baghdad|basra/.test(l))                            return '🇮🇶 Iraq';
+    if (/jordan|amman/.test(l))                                  return '🇯🇴 Jordan';
+    if (/israel|tel aviv|jerusalem/.test(l))                     return '🇮🇱 Israel';
+    if (/canada|toronto|vancouver|montreal/.test(l))             return '🇨🇦 Canada';
+    if (/australia|sydney|melbourne/.test(l))                    return '🇦🇺 Australia';
+    // Fallback — return cleaned location as-is
+    return loc.trim();
+  }
+
   const locationGroups = {};
   people.forEach(([k,d]) => {
-    if (!d.location) return;
-    const loc = d.location.trim();
-    // Normalise to country/region
-    let region = loc;
-    if (/chicago|evanston|skokie|illinois|IL/i.test(loc)) region = 'Chicago / Illinois';
-    else if (/prague|czech/i.test(loc)) region = 'Prague, Czech Republic';
-    else if (/london|england|uk|united kingdom/i.test(loc)) region = 'United Kingdom';
-    else if (/nigeria|nigeria/i.test(loc)) region = 'Nigeria';
-    else if (/usa|united states/i.test(loc)) region = 'USA';
-    else if (/ireland/i.test(loc)) region = 'Ireland';
+    if (!d.location || d.died) return; // living people only for current locations
+    const region = normaliseRegion(d.location);
     locationGroups[region] = (locationGroups[region] || 0) + 1;
   });
   const locationList = Object.entries(locationGroups).sort((a,b) => b[1]-a[1]);
   const maxLoc = locationList.length ? locationList[0][1] : 1;
+
+  // ── Historical origins — where family came from (place of birth, all people) ──
+  const originGroups = {};
+  people.forEach(([k,d]) => {
+    const src = d.pob || null;
+    if (!src) return;
+    const region = normaliseRegion(src);
+    originGroups[region] = (originGroups[region] || 0) + 1;
+  });
+  const originList = Object.entries(originGroups).sort((a,b) => b[1]-a[1]);
+  const maxOrigin = originList.length ? originList[0][1] : 1;
 
   // Most common birth month
   const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -3160,6 +3198,11 @@ function renderStats() {
   if (locationList.length) {
     sections.push(section('Where They Live', locationList.map(([loc, n]) =>
       barRow(loc, n, maxLoc)
+    )));
+  }
+  if (originList.length) {
+    sections.push(section('Where They Were Born', originList.map(([loc, n]) =>
+      barRow(loc, n, maxOrigin)
     )));
   }
 
