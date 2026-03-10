@@ -2,36 +2,36 @@ export default async (req, context) => {
   const url  = new URL(req.url);
   const path = url.pathname;
 
-  // Allow: login page, identity API, static assets
-  if (
-    path === '/login' ||
-    path === '/login.html' ||
-    path === '/favicon.ico' ||
-    path.startsWith('/.netlify/')
-  ) {
+  // Allow login page and all Netlify infrastructure
+  if (path === '/login' || path === '/login.html' || path.startsWith('/.netlify/')) {
     return context.next();
   }
 
-  // Check for our session cookie
-  const cookie = req.headers.get('cookie') || '';
-  const match  = cookie.match(/nf_jwt=([^;]+)/);
+  // Accept token from cookie OR Authorization: Bearer header (for API calls)
+  const cookie      = req.headers.get('cookie') || '';
+  const cookieMatch = cookie.match(/nf_jwt=([^;]+)/);
+  const authHeader  = req.headers.get('authorization') || '';
+  const bearerMatch = authHeader.match(/^Bearer\s+(\S+)/i);
+  const rawToken    = cookieMatch ? cookieMatch[1] : (bearerMatch ? bearerMatch[1] : null);
 
-  if (match) {
-    // Quick JWT expiry check (no signature verification — just payload)
+  if (rawToken) {
     try {
-      const payload = JSON.parse(atob(match[1].split('.')[1]));
-      if (payload.exp && payload.exp > Math.floor(Date.now() / 1000)) {
-        return context.next(); // valid, not expired
+      // Decode JWT payload (no signature verification needed — GoTrue handles that on API calls)
+      const b64     = rawToken.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
+      const payload = JSON.parse(atob(b64));
+      const now     = Math.floor(Date.now() / 1000);
+      if (payload.exp && payload.exp > now) {
+        return context.next(); // valid
       }
     } catch {
-      // Malformed token — fall through to redirect
+      // malformed — fall through
     }
   }
 
-  // No valid session — redirect to login
-  const loginUrl = new URL('/login', url.origin);
-  if (path !== '/') loginUrl.searchParams.set('redirect', path + url.search);
-  return Response.redirect(loginUrl.toString(), 302);
+  // No valid cookie — redirect to login
+  const dest = new URL('/login', url.origin);
+  if (path !== '/') dest.searchParams.set('redirect', path + url.search);
+  return Response.redirect(dest.toString(), 302);
 };
 
 export const config = {
