@@ -2503,16 +2503,17 @@ function showAuthRequired() {
 if (typeof netlifyIdentity !== 'undefined') {
   netlifyIdentity.on('init', user => {
     setAuthState(user || null);
-    // Auto-open widget if URL contains an invite or recovery token
-    const hash = window.location.hash;
-    if (hash && (hash.includes('invite_token') || hash.includes('recovery_token') || hash.includes('confirmation_token'))) {
-      netlifyIdentity.open();
-    }
   });
+  // Auto-open widget if URL contains an invite/recovery token
+  // Must run after init — use small delay to let widget settle
+  const _hash = window.location.hash;
+  if (_hash && (_hash.includes('invite_token') || _hash.includes('recovery_token') || _hash.includes('confirmation_token'))) {
+    setTimeout(() => netlifyIdentity.open(), 200);
+  }
   netlifyIdentity.on('login', user => { setAuthState(user); netlifyIdentity.close(); });
   netlifyIdentity.on('logout', () => setAuthState(null));
   netlifyIdentity.on('error', err => console.error('Identity error:', err));
-  netlifyIdentity.init();
+  netlifyIdentity.init({ APIUrl: "https://hunwick-tree.netlify.app/.netlify/identity" });
 } else {
   // Widget script not loaded — default to guest
   document.body.classList.add('auth-guest');
