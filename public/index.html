@@ -78,6 +78,15 @@
   .toolbar-btn:hover { background: var(--accent); transform: translateY(-1px); }
   .toolbar-btn.accent-btn { background: var(--accent); }
   .toolbar-btn.accent-btn:hover { background: #5c2e15; }
+  /* Auth button states */
+  .toolbar-btn.auth-btn-logged-out { background: #3a3a3a; }
+  .toolbar-btn.auth-btn-logged-out:hover { background: #1a1a1a; }
+  .toolbar-btn.auth-btn-logged-in { background: #2d6a2d; }
+  .toolbar-btn.auth-btn-logged-in:hover { background: #1e4d1e; }
+  /* Hide edit controls when logged out */
+  body.auth-guest #stats-toggle,
+  body.auth-guest #review-toggle,
+  body.auth-guest #bulk-edit-toggle { display: none; }
   /* Mobile: 2×2 grid of compact buttons */
   @media (max-width: 600px) {
     #bottom-toolbar {
@@ -1695,6 +1704,8 @@
   }
   .ap-err { color: #b00; font-size: 0.85rem; margin-top: 8px; display: none; }
 </style>
+<!-- Netlify Identity Widget -->
+<script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 </head>
 <body>
 
@@ -2179,6 +2190,9 @@
     <button id="bulk-edit-toggle" class="toolbar-btn" onclick="openBulkEdit()" aria-label="Bulk edit family members">
       <span>⚡</span><span>Bulk Edit</span>
     </button>
+    <button id="auth-btn" class="toolbar-btn auth-btn-logged-out" onclick="handleAuthClick()" aria-label="Login">
+      <span>🔒</span><span id="auth-btn-label">Family Login</span>
+    </button>
   </div>
   <div id="tree-search-wrap">
     <span id="search-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="5.5" cy="5.5" r="4" stroke="currentColor" stroke-width="1.5"/><line x1="8.7" y1="8.7" x2="12.5" y2="12.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
@@ -2441,6 +2455,61 @@
 </div>
 
 <script>
+// ════════════════════════════════════════════
+//  AUTH — Netlify Identity
+// ════════════════════════════════════════════
+let _authUser = null;  // null = guest, object = logged-in user
+
+function authHeaders() {
+  const token = _authUser?.token?.access_token;
+  return token ? { 'Authorization': `Bearer ${token}` } : {};
+}
+
+function setAuthState(user) {
+  _authUser = user;
+  const btn = document.getElementById('auth-btn');
+  const label = document.getElementById('auth-btn-label');
+  if (user) {
+    document.body.classList.remove('auth-guest');
+    btn.className = 'toolbar-btn auth-btn-logged-in';
+    const firstName = (user.user_metadata?.full_name || user.email || '').split(/[\s@]/)[0];
+    label.textContent = `Hi, ${firstName} ↩`;
+    btn.setAttribute('aria-label', 'Log out');
+  } else {
+    document.body.classList.add('auth-guest');
+    btn.className = 'toolbar-btn auth-btn-logged-out';
+    label.textContent = 'Family Login';
+    btn.setAttribute('aria-label', 'Log in');
+  }
+}
+
+function handleAuthClick() {
+  if (_authUser) {
+    netlifyIdentity.logout();
+  } else {
+    netlifyIdentity.open('login');
+  }
+}
+
+function showAuthRequired() {
+  // Flash a brief "please log in" message if a save is attempted while logged out
+  const btn = document.getElementById('auth-btn');
+  btn.style.outline = '2px solid #e33';
+  setTimeout(() => btn.style.outline = '', 2000);
+  netlifyIdentity.open('login');
+}
+
+// Initialise Identity widget
+if (typeof netlifyIdentity !== 'undefined') {
+  netlifyIdentity.on('init', user => setAuthState(user || null));
+  netlifyIdentity.on('login', user => { setAuthState(user); netlifyIdentity.close(); });
+  netlifyIdentity.on('logout', () => setAuthState(null));
+  netlifyIdentity.init();
+} else {
+  // Widget script not loaded (unlikely on prod) — default to guest
+  document.body.classList.add('auth-guest');
+}
+
 const PEOPLE_DEFAULT = {
   "William (patriarch)": { born: null, died: null, spouse: "Mary", children: ["Mary (bap.1701)", "William (bap.1706)", "Francis (bap.1749)"], parents: [], notes: "", generation: "1st — Patriarch", isDirect: false },
   "Mary (bap.1701)": { born: "bap. 1701", died: null, parents: ["William (patriarch)", "Mary"], children: [], spouse: null, notes: "", generation: "2nd", isDirect: false },
@@ -2568,10 +2637,11 @@ async function apiSavePerson(key, patch, parentKey, relType) {
       try {
         const res = await fetch('/api/save-person', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
           body: JSON.stringify({ key, data: patch, parentKey: parentKey || null, relType: relType || null })
         });
         if (res.ok) return;
+        if (res.status === 401) { showAuthRequired(); return; }
         console.warn('Save returned', res.status, 'for key:', key);
         if (res.status < 500) return;
       } catch(e) {
@@ -2606,9 +2676,10 @@ async function apiSavePhoto(name, dataUrl) {
     const blob = await resizeToBlob(dataUrl);
     const res = await fetch(`/api/photo?name=${encodeURIComponent(name)}`, {
       method: 'POST',
-      headers: { 'Content-Type': blob.type },
+      headers: { 'Content-Type': blob.type, ...authHeaders() },
       body: blob
     });
+    if (res.status === 401) { showAuthRequired(); return; }
     if (!res.ok) console.warn('Photo save returned', res.status);
     else {
       // cache a local object URL so it displays immediately
@@ -4243,7 +4314,7 @@ async function saveBulkEdit() {
   try {
     const res = await fetch('/api/save-many', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify({ updates })
     });
     if (res.ok) {
