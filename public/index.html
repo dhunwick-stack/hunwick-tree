@@ -2565,10 +2565,8 @@ function updateCardMeta() {
         const nameEl = card.querySelector('.person-name');
         if (nameEl) nameEl.after(datesEl); else card.appendChild(datesEl);
       }
-      // Only overwrite if currently blank (don't clobber hand-crafted static dates)
-      if (!datesEl.textContent.trim()) {
-        datesEl.textContent = dateStr;
-      }
+      // Always write from PEOPLE data — blob is authoritative
+      datesEl.textContent = dateStr;
     }
 
     // Remove existing meta
