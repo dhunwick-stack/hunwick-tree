@@ -17,8 +17,12 @@ export default async (req, context) => {
   if (rawToken) {
     try {
       // Decode JWT payload (no signature verification needed — GoTrue handles that on API calls)
-      const b64     = rawToken.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
-      const payload = JSON.parse(atob(b64));
+      // Decode base64url → base64, add padding, then parse
+      const b64url  = rawToken.split('.')[1];
+      const b64     = b64url.replace(/-/g,'+').replace(/_/g,'/') + '=='.slice(0, (4 - b64url.length % 4) % 4);
+      const payload = JSON.parse(new TextDecoder().decode(
+        Uint8Array.from(atob(b64), c => c.charCodeAt(0))
+      ));
       const now     = Math.floor(Date.now() / 1000);
       if (payload.exp && payload.exp > now) {
         return context.next(); // valid
