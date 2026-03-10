@@ -1,7 +1,8 @@
 import { getStore } from "@netlify/blobs";
 
 export default async (req, context) => {
-  const store = getStore("hunwick-family");
+  // Strong consistency: always return the latest written data
+  const store = getStore({ name: "hunwick-family", consistency: "strong" });
 
   const [people, photoIndex] = await Promise.all([
     store.get("people", { type: "json" }),
@@ -9,7 +10,7 @@ export default async (req, context) => {
   ]);
 
   return Response.json({
-    people: people || null,   // null = not seeded yet
+    people: people || null,
     photos: photoIndex || {},
   });
 };
