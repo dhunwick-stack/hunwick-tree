@@ -1438,6 +1438,169 @@
   .card-add-btn:hover { opacity: 1; }
 
   /* ── Add Person modal ── */
+  /* ── Bulk Edit Modal ── */
+  #bulk-edit-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 3100;
+    background: rgba(26,18,8,0.6);
+    align-items: center;
+    justify-content: center;
+  }
+  #bulk-edit-modal.open { display: flex; }
+  #bulk-edit-box {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    padding: 24px 28px 20px;
+    width: min(580px, 95vw);
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    box-shadow: 0 10px 48px rgba(90,60,20,0.28);
+  }
+  .be-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .be-header h3 {
+    font-family: var(--font-serif);
+    font-size: 1.25rem;
+    color: var(--sepia-dark);
+    margin: 0;
+  }
+  #be-close {
+    background: none;
+    border: none;
+    font-size: 1.1rem;
+    cursor: pointer;
+    color: var(--sepia-light);
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: background 0.15s;
+  }
+  #be-close:hover { background: var(--parchment); }
+  .be-field-row {
+    display: flex;
+    gap: 12px;
+  }
+  .be-col { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+  .be-label {
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--sepia-light);
+    font-weight: 600;
+  }
+  #be-field, #be-value, #be-search {
+    background: var(--parchment);
+    border: 1px solid var(--card-border);
+    border-radius: 7px;
+    padding: 8px 10px;
+    font-size: 0.88rem;
+    color: var(--sepia-dark);
+    font-family: inherit;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  #be-field:focus, #be-value:focus, #be-search:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .be-filter-row { display: flex; flex-direction: column; gap: 7px; }
+  .be-filter-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+  .be-filter-btn {
+    background: var(--parchment);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 0.78rem;
+    cursor: pointer;
+    color: var(--sepia-mid);
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+  .be-filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .be-filter-btn.active { background: var(--sepia-dark); color: var(--parchment); border-color: var(--sepia-dark); }
+  .be-select-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.84rem;
+    color: var(--sepia-mid);
+  }
+  .be-check-all { display: flex; align-items: center; gap: 7px; cursor: pointer; }
+  .be-check-all input { cursor: pointer; accent-color: var(--accent); }
+  #be-selected-count { font-size: 0.78rem; color: var(--sepia-light); }
+  #be-person-list {
+    overflow-y: auto;
+    max-height: 280px;
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    background: var(--parchment);
+  }
+  .be-person-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-bottom: 1px solid rgba(139,107,74,0.1);
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+  .be-person-item:last-child { border-bottom: none; }
+  .be-person-item:hover { background: rgba(139,107,74,0.06); }
+  .be-person-item input[type=checkbox] { accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
+  .be-person-name { font-size: 0.88rem; color: var(--sepia-dark); font-weight: 500; }
+  .be-person-meta { font-size: 0.76rem; color: var(--sepia-light); margin-left: auto; }
+  .be-person-current { font-size: 0.75rem; color: var(--sepia-light); font-style: italic; }
+  .be-footer {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    padding-top: 4px;
+  }
+  #be-cancel {
+    background: var(--parchment);
+    border: 1px solid var(--card-border);
+    border-radius: 7px;
+    padding: 9px 20px;
+    font-size: 0.88rem;
+    cursor: pointer;
+    color: var(--sepia-mid);
+    font-family: inherit;
+    transition: background 0.15s;
+  }
+  #be-cancel:hover { background: #e8dcc8; }
+  #be-save {
+    background: var(--sepia-dark);
+    color: var(--parchment);
+    border: none;
+    border-radius: 7px;
+    padding: 9px 22px;
+    font-size: 0.88rem;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 600;
+    transition: background 0.15s;
+    min-width: 130px;
+  }
+  #be-save:hover { background: var(--accent); }
+  #be-save:disabled { opacity: 0.6; cursor: not-allowed; }
+  #be-result-msg {
+    font-size: 0.82rem;
+    color: var(--accent);
+    text-align: center;
+    min-height: 18px;
+    font-weight: 500;
+  }
+  #bulk-edit-toggle {
+    flex: 1;
+  }
+
   #add-person-modal {
     display: none;
     position: fixed;
@@ -2000,6 +2163,9 @@
     <button id="review-toggle" onclick="openReviewMode()" aria-label="Complete the tree">
       <span>✏️</span><span>Complete Tree</span>
     </button>
+    <button id="bulk-edit-toggle" onclick="openBulkEdit()" aria-label="Bulk edit family members">
+      <span>⚡</span><span>Bulk Edit</span>
+    </button>
   </div>
   <div id="tree-search-wrap">
     <span id="search-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="5.5" cy="5.5" r="4" stroke="currentColor" stroke-width="1.5"/><line x1="8.7" y1="8.7" x2="12.5" y2="12.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
@@ -2121,6 +2287,65 @@
 </div>
 
 <div id="hover-card" class="hover-card" aria-hidden="true"></div>
+
+<!-- Bulk Edit Modal -->
+<div id="bulk-edit-modal">
+  <div id="bulk-edit-box">
+    <div class="be-header">
+      <h3>⚡ Bulk Edit</h3>
+      <button id="be-close" onclick="closeBulkEdit()">✕</button>
+    </div>
+    <div class="be-field-row">
+      <div class="be-col">
+        <label class="be-label">Field to update</label>
+        <select id="be-field">
+          <option value="location">Current Location</option>
+          <option value="occupation">Occupation</option>
+          <option value="pob">Place of Birth</option>
+          <option value="pod">Place of Death</option>
+          <option value="generation">Generation / Role</option>
+          <option value="notes">Notes (replaces existing)</option>
+          <option value="notes_append">Notes (append to existing)</option>
+          <option value="died">Date of Death</option>
+          <option value="married">Date of Marriage</option>
+        </select>
+      </div>
+      <div class="be-col">
+        <label class="be-label">New value</label>
+        <input id="be-value" type="text" placeholder="e.g. Evanston, IL, USA">
+      </div>
+    </div>
+
+    <div class="be-filter-row">
+      <label class="be-label">Filter people</label>
+      <div class="be-filter-btns">
+        <button class="be-filter-btn active" data-gen="">All</button>
+        <button class="be-filter-btn" data-gen="11th">11th gen</button>
+        <button class="be-filter-btn" data-gen="10th">10th gen</button>
+        <button class="be-filter-btn" data-gen="9th">9th gen</button>
+        <button class="be-filter-btn" data-gen="direct">Direct line only</button>
+      </div>
+      <input id="be-search" type="text" placeholder="Search by name…" autocomplete="off">
+    </div>
+
+    <div class="be-select-row">
+      <label class="be-check-all">
+        <input type="checkbox" id="be-select-all"> Select all visible
+      </label>
+      <span id="be-selected-count">0 selected</span>
+    </div>
+
+    <div id="be-person-list"></div>
+
+    <div class="be-footer">
+      <button id="be-cancel" onclick="closeBulkEdit()">Cancel</button>
+      <button id="be-save" onclick="saveBulkEdit()">
+        <span id="be-save-label">Save Changes</span>
+      </button>
+    </div>
+    <div id="be-result-msg"></div>
+  </div>
+</div>
 
 <!-- Add Person Modal -->
 <div id="add-person-modal">
@@ -3866,6 +4091,163 @@ function buildReviewList() {
     .filter(e => e.year && e.year >= REVIEW_BIRTH_CUTOFF)
     .sort((a, b) => a.year - b.year)
     .map(e => e.key);
+}
+
+// ════════════════════════════════════════════
+//  BULK EDIT
+// ════════════════════════════════════════════
+
+let _beGenFilter = '';
+let _beSearchFilter = '';
+
+function openBulkEdit() {
+  _beGenFilter = '';
+  _beSearchFilter = '';
+  document.getElementById('be-value').value = '';
+  document.getElementById('be-search').value = '';
+  document.getElementById('be-result-msg').textContent = '';
+  document.getElementById('be-select-all').checked = false;
+  // Reset filter buttons
+  document.querySelectorAll('.be-filter-btn').forEach(b => b.classList.toggle('active', b.dataset.gen === ''));
+  renderBulkList();
+  document.getElementById('bulk-edit-modal').classList.add('open');
+  document.getElementById('be-value').focus();
+}
+
+function closeBulkEdit() {
+  document.getElementById('bulk-edit-modal').classList.remove('open');
+}
+
+function renderBulkList() {
+  const field = document.getElementById('be-field').value;
+  const list = document.getElementById('be-person-list');
+  const search = _beSearchFilter.toLowerCase();
+
+  const entries = Object.entries(PEOPLE).filter(([key, d]) => {
+    // Generation filter
+    if (_beGenFilter === 'direct') { if (!d.isDirect) return false; }
+    else if (_beGenFilter) { if (!(d.generation || '').startsWith(_beGenFilter)) return false; }
+    // Name search
+    if (search && !key.toLowerCase().includes(search)) return false;
+    return true;
+  }).sort((a, b) => {
+    // Sort by generation number then name
+    const ga = parseInt((a[1].generation || '99').match(/\d+/)?.[0] || 99);
+    const gb = parseInt((b[1].generation || '99').match(/\d+/)?.[0] || 99);
+    return ga !== gb ? ga - gb : a[0].localeCompare(b[0]);
+  });
+
+  // Preserve checked state
+  const checked = new Set(
+    [...list.querySelectorAll('input[type=checkbox]:checked')].map(cb => cb.value)
+  );
+
+  list.innerHTML = entries.map(([key, d]) => {
+    const shortName = key.split(' (')[0];
+    const currentVal = d[field === 'notes_append' ? 'notes' : field];
+    const currentStr = currentVal ? `Current: ${currentVal.toString().slice(0, 40)}${currentVal.toString().length > 40 ? '…' : ''}` : '';
+    const gen = d.generation ? `<span class="be-person-meta">${d.generation.split('—')[0].trim()}</span>` : '';
+    return `<label class="be-person-item">
+      <input type="checkbox" value="${key.replace(/"/g, '&quot;')}"${checked.has(key) ? ' checked' : ''} onchange="updateBulkCount()">
+      <span class="be-person-name">${shortName}</span>
+      ${gen}
+      ${currentStr ? `<span class="be-person-current">${currentStr}</span>` : ''}
+    </label>`;
+  }).join('') || '<div style="padding:16px;text-align:center;color:var(--sepia-light);font-size:0.85rem;">No people match this filter</div>';
+
+  updateBulkCount();
+}
+
+function updateBulkCount() {
+  const checked = document.querySelectorAll('#be-person-list input[type=checkbox]:checked').length;
+  document.getElementById('be-selected-count').textContent = `${checked} selected`;
+  document.getElementById('be-select-all').checked =
+    checked > 0 && checked === document.querySelectorAll('#be-person-list input[type=checkbox]').length;
+}
+
+// Filter button clicks
+document.querySelectorAll('.be-filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.be-filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    _beGenFilter = btn.dataset.gen;
+    renderBulkList();
+  });
+});
+
+// Live search
+document.getElementById('be-search').addEventListener('input', e => {
+  _beSearchFilter = e.target.value;
+  renderBulkList();
+});
+
+// Field change → re-render to show current values for new field
+document.getElementById('be-field').addEventListener('change', renderBulkList);
+
+// Select all toggle
+document.getElementById('be-select-all').addEventListener('change', function() {
+  document.querySelectorAll('#be-person-list input[type=checkbox]').forEach(cb => {
+    cb.checked = this.checked;
+  });
+  updateBulkCount();
+});
+
+// Close on backdrop click
+document.getElementById('bulk-edit-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('bulk-edit-modal')) closeBulkEdit();
+});
+
+async function saveBulkEdit() {
+  const field = document.getElementById('be-field').value;
+  const value = document.getElementById('be-value').value.trim();
+  const selectedKeys = [...document.querySelectorAll('#be-person-list input[type=checkbox]:checked')]
+    .map(cb => cb.value);
+
+  if (!value) { document.getElementById('be-result-msg').textContent = 'Please enter a value.'; return; }
+  if (selectedKeys.length === 0) { document.getElementById('be-result-msg').textContent = 'No people selected.'; return; }
+
+  const btn = document.getElementById('be-save');
+  const label = document.getElementById('be-save-label');
+  btn.disabled = true;
+  label.textContent = `Saving ${selectedKeys.length}…`;
+  document.getElementById('be-result-msg').textContent = '';
+
+  // Build updates array
+  const updates = selectedKeys.map(key => {
+    let patch;
+    if (field === 'notes_append') {
+      const existing = PEOPLE[key]?.notes || '';
+      patch = { notes: existing ? `${existing}\n${value}` : value };
+    } else {
+      patch = { [field]: value };
+    }
+    // Also update local PEOPLE immediately
+    if (!PEOPLE[key]) PEOPLE[key] = {};
+    Object.assign(PEOPLE[key], patch);
+    return { key, patch };
+  });
+
+  try {
+    const res = await fetch('/api/save-many', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ updates })
+    });
+    if (res.ok) {
+      document.getElementById('be-result-msg').textContent = `✓ Updated ${selectedKeys.length} ${selectedKeys.length === 1 ? 'person' : 'people'}`;
+      label.textContent = 'Save Changes';
+      btn.disabled = false;
+      // Refresh card display
+      updateCardMeta();
+      markPresumedException();
+    } else {
+      throw new Error(`Server returned ${res.status}`);
+    }
+  } catch(e) {
+    document.getElementById('be-result-msg').textContent = `⚠ Save failed: ${e.message}`;
+    label.textContent = 'Save Changes';
+    btn.disabled = false;
+  }
 }
 
 function openReviewMode() {
