@@ -28,9 +28,14 @@ export default async (req) => {
       k.toLowerCase().split(' (')[0].trim() === oldDisplay
     );
     if (!resolvedOldKey) {
-      const allKeys = Object.keys(people).slice(0, 30).join(', ');
+      // Try even fuzzier match — first word only
+      const firstWord = oldKey.split(' ')[0].toLowerCase();
+      const fuzzyMatches = Object.keys(people).filter(k =>
+        k.toLowerCase().startsWith(firstWord)
+      );
       return new Response(JSON.stringify({
-        error: `Person not found: "${oldKey}". Sample keys: ${allKeys}`
+        error: `Person not found: "${oldKey}"`,
+        hint: `Keys starting with "${firstWord}": ${fuzzyMatches.join(', ') || 'none'}`
       }), { status: 404 });
     }
   }
