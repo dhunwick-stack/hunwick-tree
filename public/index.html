@@ -3960,6 +3960,85 @@ async function reviewSave() {
   }, 900);
 }
 
+// ════════════════════════════════════════════
+//  SEARCH
+// ════════════════════════════════════════════
+(function() {
+  const input   = document.getElementById('tree-search');
+  const clearBtn = document.getElementById('tree-search-clear');
+  const counter = document.getElementById('search-result-count');
+
+  function getAllCards() {
+    return Array.from(document.querySelectorAll('.person[data-pkey]'));
+  }
+
+  function normalise(str) {
+    return str.toLowerCase().replace(/[^a-z0-9]/g, '');
+  }
+
+  function cardMatchesQuery(card, query) {
+    const pkey = card.dataset.pkey || '';
+    const name = card.querySelector('.person-name')?.textContent || '';
+    const data = PEOPLE[pkey] || {};
+    const searchable = [
+      name, pkey,
+      data.born, data.died, data.pob, data.pod,
+      data.occupation, data.location, data.spouse, data.notes
+    ].filter(Boolean).join(' ');
+    return normalise(searchable).includes(normalise(query));
+  }
+
+  function clearSearch() {
+    input.value = '';
+    clearBtn.style.display = 'none';
+    counter.textContent = '';
+    getAllCards().forEach(c => {
+      c.classList.remove('search-match', 'search-dim');
+    });
+  }
+
+  function runSearch() {
+    const q = input.value.trim();
+    clearBtn.style.display = q ? 'block' : 'none';
+    if (!q) { clearSearch(); return; }
+
+    const cards = getAllCards();
+    const matches = [];
+    cards.forEach(c => {
+      if (cardMatchesQuery(c, q)) {
+        c.classList.add('search-match');
+        c.classList.remove('search-dim');
+        matches.push(c);
+      } else {
+        c.classList.remove('search-match');
+        c.classList.add('search-dim');
+      }
+    });
+
+    if (matches.length === 0) {
+      counter.textContent = 'No results';
+      counter.style.color = '#c0392b';
+    } else {
+      counter.textContent = matches.length === 1 ? '1 match' : matches.length + ' matches';
+      counter.style.color = 'var(--sepia-light)';
+      matches[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
+
+  input.addEventListener('input', runSearch);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Escape') clearSearch();
+    if (e.key === 'Enter') {
+      const matches = getAllCards().filter(c => c.classList.contains('search-match'));
+      if (!matches.length) return;
+      const current = matches.findIndex(c => c.getBoundingClientRect().top > 80);
+      const next = matches[current === -1 ? 0 : Math.min(current, matches.length - 1)];
+      next?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  });
+  clearBtn.addEventListener('click', () => { clearSearch(); input.focus(); });
+})();
+
 </script>
 </body>
 </html>
