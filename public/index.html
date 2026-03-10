@@ -937,13 +937,21 @@
     border-radius: 7px 7px 0 0;
   }
 
+  .dp-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+    align-self: flex-start;
+    padding-top: 2px;
+    flex-shrink: 0;
+  }
   .dp-close {
-    position: absolute; top: 14px; right: 16px;
     background: none; border: none; cursor: pointer;
     color: rgba(253,248,240,0.6);
     font-size: 1.4rem; line-height: 1;
     transition: color 0.15s;
-    padding: 4px;
+    padding: 4px 6px;
   }
   .dp-close:hover { color: #fdf8f0; }
 
@@ -1119,7 +1127,6 @@
 
   /* ── EDIT MODE ── */
   .dp-edit-btn {
-    position: absolute; top: 14px; right: 110px;
     background: rgba(255,255,255,0.12);
     border: 1px solid rgba(255,255,255,0.2);
     border-radius: 4px;
@@ -1128,16 +1135,16 @@
     font-size: 0.75rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    padding: 4px 12px;
+    padding: 4px 10px;
     cursor: pointer;
+    white-space: nowrap;
     transition: background 0.15s, color 0.15s;
   }
   .dp-edit-btn:hover { background: rgba(255,255,255,0.22); color: #fdf8f0; }
   .dp-research-btn {
-    position: absolute; top: 14px; right: 46px;
     background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.25);
-    color: rgba(253,248,240,0.85); border-radius: 6px; padding: 5px 10px;
-    font-size: 0.78rem; cursor: pointer; transition: all 0.2s;
+    color: rgba(253,248,240,0.85); border-radius: 4px; padding: 4px 9px;
+    font-size: 0.75rem; cursor: pointer; transition: all 0.2s; white-space: nowrap;
   }
   .dp-research-btn:hover { background: rgba(255,255,255,0.22); color: #fdf8f0; }
   /* ── Research Results Panel ── */
@@ -2322,11 +2329,12 @@
       <div class="dp-dates" id="dp-dates"></div>
       <span class="dp-badge" id="dp-badge"></span>
     </div>
-    <button class="dp-close" id="dp-close" aria-label="Close">&#x2715;</button>
+    <div class="dp-header-actions">
+      <button class="dp-edit-btn" id="dp-edit-btn" title="Edit this person's details">✎ Edit</button>
+      <button class="dp-research-btn" id="dp-research-btn" title="AI genealogy research">🔍 Research</button>
+      <button class="dp-close" id="dp-close" aria-label="Close">&#x2715;</button>
+    </div>
   </div>
-  <!-- EDIT TOGGLE BUTTON in header -->
-  <button class="dp-edit-btn" id="dp-edit-btn" title="Edit this person's details">✎ Edit</button>
-  <button class="dp-research-btn" id="dp-research-btn" title="AI genealogy research">🔍 Research</button>
 
   <!-- VIEW MODE -->
   <div id="dp-view-body" class="dp-body">
@@ -3098,7 +3106,7 @@ let currentCard=null, currentKey=null, editMode=false;
 function setEditMode(on) {
   editMode=on;
   document.getElementById('dp-edit-btn').classList.toggle('active',on);
-  document.getElementById('dp-edit-btn').textContent=on?'✓ Editing':'✎ Edit';
+  document.getElementById('dp-edit-btn').textContent=on?'✓ Done':'✎ Edit';
   document.getElementById('dp-view-body').classList.toggle('hidden',on);
   document.getElementById('dp-edit-form').classList.toggle('visible',on);
   if(on) populateEditForm(currentKey);
@@ -4722,7 +4730,7 @@ async function reviewSave() {
 // ── AI RESEARCH ────────────────────────────────────────────────────────────
 
 document.getElementById('dp-research-btn').addEventListener('click', () => {
-  if (currentPersonKey) researchPerson(currentPersonKey);
+  if (currentKey) researchPerson(currentKey);
 });
 document.getElementById('research-close').addEventListener('click', closeResearch);
 
@@ -4736,7 +4744,7 @@ async function researchPerson(key) {
   panel.classList.add('open');
   body.innerHTML = `<div class="research-loading"><span class="research-spinner">⏳</span>Searching historical records for <strong>${key}</strong>…</div>`;
 
-  const person = (window.PEOPLE && window.PEOPLE[key]) ? window.PEOPLE[key] : {};
+  const person = (PEOPLE && PEOPLE[key]) ? PEOPLE[key] : {};
   const _jwt1 = (document.cookie.match(/nf_jwt=([^;]+)/)||[])[1]||'';
 
   try {
@@ -4809,12 +4817,12 @@ async function applySuggestion(key, field, btn) {
     });
     if (!res.ok) throw new Error('Save failed');
 
-    if (window.PEOPLE) window.PEOPLE[key] = current;
+    if (PEOPLE) PEOPLE[key] = current;
     btn.textContent = 'Applied';
     btn.style.background = '#28a745';
     row.style.opacity = '0.6';
 
-    if (currentPersonKey === key) populateDetailPanel(key);
+    if (currentKey === key) openPanel(document.getElementById('dp-name').textContent, currentCard, key);
   } catch (e) {
     btn.textContent = 'Error';
     btn.style.background = '#dc3545';
