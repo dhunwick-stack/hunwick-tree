@@ -1,14 +1,7 @@
 [build]
   publish = "public"
+  edge_functions = "edge-functions"
 
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
-
-[edge_functions]
-  directory = "edge-functions"
-
-[[edge_functions]]
-  function = "auth-gate"
-  path = "/*"
-  excludedPath = ["/.netlify/*", "/login", "/login.html", "/favicon.ico"]
