@@ -1103,12 +1103,24 @@
     border-radius: 50%;
   }
 
-  /* ── STATS PANEL ── */
-  #stats-toggle {
+  /* ── Bottom Toolbar ── */
+  #bottom-toolbar {
     position: fixed;
-    bottom: 28px;
+    bottom: 24px;
     left: 24px;
     z-index: 800;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  #toolbar-btns {
+    display: flex;
+    gap: 10px;
+  }
+  #toolbar-btns button {
+    flex: 1;
+    position: static;
     background: var(--sepia-dark);
     color: #fdf8f0;
     border: none;
@@ -1118,17 +1130,19 @@
     font-size: 0.88rem;
     letter-spacing: 0.06em;
     cursor: pointer;
+    font-weight: 700;
     box-shadow: 0 4px 16px rgba(92,71,48,0.28);
     transition: background 0.15s, transform 0.15s;
     display: flex;
     align-items: center;
     gap: 7px;
   }
-  #stats-toggle:hover { background: var(--accent); transform: translateY(-2px); }
+  #toolbar-btns button:hover { background: var(--accent); transform: translateY(-1px); }
+  /* ── STATS PANEL ── */
 
   #stats-panel {
     position: fixed;
-    bottom: 80px;
+    bottom: 110px;
     left: 24px;
     z-index: 799;
     width: 290px;
@@ -1910,12 +1924,21 @@
 </footer>
 
 <!-- ── STATS PANEL ── -->
-<button id="stats-toggle" onclick="toggleStats()" aria-label="Family statistics">
-  <span>📊</span><span>Family Stats</span>
-</button>
-<button id="review-toggle" onclick="openReviewMode()" aria-label="Complete the tree">
-  <span>✏️</span><span>Complete Tree</span>
-</button>
+    <div id="tree-search-wrap">
+<div id="bottom-toolbar">
+  <div id="toolbar-btns">
+    <button id="stats-toggle" onclick="toggleStats()" aria-label="Family statistics">
+      <span>📊</span><span>Family Stats</span>
+    </button>
+    <button id="review-toggle" onclick="openReviewMode()" aria-label="Complete the tree">
+      <span>✏️</span><span>Complete Tree</span>
+    </button>
+  </div>
+    <span id="search-icon">⌕</span>
+    <input id="tree-search" type="search" placeholder="Search family members…" autocomplete="off" spellcheck="false">
+    <button id="tree-search-clear" title="Clear">✕</button>
+  </div>
+</div>
 <div id="stats-panel" role="complementary" aria-label="Family statistics">
   <div class="stats-header">
     <div>
@@ -4041,13 +4064,6 @@ async function reviewSave() {
 })();
 
 </script>
-
-<div id="search-float">
-  <div id="search-result-count"></div>
-  <div id="tree-search-wrap">
-    <input id="tree-search" type="search" placeholder="Search family members…" autocomplete="off" spellcheck="false">
-    <button id="tree-search-clear" title="Clear search">✕</button>
-  </div>
 </div>
 </body>
 </html>
