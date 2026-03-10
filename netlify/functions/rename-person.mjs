@@ -20,14 +20,26 @@ export default async (req) => {
   const store = getStore({ name: "hunwick-family", consistency: "strong" });
   const people = (await store.get("people", { type: "json" })) || {};
 
+  // Exact match first, then fuzzy match by display name
+  let resolvedOldKey = oldKey;
   if (!people[oldKey]) {
-    return new Response(JSON.stringify({ error: "Person not found" }), { status: 404 });
+    const oldDisplay = oldKey.split(' (')[0].toLowerCase().trim();
+    resolvedOldKey = Object.keys(people).find(k =>
+      k.toLowerCase().split(' (')[0].trim() === oldDisplay
+    );
+    if (!resolvedOldKey) {
+      const allKeys = Object.keys(people).slice(0, 30).join(', ');
+      return new Response(JSON.stringify({
+        error: `Person not found: "${oldKey}". Sample keys: ${allKeys}`
+      }), { status: 404 });
+    }
   }
   if (people[newKey]) {
     return new Response(JSON.stringify({ error: "A person with that name/key already exists" }), { status: 409 });
   }
 
   // Copy record to new key, update the name field to match
+  oldKey = resolvedOldKey; // use resolved key from here on
   const record = { ...people[oldKey] };
   const newDisplayName = newKey.split(' (')[0].trim();
   record.name = newDisplayName;
@@ -38,16 +50,13 @@ export default async (req) => {
   for (const [k, p] of Object.entries(people)) {
     if (k === newKey) continue;
 
-    // children[] array
     if (Array.isArray(p.children)) {
       p.children = p.children.map(c => c === oldKey ? newKey : c);
     }
-    // parents[] array
     if (Array.isArray(p.parents)) {
       p.parents = p.parents.map(c => c === oldKey ? newKey : c);
     }
-    // spouse string
-    if (p.spouse === oldKey) p.spouse = newKey;
+    if (typeof p.spouse === 'string' && p.spouse === oldKey) p.spouse = newKey;
   }
 
   // Also rename the photo index key if one exists
