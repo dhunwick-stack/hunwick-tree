@@ -1704,8 +1704,6 @@
   }
   .ap-err { color: #b00; font-size: 0.85rem; margin-top: 8px; display: none; }
 </style>
-<!-- Netlify Identity Widget -->
-<script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 </head>
 <body>
 
@@ -2500,24 +2498,40 @@ function showAuthRequired() {
 }
 
 // Initialise Identity widget
-if (typeof netlifyIdentity !== 'undefined') {
+// Load widget script dynamically so we control timing — avoids async race
+// where widget hasn't mounted when our inline code runs
+function _initIdentity() {
+  if (typeof netlifyIdentity === 'undefined') {
+    document.body.classList.add('auth-guest');
+    return;
+  }
+
+  const _hash = window.location.hash;
+  const _hasToken = _hash && (
+    _hash.includes('invite_token') ||
+    _hash.includes('recovery_token') ||
+    _hash.includes('confirmation_token') ||
+    _hash.includes('access_token')
+  );
+
   netlifyIdentity.on('init', user => {
     setAuthState(user || null);
+    if (_hasToken) netlifyIdentity.open();
   });
-  // Auto-open widget if URL contains an invite/recovery token
-  // Must run after init — use small delay to let widget settle
-  const _hash = window.location.hash;
-  if (_hash && (_hash.includes('invite_token') || _hash.includes('recovery_token') || _hash.includes('confirmation_token'))) {
-    setTimeout(() => netlifyIdentity.open(), 200);
-  }
   netlifyIdentity.on('login', user => { setAuthState(user); netlifyIdentity.close(); });
   netlifyIdentity.on('logout', () => setAuthState(null));
   netlifyIdentity.on('error', err => console.error('Identity error:', err));
-  netlifyIdentity.init({ APIUrl: "https://hunwick-tree.netlify.app/.netlify/identity" });
-} else {
-  // Widget script not loaded — default to guest
-  document.body.classList.add('auth-guest');
+  netlifyIdentity.init({ APIUrl: 'https://hunwick-tree.netlify.app/.netlify/identity' });
 }
+
+// Inject widget script, then init once loaded
+(function() {
+  const s = document.createElement('script');
+  s.src = 'https://identity.netlify.com/v1/netlify-identity-widget.js';
+  s.onload = _initIdentity;
+  s.onerror = () => document.body.classList.add('auth-guest');
+  document.head.appendChild(s);
+})();
 
 const PEOPLE_DEFAULT = {
   "William (patriarch)": { born: null, died: null, spouse: "Mary", children: ["Mary (bap.1701)", "William (bap.1706)", "Francis (bap.1749)"], parents: [], notes: "", generation: "1st — Patriarch", isDirect: false },
