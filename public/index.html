@@ -3272,8 +3272,17 @@ apiLoad().then(() => {
       PEOPLE[key] = Object.assign({}, data, window._serverEdits?.[key] || {});
       if (data._added && data.name) {
         const parentKey = (data.parents || [])[0] || null;
-        const relKey = parentKey || null;
-        const relType = parentKey ? 'child' : 'child';
+        // Detect if this person was added as a spouse:
+        // they have no parents[], and some other person's .spouse field points to them
+        const isSpouse = !parentKey && Object.entries(PEOPLE).some(([k, d]) =>
+          k !== key && (d.spouse === data.name || d.spouse === key)
+        );
+        const relType = isSpouse ? 'spouse' : 'child';
+        // For spouse: find the person whose spouse field points to this key
+        const spouseOfKey = isSpouse
+          ? (Object.entries(PEOPLE).find(([k, d]) => k !== key && (d.spouse === data.name || d.spouse === key)) || [])[0] || null
+          : null;
+        const relKey = isSpouse ? spouseOfKey : (parentKey || null);
         renderNewCard(key, PEOPLE[key], relType, relKey);
       }
     });
