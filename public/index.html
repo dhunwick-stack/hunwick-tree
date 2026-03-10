@@ -3168,22 +3168,65 @@ async function saveEditForm() {
     url:document.getElementById('ef-url').value.trim()||null,
     notes:document.getElementById('ef-notes').value.trim()
   };
-  if(!PEOPLE[currentKey])PEOPLE[currentKey]={};
-  Object.assign(PEOPLE[currentKey],patch);
-  if(currentCard)currentCard.classList.add('edited');
   const btn=document.getElementById('dp-edit-save');
   btn.textContent='Saving…';btn.disabled=true;
-  await apiSaveEdit(currentKey,patch);
+
+  // Check if name changed — if so, rename the key first
+  const newNameRaw = document.getElementById('ef-name').value.trim();
+  const oldDisplayName = currentKey.split(' (')[0].trim();
+  const newDisplayName = newNameRaw || oldDisplayName;
+  const bornYear = (patch.born || (PEOPLE[currentKey]||{}).born || '').match(/\d{4}/)?.[0];
+  const newKey = bornYear ? `${newDisplayName} (b.${bornYear})` : newDisplayName;
+
+  let activeKey = currentKey;
+
+  if (newDisplayName !== oldDisplayName || newKey !== currentKey) {
+    // Name changed — rename the key in the blob store
+    try {
+      const res = await fetch('/api/rename-person', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        body: JSON.stringify({ oldKey: currentKey, newKey })
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        alert('Rename failed: ' + (err.error || res.status));
+        btn.textContent='Save Changes';btn.disabled=false;
+        return;
+      }
+      // Update local state
+      if (PEOPLE[currentKey]) {
+        PEOPLE[newKey] = { ...PEOPLE[currentKey], name: newDisplayName };
+        delete PEOPLE[currentKey];
+      }
+      // Update card dataset and display
+      if (currentCard) {
+        currentCard.dataset.pkey = newKey;
+        const nameEl = currentCard.querySelector('.person-name');
+        if (nameEl) nameEl.textContent = newDisplayName;
+      }
+      activeKey = newKey;
+      currentKey = newKey;
+    } catch(e) {
+      alert('Rename error: ' + e.message);
+      btn.textContent='Save Changes';btn.disabled=false;
+      return;
+    }
+  }
+
+  // Save the rest of the patch
+  if(!PEOPLE[activeKey])PEOPLE[activeKey]={};
+  Object.assign(PEOPLE[activeKey],patch);
+  if(currentCard)currentCard.classList.add('edited');
+  await apiSaveEdit(activeKey, patch);
+
   btn.textContent='Save Changes';btn.disabled=false;
-  const newName=document.getElementById('ef-name').value.trim();
-  const nameEl=currentCard?.querySelector('.person-name');
-  if(nameEl&&newName)nameEl.textContent=newName;
   const msg=document.getElementById('dp-edit-saved-msg');
   msg.classList.add('show');setTimeout(()=>msg.classList.remove('show'),2500);
   setEditMode(false);
   updateCardMeta();
   markPresumedException();
-  openPanel(document.getElementById('dp-name').textContent,currentCard,currentKey);
+  openPanel(document.getElementById('dp-name').textContent, currentCard, activeKey);
 }
 
 function renderPanelAvatar(key) {
