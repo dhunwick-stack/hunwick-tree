@@ -1,7 +1,11 @@
 import { getStore } from "@netlify/blobs";
+import { requireAuth } from "./auth-verify.mjs";
 
 export default async (req, context) => {
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
+
+  const auth = await requireAuth(req);
+  if (!auth.ok) return auth.response;
 
   const url = new URL(req.url);
   const name = url.searchParams.get("name");

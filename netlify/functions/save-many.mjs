@@ -1,10 +1,12 @@
 import { getStore } from "@netlify/blobs";
+import { requireAuth } from "./auth-verify.mjs";
 
 // Batch save: accepts an array of { key, patch } objects.
-// Reads the people blob once, applies all patches, writes once.
-// Avoids race conditions from multiple sequential saves.
 export default async (req, context) => {
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
+
+  const auth = await requireAuth(req);
+  if (!auth.ok) return auth.response;
 
   let body;
   try { body = await req.json(); } catch { return new Response("Bad JSON", { status: 400 }); }
