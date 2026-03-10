@@ -3998,7 +3998,8 @@ async function reviewSave() {
     clearBtn.style.display = 'none';
     counter.textContent = '';
     getAllCards().forEach(c => {
-      c.classList.remove('search-match', 'search-dim');
+      c.classList.remove('search-match');
+      c.style.display = '';
     });
   }
 
@@ -4012,11 +4013,11 @@ async function reviewSave() {
     cards.forEach(c => {
       if (cardMatchesQuery(c, q)) {
         c.classList.add('search-match');
-        c.classList.remove('search-dim');
+        c.style.display = '';
         matches.push(c);
       } else {
         c.classList.remove('search-match');
-        c.classList.add('search-dim');
+        c.style.display = 'none';
       }
     });
 
