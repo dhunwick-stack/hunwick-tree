@@ -46,21 +46,18 @@
     left: 24px;
     z-index: 800;
     display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
   }
   #toolbar-buttons {
     display: flex;
     gap: 10px;
   }
-  #toolbar-buttons button {
-    flex: 1;
-  }
   /* Search result count floats above toolbar */
   #search-result-count {
     position: fixed;
-    bottom: 72px;
+    bottom: 76px;
     left: 24px;
     font-family: 'Crimson Pro', serif;
     font-size: 0.82rem;
@@ -86,6 +83,7 @@
     gap: 7px;
     box-shadow: 0 4px 16px rgba(92,71,48,0.28);
     transition: background 0.15s, box-shadow 0.2s;
+    width: 220px;
   }
   #tree-search-wrap:focus-within {
     background: #3d2a1a;
@@ -2276,27 +2274,40 @@ async function apiLoad() {
   try {
     const res = await fetch('/api/data');
     if (!res.ok) return;
-    const { edits, photos, added } = await res.json();
-    // Store edits globally — re-applied AFTER added people are restored
-    // so Cara Eme's edits don't get overwritten by her original blob data
-    window._serverEdits = edits || {};
-    Object.entries(window._serverEdits).forEach(([k,v]) => { if (!PEOPLE[k]) PEOPLE[k]={}; Object.assign(PEOPLE[k], v); });
-    // Restore dynamically added people — defer until after stamp/updateCardMeta
-    window._pendingAdded = added || {};
+    const { people, photos } = await res.json();
+    // If the blob is seeded, merge it into PEOPLE (blob is authoritative)
+    if (people) {
+      Object.entries(people).forEach(([k, v]) => {
+        PEOPLE[k] = Object.assign({}, PEOPLE_DEFAULT[k] || {}, v);
+      });
+    }
     await Promise.all(Object.entries(photos||{}).map(async ([name, key]) => {
       try {
         const r = await fetch(`/api/photo-get?key=${encodeURIComponent(key)}`);
         if (r.ok) {
           const blob = await r.blob();
           const objUrl = URL.createObjectURL(blob);
-          // Store under both the saved name AND the resolved pkey
-          // so photos are found regardless of which form the key was saved under
           photoCache[name] = objUrl;
           const resolved = findKey(name);
           if (resolved && resolved !== name) photoCache[resolved] = objUrl;
         }
       } catch {}
     }));
+    // Render any people in the blob that aren't in the static HTML
+    Object.entries(PEOPLE).forEach(([key, data]) => {
+      if (!PEOPLE_DEFAULT[key] && !document.querySelector(`.person[data-pkey="${CSS.escape(key)}"]`)) {
+        const parents = data.parents || [];
+        const parentKey = parents[0] || null;
+        const isSpouse = !parentKey && Object.entries(PEOPLE).some(([k, d]) =>
+          k !== key && (d.spouse === key)
+        );
+        const relType = isSpouse ? 'spouse' : 'child';
+        const relKey = isSpouse
+          ? (Object.entries(PEOPLE).find(([k, d]) => k !== key && d.spouse === key) || [])[0] || null
+          : parentKey;
+        if (relKey) renderNewCard(key, data, relType, relKey);
+      }
+    });
     markEditedCards();
     updateCardMeta();
     document.querySelectorAll('.person[data-pkey]').forEach(card => {
@@ -2306,20 +2317,23 @@ async function apiLoad() {
   } catch(e) { console.warn('Server load failed, using defaults', e); }
 }
 
-// ── Serialised save queue — prevents race conditions on the edits blob ──
+// ── Serialised save queue — prevents race conditions on the people blob ──
 let _saveQueue = Promise.resolve();
-async function apiSaveEdit(key, patch) {
+async function apiSavePerson(key, patch, parentKey, relType) {
+  // Update local PEOPLE immediately
+  if (!PEOPLE[key]) PEOPLE[key] = {};
+  Object.assign(PEOPLE[key], patch);
   _saveQueue = _saveQueue.then(async () => {
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
-        const res = await fetch('/api/edit', {
+        const res = await fetch('/api/save-person', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ key, patch })
+          body: JSON.stringify({ key, data: patch, parentKey: parentKey || null, relType: relType || null })
         });
         if (res.ok) return;
         console.warn('Save returned', res.status, 'for key:', key);
-        if (res.status < 500) return; // client error — don't retry
+        if (res.status < 500) return;
       } catch(e) {
         console.warn('Save attempt', attempt + 1, 'failed:', e);
       }
@@ -2329,6 +2343,8 @@ async function apiSaveEdit(key, patch) {
   });
   return _saveQueue;
 }
+// Backwards-compat alias used throughout the edit panel
+const apiSaveEdit = (key, patch) => apiSavePerson(key, patch, null, null);
 
 async function resizeToBlob(dataUrl, maxWidth=1200, quality=0.82) {
   return new Promise(resolve => {
@@ -2523,7 +2539,7 @@ document.querySelectorAll('.person').forEach(card => {
 
 function markEditedCards() {
   document.querySelectorAll('.person[data-pkey]').forEach(card => {
-    card.classList.toggle('edited', JSON.stringify(PEOPLE[card.dataset.pkey]) !== JSON.stringify(PEOPLE_DEFAULT[card.dataset.pkey]));
+    card.classList.toggle('edited', !!(PEOPLE[card.dataset.pkey]?._edited));
   });
 }
 
@@ -2919,7 +2935,7 @@ document.getElementById('dp-avatar-lg').addEventListener('click',()=>{
 });
 
 document.getElementById('dp-export-btn').addEventListener('click',()=>{
-  const out={};Object.keys(PEOPLE).forEach(k=>{if(JSON.stringify(PEOPLE[k])!==JSON.stringify(PEOPLE_DEFAULT[k]))out[k]=PEOPLE[k];});
+  const out={};Object.keys(PEOPLE).forEach(k=>{ out[k]=PEOPLE[k]; });
   const blob=new Blob([JSON.stringify(out,null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='hunwick-edits.json';a.click();
 });
@@ -3347,47 +3363,10 @@ document.addEventListener('click', e => {
 });
 
 apiLoad().then(() => {
-  // Restore dynamically added people after DOM is stamped and painted
   requestAnimationFrame(() => {
-    const added = window._pendingAdded || {};
-    // Also build a set of base names from static data to catch key mismatches (e.g. "Ben" vs "Ben Hughes")
-    const _staticBaseNames = new Set(
-      Object.keys(PEOPLE_DEFAULT).map(k => k.split(' (')[0].toLowerCase().trim())
-    );
-    Object.entries(added).forEach(([key, data]) => {
-      if (PEOPLE_DEFAULT[key]) return; // exact key match
-      // Also skip if base name matches a static person (prevents "Ben Hughes" overriding "Ben")
-      const baseName = (data.name || key.split(' (')[0]).toLowerCase().trim();
-      if (_staticBaseNames.has(baseName)) return;
-      if (document.querySelector(`.person[data-pkey="${CSS.escape(key)}"]`)) return; // already in DOM
-      // Set base data first, then immediately overlay any saved edits
-      // This prevents the original blob data from overwriting edits on reload
-      PEOPLE[key] = Object.assign({}, data, window._serverEdits?.[key] || {});
-      if (data._added && data.name) {
-        const parentKey = (data.parents || [])[0] || null;
-        // Detect if this person was added as a spouse:
-        // they have no parents[], and some other person's .spouse field points to them
-        const isSpouse = !parentKey && Object.entries(PEOPLE).some(([k, d]) =>
-          k !== key && (d.spouse === data.name || d.spouse === key)
-        );
-        const relType = isSpouse ? 'spouse' : 'child';
-        // For spouse: find the person whose spouse field points to this key
-        const spouseOfKey = isSpouse
-          ? (Object.entries(PEOPLE).find(([k, d]) => k !== key && (d.spouse === data.name || d.spouse === key)) || [])[0] || null
-          : null;
-        const relKey = isSpouse ? spouseOfKey : (parentKey || null);
-        renderNewCard(key, PEOPLE[key], relType, relKey);
-      }
-    });
-    // Re-apply all edits once more to catch any added-person fields
-    Object.entries(window._serverEdits || {}).forEach(([k,v]) => {
-      if (PEOPLE[k]) Object.assign(PEOPLE[k], v);
-    });
     updateCardMeta();
     markPresumedException();
     injectAddButtonsAll();
-    // Apply photos to all newly-rendered dynamic cards
-    // (must run AFTER renderNewCard so the cards exist in DOM)
     document.querySelectorAll('.person[data-pkey]').forEach(card => {
       const key = card.dataset.pkey;
       if (key && photoCache[key]) applyPhotoToKey(key);
@@ -3718,13 +3697,21 @@ document.getElementById('ap-save').addEventListener('click', async () => {
     }
   }
 
-  // Save new person to server
+  // Save new person to server (with parent linkage in one atomic write)
   try {
-    await fetch('/api/add-person', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ key, data })
-    });
+    const parentForSave = addRelType === 'child' ? addRelKey : null;
+    const spouseForSave = addRelType === 'spouse' ? addRelKey : null;
+    await apiSavePerson(key, { ...data, _added: true }, parentForSave, addRelType);
+    // Also update the parent's children array locally
+    if (parentForSave && PEOPLE[parentForSave]) {
+      const kids = PEOPLE[parentForSave].children || [];
+      if (!kids.includes(key)) {
+        PEOPLE[parentForSave].children = [...kids, key];
+      }
+    }
+    if (spouseForSave && PEOPLE[spouseForSave]) {
+      PEOPLE[spouseForSave].spouse = key;
+    }
   } catch (e) {
     console.warn('Add-person save failed', e);
   }
