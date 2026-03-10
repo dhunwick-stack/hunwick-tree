@@ -2557,10 +2557,10 @@ function _showSetPassword(token, isInvite) {
 
     try {
       const type = isInvite ? 'signup' : 'recovery';
-      const res = await fetch(`/.netlify/identity/verify?type=${type}&token=${encodeURIComponent(token)}`, {
+      const res = await fetch('/.netlify/identity/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: pw })
+        body: JSON.stringify({ type, token, password: pw })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.msg || data.error_description || 'Unknown error');
