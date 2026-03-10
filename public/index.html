@@ -2296,6 +2296,8 @@ async function apiLoad() {
     // Render any people in the blob that aren't in the static HTML
     Object.entries(PEOPLE).forEach(([key, data]) => {
       if (!PEOPLE_DEFAULT[key] && !document.querySelector(`.person[data-pkey="${CSS.escape(key)}"]`)) {
+        // name is stored as the key — inject it into data so renderNewCard can use it
+        const dataWithName = { ...data, name: data.name || key.split(' (')[0] };
         const parents = data.parents || [];
         const parentKey = parents[0] || null;
         const isSpouse = !parentKey && Object.entries(PEOPLE).some(([k, d]) =>
@@ -2305,7 +2307,7 @@ async function apiLoad() {
         const relKey = isSpouse
           ? (Object.entries(PEOPLE).find(([k, d]) => k !== key && d.spouse === key) || [])[0] || null
           : parentKey;
-        if (relKey) renderNewCard(key, data, relType, relKey);
+        if (relKey) renderNewCard(key, dataWithName, relType, relKey);
       }
     });
     markEditedCards();
