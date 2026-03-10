@@ -39,6 +39,96 @@
     position: relative;
   }
 
+  /* ── Bottom Toolbar ── */
+  #bottom-toolbar {
+    position: fixed;
+    bottom: 24px;
+    left: 24px;
+    z-index: 800;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  #toolbar-buttons {
+    display: flex;
+    gap: 10px;
+  }
+  #toolbar-buttons button {
+    flex: 1;
+  }
+  /* Search result count floats above toolbar */
+  #search-result-count {
+    position: fixed;
+    bottom: 72px;
+    left: 24px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.82rem;
+    color: var(--ink);
+    background: rgba(253,245,224,0.97);
+    padding: 3px 12px;
+    border-radius: 12px;
+    border: 1px solid var(--sepia-light);
+    box-shadow: 0 2px 8px rgba(90,60,20,0.12);
+    letter-spacing: 0.03em;
+    display: none;
+    z-index: 800;
+  }
+  #search-result-count.visible { display: block; }
+  /* Search pill — matches button height/style */
+  #tree-search-wrap {
+    display: flex;
+    align-items: center;
+    background: var(--sepia-dark);
+    border: none;
+    border-radius: 24px;
+    padding: 10px 14px 10px 16px;
+    gap: 7px;
+    box-shadow: 0 4px 16px rgba(92,71,48,0.28);
+    transition: background 0.15s, box-shadow 0.2s;
+  }
+  #tree-search-wrap:focus-within {
+    background: #3d2a1a;
+    box-shadow: 0 4px 20px rgba(92,71,48,0.38);
+  }
+  #search-icon { color: rgba(253,245,224,0.7); display: flex; align-items: center; pointer-events: none; flex-shrink: 0; }
+  #tree-search {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #fdf8f0;
+    outline: none;
+    min-width: 0;
+    letter-spacing: 0.03em;
+  }
+  #tree-search::placeholder { color: rgba(253,245,224,0.5); }
+  #tree-search-clear {
+    background: rgba(253,245,224,0.2);
+    border: none;
+    cursor: pointer;
+    color: rgba(253,245,224,0.85);
+    font-size: 0.7rem;
+    line-height: 1;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: none;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: background 0.15s;
+  }
+  #tree-search-clear:hover { background: rgba(253,245,224,0.35); color: #fdf8f0; }
+  .person.search-match {
+    outline: 2.5px solid var(--accent);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 5px rgba(122,59,30,0.13), 0 4px 16px rgba(90,60,20,0.15) !important;
+  }
+
   header::after {
     content: '';
     display: block;
@@ -433,10 +523,6 @@
 
   /* ── REVIEW MODE ── */
   #review-toggle {
-    position: fixed;
-    bottom: 24px;
-    left: 168px;
-    z-index: 800;
     background: var(--accent);
     color: #fdf8f0;
     border: none;
@@ -1103,24 +1189,8 @@
     border-radius: 50%;
   }
 
-  /* ── Bottom Toolbar ── */
-  #bottom-toolbar {
-    position: fixed;
-    bottom: 24px;
-    left: 24px;
-    z-index: 800;
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-  }
-  #toolbar-btns {
-    display: flex;
-    gap: 10px;
-  }
-  #toolbar-btns button {
-    flex: 1;
-    position: static;
+  /* ── STATS PANEL ── */
+  #stats-toggle {
     background: var(--sepia-dark);
     color: #fdf8f0;
     border: none;
@@ -1130,19 +1200,17 @@
     font-size: 0.88rem;
     letter-spacing: 0.06em;
     cursor: pointer;
-    font-weight: 700;
     box-shadow: 0 4px 16px rgba(92,71,48,0.28);
     transition: background 0.15s, transform 0.15s;
     display: flex;
     align-items: center;
     gap: 7px;
   }
-  #toolbar-btns button:hover { background: var(--accent); transform: translateY(-1px); }
-  /* ── STATS PANEL ── */
+  #stats-toggle:hover { background: var(--accent); transform: translateY(-2px); }
 
   #stats-panel {
     position: fixed;
-    bottom: 110px;
+    bottom: 80px;
     left: 24px;
     z-index: 799;
     width: 290px;
@@ -1924,9 +1992,10 @@
 </footer>
 
 <!-- ── STATS PANEL ── -->
-    <div id="tree-search-wrap">
+<!-- ── BOTTOM TOOLBAR ── -->
+<div id="search-result-count"></div>
 <div id="bottom-toolbar">
-  <div id="toolbar-btns">
+  <div id="toolbar-buttons">
     <button id="stats-toggle" onclick="toggleStats()" aria-label="Family statistics">
       <span>📊</span><span>Family Stats</span>
     </button>
@@ -1934,7 +2003,8 @@
       <span>✏️</span><span>Complete Tree</span>
     </button>
   </div>
-    <span id="search-icon">⌕</span>
+  <div id="tree-search-wrap">
+    <span id="search-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="5.5" cy="5.5" r="4" stroke="currentColor" stroke-width="1.5"/><line x1="8.7" y1="8.7" x2="12.5" y2="12.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
     <input id="tree-search" type="search" placeholder="Search family members…" autocomplete="off" spellcheck="false">
     <button id="tree-search-clear" title="Clear">✕</button>
   </div>
@@ -2149,17 +2219,17 @@ const PEOPLE_DEFAULT = {
   "Francis (bap.1763)": { born: "bap. 1763", died: "1804", spouse: "Lydia (m. 1787)", parents: ["William (bap.1732)", "Elizabeth"], children: ["Lydia (bap.1788)", "Francis (bap.1790)", "John (b.1796)", "Mary (b.1799)", "William (s/o Francis)"], notes: "", generation: "4th — Direct Line", isDirect: true },
   "Lydia (bap.1788)": { born: "bap. 1788", died: null, parents: ["Francis (bap.1763)", "Lydia"], children: [], spouse: null, notes: "", generation: "5th", isDirect: false },
   "Francis (bap.1790)": { born: "bap. 1790", died: null, parents: ["Francis (bap.1763)", "Lydia"], children: [], spouse: null, notes: "", generation: "5th", isDirect: false },
-  "John (b.1796)": { born: "1796", died: "1860", spouse: "Mary Greenham", parents: ["Francis (bap.1763)", "Lydia"], children: ["James (b.1828)", "Sarah (b.1836)", "Ann (b.1839)", "Alfred (b.1842)"], notes: "", generation: "5th — Direct Line", isDirect: true },
+  "John (b.1796)": { born: "1796", died: "1860", pob: "Hoxton, Middlesex", spouse: "Mary Greenham", parents: ["Francis (bap.1763)", "Lydia"], children: ["James (b.1828)", "Sarah (b.1836)", "Ann (b.1839)", "Alfred (b.1842)"], notes: "", generation: "5th — Direct Line", isDirect: true },
   "Mary (b.1799)": { born: "1799", died: null, parents: ["Francis (bap.1763)", "Lydia"], children: [], spouse: null, notes: "", generation: "5th", isDirect: false },
   "William (s/o Francis)": { born: null, died: null, parents: ["Francis (bap.1763)", "Lydia"], children: [], spouse: null, notes: "", generation: "5th", isDirect: false },
-  "James (b.1828)": { born: "1828", died: "1911", spouse: "(1) Martha  (2) Esther (d.1911)", parents: ["John (b.1796)", "Mary Greenham"], children: ["Agnes (by Martha)", "James (b.1863)", "Ernest (b.1864)", "Owen (b.1865)", "Catherine (b.1868)", "Ella (b.1870)", "Cyril (b.1871)", "Bernard (b.1872)", "Clayton (b.1874)", "Gilbert (b.1876)", "Silas (b.1880)"], notes: "", generation: "6th — Direct Line", isDirect: true },
+  "James (b.1828)": { born: "1828", died: "9 Oct 1911", pob: "Hoxton, Middlesex", pod: "Braintree, Essex", spouse: "(1) Martha  (2) Esther (d.1911)", parents: ["John (b.1796)", "Mary Greenham"], children: ["Agnes (by Martha)", "James (b.1863)", "Ernest (b.1864)", "Owen (b.1865)", "Catherine (b.1868)", "Ella (b.1870)", "Cyril (b.1871)", "Bernard (b.1872)", "Clayton (b.1874)", "Gilbert (b.1876)", "Silas (b.1880)"], notes: "", generation: "6th — Direct Line", isDirect: true },
   "Sarah (b.1836)": { born: "1836", died: null, parents: ["John (b.1796)", "Mary Greenham"], children: [], spouse: null, notes: "", generation: "6th", isDirect: false },
   "Ann (b.1839)": { born: "1839", died: null, parents: ["John (b.1796)", "Mary Greenham"], children: [], spouse: null, notes: "", generation: "6th", isDirect: false },
   "Alfred (b.1842)": { born: "1842", died: null, parents: ["John (b.1796)", "Mary Greenham"], children: [], spouse: null, notes: "", generation: "6th", isDirect: false },
   "Agnes (by Martha)": { born: null, died: null, parents: ["James (b.1828)", "Martha"], children: [], spouse: null, notes: "Born to James's first wife Martha.", generation: "7th", isDirect: false },
   "James (b.1863)": { born: "1863", died: null, parents: ["James (b.1828)", "Esther"], children: [], spouse: null, notes: "", generation: "7th", isDirect: false },
   "Ernest (b.1864)": { born: "1864", died: null, parents: ["James (b.1828)", "Esther"], children: [], spouse: null, notes: "", generation: "7th", isDirect: false },
-  "Owen (b.1865)": { born: "1865", died: null, spouse: "Eliza Lucy Stevenson", parents: ["James (b.1828)", "Esther"], children: ["Cyril Owen (b.1898)", "Lucy", "Ida", "Norman (b.1905)", "George Braden"], notes: "", generation: "7th — Direct Line", isDirect: true },
+  "Owen (b.1865)": { born: "1865", died: null, pob: "Kelvedon, Essex", occupation: "Draper", spouse: "Eliza Lucy Stevenson", parents: ["James (b.1828)", "Esther"], children: ["Cyril Owen (b.1898)", "Lucy", "Ida", "Norman (b.1905)", "George Braden"], notes: "", generation: "7th — Direct Line", isDirect: true },
   "Catherine (b.1868)": { born: "1868", died: "1869", parents: ["James (b.1828)", "Esther"], children: [], spouse: null, notes: "Died in infancy.", generation: "7th", isDirect: false },
   "Ella (b.1870)": { born: "1870", died: null, parents: ["James (b.1828)", "Esther"], children: [], spouse: null, notes: "", generation: "7th", isDirect: false },
   "Cyril (b.1871)": { born: "1871", died: "1881", parents: ["James (b.1828)", "Esther"], children: [], spouse: null, notes: "", generation: "7th", isDirect: false },
@@ -2167,7 +2237,7 @@ const PEOPLE_DEFAULT = {
   "Clayton (b.1874)": { born: "1874", died: null, parents: ["James (b.1828)", "Esther"], children: [], spouse: null, notes: "", generation: "7th", isDirect: false },
   "Gilbert (b.1876)": { born: "1876", died: null, parents: ["James (b.1828)", "Esther"], children: [], spouse: null, notes: "", generation: "7th", isDirect: false },
   "Silas (b.1880)": { born: "1880", died: null, parents: ["James (b.1828)", "Esther"], children: [], spouse: null, notes: "", generation: "7th", isDirect: false },
-  "Cyril Owen (b.1898)": { born: "1898", died: "1969", spouse: "Doris Miller (b.1900)", married: "1928", parents: ["Owen (b.1865)", "Eliza Lucy Stevenson"], children: ["Muriel (b.1929)", "Peter (b.1931)", "John O. Hunwick", "Mary (b.1938)"], notes: "", generation: "8th — Direct Line", isDirect: true },
+  "Cyril Owen (b.1898)": { born: "1898", died: "14 Feb 1969", pob: "Gravesend, Kent", spouse: "Doris Miller (b.1900)", married: "1928", parents: ["Owen (b.1865)", "Eliza Lucy Stevenson"], children: ["Muriel (b.1929)", "Peter (b.1931)", "John O. Hunwick", "Mary (b.1938)"], notes: "", generation: "8th — Direct Line", isDirect: true },
   "Doris Miller (b.1900)": { born: "1900", died: "1993", pob: null, spouse: "Cyril Owen (b.1898)", married: "1928", parents: [], children: ["Muriel (b.1929)", "Peter (b.1931)", "John O. Hunwick", "Mary (b.1938)"], notes: "Married Cyril Owen Hunwick in 1928.", generation: "8th", isDirect: false },
   "Lucy": { born: null, died: null, parents: ["Owen (b.1865)", "Eliza Lucy Stevenson"], children: [], spouse: null, notes: "", generation: "8th", isDirect: false },
   "Ida": { born: null, died: null, parents: ["Owen (b.1865)", "Eliza Lucy Stevenson"], children: [], spouse: null, notes: "", generation: "8th", isDirect: false },
@@ -3984,7 +4054,7 @@ async function reviewSave() {
 }
 
 // ════════════════════════════════════════════
-//  SEARCH — find any person by name, date, place
+//  SEARCH
 // ════════════════════════════════════════════
 (function() {
   const input   = document.getElementById('tree-search');
@@ -4015,15 +4085,21 @@ async function reviewSave() {
     input.value = '';
     clearBtn.style.display = 'none';
     counter.textContent = '';
+    counter.classList.remove('visible');
+    // Restore all cards AND their parent wrappers (marriage/col/branch divs)
     getAllCards().forEach(c => {
       c.classList.remove('search-match');
       c.style.display = '';
+    });
+    // Also un-hide any wrapper elements that got hidden indirectly
+    document.querySelectorAll('.marriage, .col, .family-branch, .branch-children, .children-row, .tree-section').forEach(el => {
+      el.style.display = '';
     });
   }
 
   function runSearch() {
     const q = input.value.trim();
-    clearBtn.style.display = q ? 'block' : 'none';
+    clearBtn.style.display = q ? 'flex' : 'none';
     if (!q) { clearSearch(); return; }
 
     const cards = getAllCards();
@@ -4042,9 +4118,11 @@ async function reviewSave() {
     if (matches.length === 0) {
       counter.textContent = 'No results';
       counter.style.color = '#c0392b';
+      counter.classList.add('visible');
     } else {
-      counter.textContent = matches.length === 1 ? '1 match' : matches.length + ' matches';
-      counter.style.color = 'var(--sepia-light)';
+      counter.textContent = matches.length === 1 ? '1 match' : `${matches.length} matches`;
+      counter.style.color = 'var(--ink)';
+      counter.classList.add('visible');
       matches[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   }
@@ -4052,10 +4130,14 @@ async function reviewSave() {
   input.addEventListener('input', runSearch);
   input.addEventListener('keydown', e => {
     if (e.key === 'Escape') clearSearch();
+    // Enter = jump to next match
     if (e.key === 'Enter') {
       const matches = getAllCards().filter(c => c.classList.contains('search-match'));
       if (!matches.length) return;
-      const current = matches.findIndex(c => c.getBoundingClientRect().top > 80);
+      const current = matches.findIndex(c => {
+        const rect = c.getBoundingClientRect();
+        return rect.top > 80;
+      });
       const next = matches[current === -1 ? 0 : Math.min(current, matches.length - 1)];
       next?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
@@ -4064,6 +4146,6 @@ async function reviewSave() {
 })();
 
 </script>
-</div>
+
 </body>
 </html>
