@@ -3183,36 +3183,51 @@ async function saveEditForm() {
   let activeKey = currentKey;
 
   if (newKey !== currentKey) {
-    // Name changed — rename the key in the blob store
-    try {
-      const res = await fetch('/api/rename-person', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authHeaders() },
-        body: JSON.stringify({ oldKey: currentKey, newKey })
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        alert('Rename failed: ' + (err.error || res.status));
-        btn.textContent='Save Changes';btn.disabled=false;
-        return;
-      }
-      // Update local state
-      if (PEOPLE[currentKey]) {
-        PEOPLE[newKey] = { ...PEOPLE[currentKey], name: newDisplayName };
-        delete PEOPLE[currentKey];
-      }
-      // Update card dataset and display
+    // Only rename blob-only people — static HTML people have fixed data-pkey
+    // that can't change, so renaming them creates duplicates
+    const isStaticPerson = !!PEOPLE_DEFAULT[currentKey];
+
+    if (isStaticPerson) {
+      // For static people, store the display name as a field but keep the key
+      patch.name = newDisplayName;
+      // Update the visible card name and panel
       if (currentCard) {
-        currentCard.dataset.pkey = newKey;
         const nameEl = currentCard.querySelector('.person-name');
         if (nameEl) nameEl.textContent = newDisplayName;
       }
-      activeKey = newKey;
-      currentKey = newKey;
-    } catch(e) {
-      alert('Rename error: ' + e.message);
-      btn.textContent='Save Changes';btn.disabled=false;
-      return;
+      document.getElementById('dp-name').textContent = newDisplayName;
+    } else {
+      // Blob-only person — safe to rename the key
+      try {
+        const res = await fetch('/api/rename-person', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
+          body: JSON.stringify({ oldKey: currentKey, newKey })
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          alert('Rename failed: ' + (err.error || res.status));
+          btn.textContent='Save Changes';btn.disabled=false;
+          return;
+        }
+        // Update local state
+        if (PEOPLE[currentKey]) {
+          PEOPLE[newKey] = { ...PEOPLE[currentKey], name: newDisplayName };
+          delete PEOPLE[currentKey];
+        }
+        // Update card dataset and display
+        if (currentCard) {
+          currentCard.dataset.pkey = newKey;
+          const nameEl = currentCard.querySelector('.person-name');
+          if (nameEl) nameEl.textContent = newDisplayName;
+        }
+        activeKey = newKey;
+        currentKey = newKey;
+      } catch(e) {
+        alert('Rename error: ' + e.message);
+        btn.textContent='Save Changes';btn.disabled=false;
+        return;
+      }
     }
   }
 
