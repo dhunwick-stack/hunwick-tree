@@ -299,6 +299,7 @@
     max-width: 180px;
     text-align: center;
     position: relative;
+    z-index: 2;
     box-shadow: 0 2px 8px var(--shadow), inset 0 1px 0 rgba(255,255,255,0.7);
     transition: transform 0.2s, box-shadow 0.2s;
     cursor: default;
@@ -3175,12 +3176,13 @@ async function saveEditForm() {
   const newNameRaw = document.getElementById('ef-name').value.trim();
   const oldDisplayName = currentKey.split(' (')[0].trim();
   const newDisplayName = newNameRaw || oldDisplayName;
-  const bornYear = (patch.born || (PEOPLE[currentKey]||{}).born || '').match(/\d{4}/)?.[0];
-  const newKey = bornYear ? `${newDisplayName} (b.${bornYear})` : newDisplayName;
+  // Use buildNewKey with the stored born date so the format always matches
+  const storedBorn = patch.born || (PEOPLE[currentKey]||{}).born || '';
+  const newKey = buildNewKey(newDisplayName, storedBorn);
 
   let activeKey = currentKey;
 
-  if (newDisplayName !== oldDisplayName || newKey !== currentKey) {
+  if (newKey !== currentKey) {
     // Name changed — rename the key in the blob store
     try {
       const res = await fetch('/api/rename-person', {
