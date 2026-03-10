@@ -7,93 +7,77 @@ export default async (req) => {
 
   const store = getStore({ name: "hunwick-family", consistency: "strong" });
   const people = (await store.get("people", { type: "json" })) || {};
-
   const changes = [];
 
-  // These are the STATIC HTML canonical keys — any blob entries with these
-  // display names but DIFFERENT keys are rename artifacts that must be merged/deleted
-  const canonicalKeys = {
-    // blob key (wrong) → static HTML key (correct)
-    "David C. Hunwick (b.1973)":    "David (b.1973)",
-    "Yvette Hunwick (b.1969)":      "Yvette (b.1969)",
+  // ── STEP 1: Merge rename artifacts into canonical static keys ──────────────
+  // These were created by rename but conflict with static HTML data-pkey values
+  const mergeMap = {
     "Laith Cameron-Hunwick (b.2000)": "Laith (b.2000)",
-    "Cyril Owen Hunwick (b.1898)":  "Cyril Owen (b.1898)",
-    "Muriel Westwater (b.1929)":    "Muriel (b.1929)",
-    "Ann Clare Hunwick (b.1971)":   "Ann Clare (b.1971)",
-    "John O. Hunwick (b.1936)":     "John O. Hunwick",
+    "David C. Hunwick (b.1973)":      "David (b.1973)",
   };
 
-  // 1. Merge wrongly-keyed blob entries into the canonical key, then delete the wrong key
-  for (const [wrongKey, rightKey] of Object.entries(canonicalKeys)) {
-    if (people[wrongKey]) {
-      // Merge into canonical key (preserve good fields, don't overwrite with bad parents)
-      const existing = people[rightKey] || {};
-      const wrongData = people[wrongKey];
-      // Only merge non-parent fields (parents in blob may be wrong)
-      people[rightKey] = {
-        ...existing,
-        born: wrongData.born || existing.born,
-        died: wrongData.died || existing.died,
-        pob: wrongData.pob || existing.pob,
-        notes: wrongData.notes || existing.notes,
-        occupation: wrongData.occupation || existing.occupation,
-        location: wrongData.location || existing.location,
-        photo: wrongData.photo || existing.photo,
-        _edited: wrongData._edited || existing._edited,
-      };
-      delete people[wrongKey];
-      changes.push(`Merged "${wrongKey}" → "${rightKey}" and deleted wrong key`);
+  for (const [wrongKey, rightKey] of Object.entries(mergeMap)) {
+    if (!people[wrongKey]) continue;
+    const good = people[wrongKey];
+    const existing = people[rightKey] || {};
+    // Merge good fields from the renamed entry into the canonical key
+    people[rightKey] = {
+      ...existing,
+      ...(good.born      && { born: good.born }),
+      ...(good.died      && { died: good.died }),
+      ...(good.pob       && { pob: good.pob }),
+      ...(good.pod       && { pod: good.pod }),
+      ...(good.notes     && { notes: good.notes }),
+      ...(good.occupation && { occupation: good.occupation }),
+      ...(good.location  && { location: good.location }),
+      ...(good.married   && { married: good.married }),
+      ...(good.generation && { generation: good.generation }),
+    };
+    delete people[wrongKey];
+    changes.push(`Merged "${wrongKey}" → "${rightKey}"`);
 
-      // Fix all references to wrongKey throughout the tree
-      for (const [k, p] of Object.entries(people)) {
-        let changed = false;
-        if (Array.isArray(p.children)) {
-          const newC = p.children.map(c => c === wrongKey ? rightKey : c);
-          if (JSON.stringify(newC) !== JSON.stringify(p.children)) { p.children = newC; changed = true; }
-        }
-        if (Array.isArray(p.parents)) {
-          const newP = p.parents.map(c => c === wrongKey ? rightKey : c);
-          if (JSON.stringify(newP) !== JSON.stringify(p.parents)) { p.parents = newP; changed = true; }
-        }
-        if (p.spouse === wrongKey) { p.spouse = rightKey; changed = true; }
-        if (changed) changes.push(`  Updated references in "${k}"`);
-      }
+    // Rewrite all references from wrongKey → rightKey
+    for (const p of Object.values(people)) {
+      if (Array.isArray(p.children)) p.children = p.children.map(c => c === wrongKey ? rightKey : c);
+      if (Array.isArray(p.parents))  p.parents  = p.parents.map(c => c === wrongKey ? rightKey : c);
+      if (p.spouse === wrongKey)     p.spouse    = rightKey;
     }
   }
 
-  // 2. Fix David (b.1973) — correct parents and children
+  // ── STEP 2: Set correct relationships for key people ──────────────────────
+
+  // David (b.1973) — son of John O. Hunwick & Uwa Uldensi, married Cara
   if (people["David (b.1973)"]) {
-    people["David (b.1973)"].parents = ["John O. Hunwick", "Cara (b.1980)"];
-    people["David (b.1973)"].spouse = "Cara (b.1980)";
-    // His children per the tree
+    people["David (b.1973)"].parents  = ["John O. Hunwick", "Uwa Uldensi"];
+    people["David (b.1973)"].spouse   = "Cara (b.1980)";
     people["David (b.1973)"].children = ["Johnny (b.2007)", "Sophia (b.2009)", "Sean (b.2013)"];
-    changes.push("Fixed David (b.1973) parents, spouse, children");
+    changes.push("Fixed David (b.1973) parents/spouse/children");
   }
 
-  // 3. Fix Cara (b.1980) — she's David's wife, not a child
+  // Cara (b.1980) — David's wife, NOT his child, has no parents in the tree
   if (people["Cara (b.1980)"]) {
-    people["Cara (b.1980)"].parents = [];
-    people["Cara (b.1980)"].spouse = "David (b.1973)";
+    people["Cara (b.1980)"].parents  = [];
+    people["Cara (b.1980)"].spouse   = "David (b.1973)";
     people["Cara (b.1980)"].children = ["Johnny (b.2007)", "Sophia (b.2009)", "Sean (b.2013)"];
-    changes.push("Fixed Cara (b.1980) — set as David's spouse, cleared bad parents");
+    changes.push("Fixed Cara (b.1980) — spouse of David, not his child");
   }
 
-  // 4. Fix John O. Hunwick children — remove Mary, keep correct set
+  // John O. Hunwick — children should NOT include Mary
   if (people["John O. Hunwick"]) {
     people["John O. Hunwick"].children = [
       "Joseph (b.1959)", "Maryam (b.1960)",
       "Yvette (b.1969)", "Ann Clare (b.1971)", "David (b.1973)"
     ];
-    changes.push("Fixed John O. Hunwick children");
+    changes.push("Fixed John O. Hunwick children (removed Mary, ensured correct list)");
   }
 
-  // 5. Fix Mary (b.1938) parents
+  // Mary (b.1938) — sister of John O. Hunwick, child of Cyril Owen
   if (people["Mary (b.1938)"]) {
     people["Mary (b.1938)"].parents = ["Cyril Owen (b.1898)", "Doris Miller (b.1900)"];
     changes.push("Fixed Mary (b.1938) parents");
   }
 
-  // 6. Fix Cyril Owen (b.1898) children
+  // Cyril Owen (b.1898) — children include Mary but NOT Laith/David etc
   if (people["Cyril Owen (b.1898)"]) {
     people["Cyril Owen (b.1898)"].children = [
       "Muriel (b.1929)", "Peter (b.1931)", "John O. Hunwick", "Mary (b.1938)"
@@ -101,57 +85,53 @@ export default async (req) => {
     changes.push("Fixed Cyril Owen (b.1898) children");
   }
 
-  // 7. Fix Muriel (b.1929) — she's Cyril Owen's daughter
+  // Muriel (b.1929) — Cyril Owen's daughter
   if (people["Muriel (b.1929)"]) {
     people["Muriel (b.1929)"].parents = ["Cyril Owen (b.1898)", "Doris Miller (b.1900)"];
     changes.push("Fixed Muriel (b.1929) parents");
   }
 
-  // 8. Fix Ann Clare (b.1971) parents
-  if (people["Ann Clare (b.1971)"]) {
-    people["Ann Clare (b.1971)"].parents = ["John O. Hunwick", "Uwa Uldensi"];
-    changes.push("Fixed Ann Clare (b.1971) parents");
-  }
-
-  // 9. Fix Yvette (b.1969) parents and children
+  // Yvette (b.1969) — daughter of John O. Hunwick & Uwa Uldensi
   if (people["Yvette (b.1969)"]) {
-    people["Yvette (b.1969)"].parents = ["John O. Hunwick", "Uwa Uldensi"];
+    people["Yvette (b.1969)"].parents  = ["John O. Hunwick", "Uwa Uldensi"];
     people["Yvette (b.1969)"].children = ["Laith (b.2000)"];
-    changes.push("Fixed Yvette (b.1969) parents and children");
+    changes.push("Fixed Yvette (b.1969) parents/children");
   }
 
-  // 10. Fix Laith (b.2000) parents
+  // Laith (b.2000) — son of Yvette
   if (people["Laith (b.2000)"]) {
     people["Laith (b.2000)"].parents = ["Yvette (b.1969)"];
     changes.push("Fixed Laith (b.2000) parents");
   }
 
+  // Ann Clare (b.1971) — daughter of John O. Hunwick & Uwa Uldensi
+  if (people["Ann Clare (b.1971)"]) {
+    people["Ann Clare (b.1971)"].parents = ["John O. Hunwick", "Uwa Uldensi"];
+    changes.push("Fixed Ann Clare (b.1971) parents");
+  }
+
+  // Kingston and Christian John belong to Ann Clare, not David
+  for (const k of ["Kingston (b.2020)", "Christian John (b.2014)"]) {
+    if (people[k]) {
+      people[k].parents = ["Ann Clare (b.1971)"];
+      changes.push(`Fixed ${k} parents → Ann Clare`);
+    }
+  }
+
   await store.setJSON("people", people);
 
-  // Snapshot key relationships
-  const snap = {};
+  // Snapshot for verification
+  const verify = {};
   ["David (b.1973)", "Cara (b.1980)", "John O. Hunwick", "Cyril Owen (b.1898)",
-   "Mary (b.1938)", "Yvette (b.1969)", "Laith (b.2000)", "Muriel (b.1929)"].forEach(k => {
-    if (people[k]) snap[k] = { parents: people[k].parents, children: people[k].children, spouse: people[k].spouse };
+   "Mary (b.1938)", "Yvette (b.1969)", "Laith (b.2000)", "Ann Clare (b.1971)"].forEach(k => {
+    if (people[k]) verify[k] = {
+      parents: people[k].parents,
+      children: people[k].children,
+      spouse: people[k].spouse
+    };
   });
 
-  // Also show any remaining "orphan" blob keys that don't match static HTML
-  const staticKeys = new Set([
-    "William (b.1680)","William (b.1706)","William (b.1732)","Francis (b.1763)",
-    "John (b.1796)","James (b.1828)","Owen (b.1865)","Cyril Owen (b.1898)",
-    "Doris Miller (b.1900)","John O. Hunwick","Uwa Uldensi","Audrey Najer-Grant",
-    "Muriel (b.1929)","Peter (b.1931)","Mary (b.1938)",
-    "Joseph (b.1959)","Maryam (b.1960)","Yvette (b.1969)",
-    "Ann Clare (b.1971)","David (b.1973)","Laith (b.2000)",
-    "Cara (b.1980)","Johnny (b.2007)","Sophia (b.2009)","Sean (b.2013)",
-    "Jason (b.1990)","Jessica (b.1991)","Shawnine (b.1994)","Maia (b.1999)",
-    "Kingston (b.2020)","Christian John (b.2014)",
-    "Eliza Lucy Stevenson","Ben Hughes (b.1987)",
-    "Zion","Galena","Rain","Summer","Akira (b.2018)",
-  ]);
-  const unknownKeys = Object.keys(people).filter(k => !staticKeys.has(k));
-
-  return Response.json({ ok: true, changes, snapshot: snap, unknownKeys });
+  return Response.json({ ok: true, changes, verify });
 };
 
 export const config = { path: "/api/fix-data" };
