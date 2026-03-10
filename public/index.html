@@ -1119,7 +1119,7 @@
 
   /* ── EDIT MODE ── */
   .dp-edit-btn {
-    position: absolute; top: 14px; right: 46px;
+    position: absolute; top: 14px; right: 110px;
     background: rgba(255,255,255,0.12);
     border: 1px solid rgba(255,255,255,0.2);
     border-radius: 4px;
@@ -1133,6 +1133,78 @@
     transition: background 0.15s, color 0.15s;
   }
   .dp-edit-btn:hover { background: rgba(255,255,255,0.22); color: #fdf8f0; }
+  .dp-research-btn {
+    position: absolute; top: 14px; right: 46px;
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.25);
+    color: rgba(253,248,240,0.85); border-radius: 6px; padding: 5px 10px;
+    font-size: 0.78rem; cursor: pointer; transition: all 0.2s;
+  }
+  .dp-research-btn:hover { background: rgba(255,255,255,0.22); color: #fdf8f0; }
+  /* ── Research Results Panel ── */
+  #research-panel {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: var(--parchment); z-index: 20; overflow-y: auto;
+    padding: 20px; display: none; flex-direction: column; gap: 12px;
+    border-radius: inherit;
+  }
+  #research-panel.open { display: flex; }
+  .research-header { display: flex; justify-content: space-between; align-items: center; }
+  .research-header h3 { font-family: 'Playfair Display', serif; color: var(--ink); font-size: 1rem; }
+  #research-close { background: none; border: none; font-size: 1.3rem; cursor: pointer; color: var(--sepia); }
+  .research-summary { font-size: 0.82rem; color: var(--ink); line-height: 1.5;
+    background: rgba(139,109,56,0.08); border-radius: 6px; padding: 10px 12px;
+    border-left: 3px solid var(--gold); }
+  .research-suggestions { display: flex; flex-direction: column; gap: 8px; }
+  .research-suggestion {
+    background: #fff; border: 1px solid rgba(139,109,56,0.2); border-radius: 8px;
+    padding: 10px 12px; display: flex; align-items: center; gap: 10px;
+  }
+  .research-suggestion .sug-field { font-size: 0.7rem; color: var(--sepia); text-transform: uppercase; letter-spacing: 0.05em; min-width: 70px; }
+  .research-suggestion .sug-value { font-size: 0.88rem; color: var(--ink); flex: 1; font-weight: 500; }
+  .research-suggestion .sug-source { font-size: 0.72rem; color: var(--sepia); font-style: italic; }
+  .research-suggestion .sug-conf { font-size: 0.68rem; padding: 2px 6px; border-radius: 10px; }
+  .sug-conf.high { background: #d4edda; color: #155724; }
+  .sug-conf.medium { background: #fff3cd; color: #856404; }
+  .sug-conf.low { background: #f8d7da; color: #721c24; }
+  .sug-apply-btn { background: var(--accent); border: none; color: #fff; border-radius: 5px;
+    padding: 4px 10px; font-size: 0.75rem; cursor: pointer; white-space: nowrap; }
+  .sug-apply-btn:hover { opacity: 0.85; }
+  .research-loading { text-align: center; padding: 40px 20px; color: var(--sepia); font-style: italic; }
+  .research-spinner { font-size: 1.8rem; animation: spin 1s linear infinite; display: block; margin-bottom: 10px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .research-sources { font-size: 0.72rem; color: var(--sepia); margin-top: 4px; }
+  /* ── GEDCOM Import Modal ── */
+  #gedcom-modal {
+    display: none; position: fixed; inset: 0; background: rgba(30,20,10,0.55);
+    z-index: 200; align-items: center; justify-content: center;
+  }
+  #gedcom-modal.open { display: flex; }
+  #gedcom-inner {
+    background: var(--parchment); border-radius: 12px; padding: 28px 32px;
+    max-width: 560px; width: 94%; max-height: 80vh; overflow-y: auto;
+    box-shadow: 0 12px 48px rgba(0,0,0,0.35);
+  }
+  #gedcom-inner h3 { font-family: 'Playfair Display', serif; color: var(--ink); margin: 0 0 6px; }
+  #gedcom-inner p { font-size: 0.83rem; color: var(--sepia); margin: 0 0 18px; }
+  #gedcom-drop {
+    border: 2px dashed rgba(139,109,56,0.4); border-radius: 10px;
+    padding: 36px; text-align: center; cursor: pointer;
+    transition: all 0.2s; background: rgba(139,109,56,0.04);
+    font-size: 0.85rem; color: var(--sepia);
+  }
+  #gedcom-drop.dragover { border-color: var(--accent); background: rgba(139,109,56,0.1); }
+  #gedcom-drop input { display: none; }
+  #gedcom-preview { margin-top: 18px; display: none; }
+  #gedcom-preview table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+  #gedcom-preview th { background: var(--sepia); color: #fdf8f0; padding: 6px 8px; text-align: left; }
+  #gedcom-preview td { padding: 5px 8px; border-bottom: 1px solid rgba(139,109,56,0.15); }
+  #gedcom-preview tr:nth-child(even) td { background: rgba(139,109,56,0.05); }
+  .gedcom-actions { display: flex; gap: 10px; margin-top: 18px; justify-content: flex-end; }
+  .gedcom-btn { padding: 8px 18px; border-radius: 7px; font-size: 0.83rem; cursor: pointer; border: none; }
+  .gedcom-btn-primary { background: var(--accent); color: #fff; }
+  .gedcom-btn-primary:hover { opacity: 0.87; }
+  .gedcom-btn-secondary { background: transparent; border: 1px solid var(--sepia); color: var(--sepia); }
+  .gedcom-btn-secondary:hover { background: rgba(139,109,56,0.08); }
   .dp-edit-btn.active { background: var(--accent); border-color: var(--accent); color: #fdf8f0; }
 
   /* editable field */
@@ -2182,6 +2254,9 @@
     <button id="bulk-edit-toggle" class="toolbar-btn" onclick="openBulkEdit()" aria-label="Bulk edit family members">
       <span>⚡</span><span>Bulk Edit</span>
     </button>
+    <button id="gedcom-import-toggle" class="toolbar-btn" onclick="openGedcomImport()" aria-label="Import GEDCOM from Ancestry or FamilySearch">
+      <span>📥</span><span>Import</span>
+    </button>
     <button id="auth-btn" class="toolbar-btn auth-btn-logged-out" onclick="handleAuthClick()" aria-label="Login">
       <span>🔒</span><span id="auth-btn-label">Family Login</span>
     </button>
@@ -2251,6 +2326,7 @@
   </div>
   <!-- EDIT TOGGLE BUTTON in header -->
   <button class="dp-edit-btn" id="dp-edit-btn" title="Edit this person's details">✎ Edit</button>
+  <button class="dp-research-btn" id="dp-research-btn" title="AI genealogy research">🔍 Research</button>
 
   <!-- VIEW MODE -->
   <div id="dp-view-body" class="dp-body">
@@ -2302,6 +2378,41 @@
       <span class="dp-edit-saved" id="dp-edit-saved-msg">Saved ✓</span>
     </div>
     <button class="dp-export-btn" id="dp-export-btn">⬇ Export all edits as JSON</button>
+  </div>
+
+  <!-- ── RESEARCH PANEL (overlays detail panel) ── -->
+  <div id="research-panel">
+    <div class="research-header">
+      <h3>🔍 AI Genealogy Research</h3>
+      <button id="research-close">✕</button>
+    </div>
+    <div id="research-body">
+      <div class="research-loading">
+        <span class="research-spinner">⏳</span>
+        Searching historical records…
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── GEDCOM Import Modal ── -->
+<div id="gedcom-modal">
+  <div id="gedcom-inner">
+    <h3>📥 Import from Ancestry / FamilySearch</h3>
+    <p>Export a GEDCOM (.ged) file from Ancestry or FamilySearch, then upload it here. Existing data won't be overwritten — only missing fields will be filled in.</p>
+    <div id="gedcom-drop">
+      <input type="file" id="gedcom-file-input" accept=".ged,.gedcom,.txt">
+      <div id="gedcom-drop-label">
+        <div style="font-size:2rem;margin-bottom:8px">📂</div>
+        <strong>Drop .ged file here</strong><br>
+        or <span style="color:var(--accent);text-decoration:underline;cursor:pointer" onclick="document.getElementById('gedcom-file-input').click()">click to browse</span>
+      </div>
+    </div>
+    <div id="gedcom-preview"></div>
+    <div class="gedcom-actions">
+      <button class="gedcom-btn gedcom-btn-secondary" onclick="closeGedcomImport()">Cancel</button>
+      <button class="gedcom-btn gedcom-btn-primary" id="gedcom-import-btn" style="display:none" onclick="executeGedcomImport()">Import into Tree</button>
+    </div>
   </div>
 </div>
 
@@ -2449,8 +2560,35 @@
 <script>
 // ── Auth ─────────────────────────────────────────
 // Site is fully gated by edge function — user is always authenticated here.
-// We just parse the JWT cookie to get their name for the logout button,
-// and provide a logout function that clears the cookie.
+// On load: auto-refresh token if near expiry. Read name from JWT for button.
+
+// Silently refresh token using stored refresh_token if cookie near expiry
+(async function maybeRefreshToken() {
+  try {
+    const s = JSON.parse(localStorage.getItem('gotrue.session') || 'null');
+    if (!s) return;
+    const now = Math.floor(Date.now()/1000);
+    // Refresh if less than 5 minutes remaining
+    if (s.expires_at - now < 300) {
+      const res = await fetch('/.netlify/identity/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ grant_type: 'refresh_token', refresh_token: s.refresh_token })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const updated = { access_token: data.access_token, refresh_token: data.refresh_token, expires_at: now + (data.expires_in || 3600) };
+        localStorage.setItem('gotrue.session', JSON.stringify(updated));
+        document.cookie = `nf_jwt=${data.access_token}; path=/; max-age=${data.expires_in || 3600}; SameSite=Lax`;
+      } else {
+        // Refresh failed — send to login
+        localStorage.removeItem('gotrue.session');
+        document.cookie = 'nf_jwt=; path=/; max-age=0';
+        window.location.href = '/login';
+      }
+    }
+  } catch {}
+})();
 
 function _parseJwtName() {
   try {
@@ -4580,6 +4718,211 @@ async function reviewSave() {
   });
   clearBtn.addEventListener('click', () => { clearSearch(); input.focus(); });
 })();
+
+// ── AI RESEARCH ────────────────────────────────────────────────────────────
+
+document.getElementById('dp-research-btn').addEventListener('click', () => {
+  if (currentPersonKey) researchPerson(currentPersonKey);
+});
+document.getElementById('research-close').addEventListener('click', closeResearch);
+
+function closeResearch() {
+  document.getElementById('research-panel').classList.remove('open');
+}
+
+async function researchPerson(key) {
+  const panel = document.getElementById('research-panel');
+  const body = document.getElementById('research-body');
+  panel.classList.add('open');
+  body.innerHTML = `<div class="research-loading"><span class="research-spinner">⏳</span>Searching historical records for <strong>${key}</strong>…</div>`;
+
+  const person = (window.PEOPLE && window.PEOPLE[key]) ? window.PEOPLE[key] : {};
+  const _jwt1 = (document.cookie.match(/nf_jwt=([^;]+)/)||[])[1]||'';
+
+  try {
+    const res = await fetch('/api/research-person', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${_jwt1}` },
+      body: JSON.stringify({ key, person }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Research failed');
+    renderResearchResults(data, key);
+  } catch (e) {
+    body.innerHTML = `<div class="research-loading" style="color:#721c24">❌ ${e.message}</div>`;
+  }
+}
+
+function renderResearchResults(data, key) {
+  const body = document.getElementById('research-body');
+  const sugs = data.suggestions || [];
+
+  let html = '';
+  if (data.summary) {
+    html += `<div class="research-summary">${data.summary}</div>`;
+  }
+
+  if (sugs.length === 0) {
+    html += `<div class="research-loading" style="color:var(--sepia)">No new information found beyond what is already recorded.</div>`;
+  } else {
+    html += `<div style="font-size:0.78rem;color:var(--sepia);margin:4px 0 8px">${sugs.length} suggestion${sugs.length>1?'s':''} found — click Apply to add to this person's record</div>`;
+    html += `<div class="research-suggestions">`;
+    sugs.forEach((s, i) => {
+      const conf = s.confidence || 'medium';
+      html += `
+      <div class="research-suggestion" data-index="${i}">
+        <span class="sug-field">${s.field}</span>
+        <div style="flex:1">
+          <div class="sug-value">${s.value}</div>
+          <div class="sug-source">${s.source || ''}</div>
+        </div>
+        <span class="sug-conf ${conf}">${conf}</span>
+        <button class="sug-apply-btn" onclick="applySuggestion('${key}','${s.field}',this)">Apply</button>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  if (data.sources_searched && data.sources_searched.length) {
+    html += `<div class="research-sources">Sources checked: ${data.sources_searched.join(', ')}</div>`;
+  }
+
+  body.innerHTML = html;
+}
+
+async function applySuggestion(key, field, btn) {
+  const row = btn.closest('.research-suggestion');
+  const value = row.querySelector('.sug-value').textContent;
+  const _jwt2 = (document.cookie.match(/nf_jwt=([^;]+)/)||[])[1]||'';
+
+  btn.textContent = '…';
+  btn.disabled = true;
+
+  try {
+    const current = (treeData && treeData[key]) ? { ...treeData[key] } : {};
+    current[field] = value;
+
+    const res = await fetch('/api/save-person', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${_jwt2}` },
+      body: JSON.stringify({ key, data: current }),
+    });
+    if (!res.ok) throw new Error('Save failed');
+
+    if (window.PEOPLE) window.PEOPLE[key] = current;
+    btn.textContent = 'Applied';
+    btn.style.background = '#28a745';
+    row.style.opacity = '0.6';
+
+    if (currentPersonKey === key) populateDetailPanel(key);
+  } catch (e) {
+    btn.textContent = 'Error';
+    btn.style.background = '#dc3545';
+    btn.disabled = false;
+  }
+}
+
+// ── GEDCOM IMPORT ──────────────────────────────────────────────────────────
+
+let gedcomParsedData = null;
+
+function openGedcomImport() {
+  document.getElementById('gedcom-modal').classList.add('open');
+}
+
+function closeGedcomImport() {
+  document.getElementById('gedcom-modal').classList.remove('open');
+  document.getElementById('gedcom-preview').style.display = 'none';
+  document.getElementById('gedcom-preview').innerHTML = '';
+  document.getElementById('gedcom-import-btn').style.display = 'none';
+  document.getElementById('gedcom-drop-label').style.display = '';
+  gedcomParsedData = null;
+  document.getElementById('gedcom-file-input').value = '';
+}
+
+const gedcomDropZone = document.getElementById('gedcom-drop');
+gedcomDropZone.addEventListener('dragover', e => { e.preventDefault(); gedcomDropZone.classList.add('dragover'); });
+gedcomDropZone.addEventListener('dragleave', () => gedcomDropZone.classList.remove('dragover'));
+gedcomDropZone.addEventListener('drop', e => {
+  e.preventDefault(); gedcomDropZone.classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file) handleGedcomFile(file);
+});
+document.getElementById('gedcom-file-input').addEventListener('change', e => {
+  if (e.target.files[0]) handleGedcomFile(e.target.files[0]);
+});
+
+async function handleGedcomFile(file) {
+  const text = await file.text();
+  const _jwt3 = (document.cookie.match(/nf_jwt=([^;]+)/)||[])[1]||'';
+  document.getElementById('gedcom-drop-label').innerHTML = '<div style="font-size:1.5rem">⏳</div>Parsing ' + file.name + '…';
+
+  try {
+    const res = await fetch('/api/gedcom-import', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${_jwt3}` },
+      body: JSON.stringify({ gedcomText: text, mode: 'preview' }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Parse failed');
+
+    gedcomParsedData = data.people;
+    renderGedcomPreview(data.people);
+  } catch (e) {
+    document.getElementById('gedcom-drop-label').innerHTML = '<div style="color:#721c24">❌ ' + e.message + '</div>';
+  }
+}
+
+function renderGedcomPreview(people) {
+  const preview = document.getElementById('gedcom-preview');
+  const importBtn = document.getElementById('gedcom-import-btn');
+  document.getElementById('gedcom-drop-label').innerHTML = '<div style="font-size:1.2rem">✅</div><strong>' + people.length + ' people found</strong>';
+
+  let html = '<div style="font-size:0.8rem;color:var(--sepia);margin-bottom:10px">Preview of first 15 records — existing data will not be overwritten</div>';
+  html += '<table><thead><tr><th>Name</th><th>Born</th><th>Died</th><th>Place of Birth</th></tr></thead><tbody>';
+  people.slice(0, 15).forEach(p => {
+    html += '<tr><td>' + p.key + '</td><td>' + (p.data.birth||'—') + '</td><td>' + (p.data.death||'—') + '</td><td>' + (p.data.pob||'—') + '</td></tr>';
+  });
+  if (people.length > 15) html += '<tr><td colspan="4" style="color:var(--sepia);font-style:italic">…and ' + (people.length-15) + ' more</td></tr>';
+  html += '</tbody></table>';
+
+  preview.innerHTML = html;
+  preview.style.display = 'block';
+  importBtn.style.display = '';
+}
+
+async function executeGedcomImport() {
+  if (!gedcomParsedData) return;
+  const btn = document.getElementById('gedcom-import-btn');
+  btn.textContent = 'Importing…';
+  btn.disabled = true;
+
+  const _jwt4 = (document.cookie.match(/nf_jwt=([^;]+)/)||[])[1]||'';
+  const fileInput = document.getElementById('gedcom-file-input');
+  const file = fileInput.files[0];
+  const text = file ? await file.text() : '';
+
+  try {
+    const res = await fetch('/api/gedcom-import', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${_jwt4}` },
+      body: JSON.stringify({ gedcomText: text, mode: 'import' }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Import failed');
+
+    btn.textContent = 'Done — ' + data.added + ' added, ' + data.updated + ' updated';
+    btn.style.background = '#28a745';
+    setTimeout(() => {
+      closeGedcomImport();
+      if (typeof loadTreeData === 'function') loadTreeData();
+    }, 2000);
+  } catch (e) {
+    btn.textContent = 'Import failed';
+    btn.style.background = '#dc3545';
+    btn.disabled = false;
+  }
+}
 
 </script>
 
