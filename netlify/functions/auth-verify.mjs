@@ -2,8 +2,15 @@
 // Returns { ok: true, user } or { ok: false, response }
 
 export async function requireAuth(req) {
+  // Accept token from Authorization header OR nf_jwt cookie (browser direct visits)
   const authHeader = req.headers.get('authorization') || '';
-  const token = authHeader.replace('Bearer ', '').trim();
+  let token = authHeader.replace(/^Bearer\s+/i, '').trim();
+
+  if (!token) {
+    const cookie = req.headers.get('cookie') || '';
+    const match = cookie.match(/nf_jwt=([^;]+)/);
+    token = match ? match[1] : '';
+  }
 
   if (!token) {
     return {
@@ -16,8 +23,6 @@ export async function requireAuth(req) {
   }
 
   try {
-    // Netlify Identity issues JWTs — verify by calling the /.netlify/identity/user endpoint
-    // We decode the payload to get the user info (signature already verified by Netlify's gateway)
     const parts = token.split('.');
     if (parts.length !== 3) throw new Error('Malformed token');
 
@@ -25,12 +30,10 @@ export async function requireAuth(req) {
       Buffer.from(parts[1].replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8')
     );
 
-    // Check expiry
     if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
       throw new Error('Token expired');
     }
 
-    // Must have a valid sub (user ID) and email
     if (!payload.sub || !payload.email) throw new Error('Invalid token payload');
 
     return { ok: true, user: { id: payload.sub, email: payload.email } };
