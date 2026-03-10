@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hunwick Family Tree — Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --ink: #1a1208;
+      --parchment: #f5efe2;
+      --sepia-dark: #5c4730;
+      --sepia-mid: #8b6f4a;
+      --sepia-light: #c4a47a;
+      --accent: #7a3b1e;
+      --card-bg: #fdf8f0;
+    }
+    body {
+      min-height: 100vh;
+      background: var(--parchment);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Crimson Pro', serif;
+      background-image: radial-gradient(ellipse at 20% 50%, rgba(139,107,74,0.08) 0%, transparent 60%),
+                        radial-gradient(ellipse at 80% 20%, rgba(122,59,30,0.06) 0%, transparent 50%);
+    }
+    .box {
+      background: var(--card-bg);
+      border: 1px solid rgba(139,107,74,0.2);
+      border-radius: 18px;
+      padding: 44px 48px;
+      width: min(440px, 94vw);
+      box-shadow: 0 12px 56px rgba(90,60,20,0.18);
+      text-align: center;
+    }
+    .crest { font-size: 3rem; margin-bottom: 16px; }
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.6rem;
+      color: var(--ink);
+      letter-spacing: 0.04em;
+      margin-bottom: 4px;
+    }
+    .subtitle {
+      font-size: 0.9rem;
+      color: var(--sepia-mid);
+      font-style: italic;
+      margin-bottom: 32px;
+    }
+    .mode-title {
+      font-size: 1rem;
+      color: var(--sepia-dark);
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+    input[type=email], input[type=password] {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1px solid rgba(139,107,74,0.35);
+      border-radius: 9px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      background: #fff;
+      color: var(--ink);
+      margin-bottom: 12px;
+      transition: border-color 0.15s;
+    }
+    input:focus { outline: none; border-color: var(--accent); }
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background: var(--sepia-dark);
+      color: #fdf8f0;
+      border: none;
+      border-radius: 9px;
+      font-size: 1rem;
+      font-family: 'Crimson Pro', serif;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+      margin-top: 4px;
+    }
+    .btn:hover { background: var(--accent); }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn.secondary {
+      background: transparent;
+      color: var(--sepia-mid);
+      border: 1px solid rgba(139,107,74,0.3);
+      margin-top: 10px;
+      font-size: 0.88rem;
+    }
+    .btn.secondary:hover { background: var(--parchment); color: var(--sepia-dark); }
+    .msg { margin-top: 14px; font-size: 0.88rem; min-height: 20px; }
+    .msg.err { color: #a00; }
+    .msg.ok  { color: #2a6b2a; }
+    .divider { border: none; border-top: 1px solid rgba(139,107,74,0.15); margin: 20px 0; }
+    #forgot-link {
+      display: block;
+      margin-top: 12px;
+      font-size: 0.85rem;
+      color: var(--sepia-light);
+      cursor: pointer;
+      text-decoration: underline;
+      background: none;
+      border: none;
+      font-family: inherit;
+    }
+    #forgot-link:hover { color: var(--sepia-mid); }
+    .back-link {
+      display: block;
+      margin-top: 10px;
+      font-size: 0.82rem;
+      color: var(--sepia-light);
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-family: inherit;
+      text-decoration: underline;
+    }
+    .back-link:hover { color: var(--sepia-mid); }
+  </style>
+</head>
+<body>
+<div class="box">
+  <div class="crest">🌲</div>
+  <h1>HUNWICK</h1>
+  <div class="subtitle">Family Tree</div>
+
+  <!-- LOGIN FORM (default) -->
+  <div id="mode-login">
+    <div class="mode-title">Family members only</div>
+    <input id="login-email" type="email" placeholder="Email address" autocomplete="email">
+    <input id="login-pw" type="password" placeholder="Password" autocomplete="current-password">
+    <button class="btn" id="login-btn" onclick="doLogin()">Log in</button>
+    <button id="forgot-link" onclick="showForgot()">Forgot password?</button>
+    <div class="msg" id="login-msg"></div>
+  </div>
+
+  <!-- FORGOT PASSWORD -->
+  <div id="mode-forgot" style="display:none">
+    <div class="mode-title">Reset password</div>
+    <input id="forgot-email" type="email" placeholder="Your email address" autocomplete="email">
+    <button class="btn" id="forgot-btn" onclick="doForgot()">Send reset link</button>
+    <button class="back-link" onclick="showLogin()">&#8592; Back to login</button>
+    <div class="msg" id="forgot-msg"></div>
+  </div>
+
+  <!-- SET PASSWORD (invite or recovery) -->
+  <div id="mode-setpw" style="display:none">
+    <div class="mode-title" id="setpw-title">Welcome — set your password</div>
+    <input id="setpw-pw"  type="password" placeholder="Choose a password" autocomplete="new-password">
+    <input id="setpw-pw2" type="password" placeholder="Confirm password"  autocomplete="new-password">
+    <button class="btn" id="setpw-btn" onclick="doSetPassword()">Set password &amp; log in</button>
+    <div class="msg" id="setpw-msg"></div>
+  </div>
+</div>
+
+<script>
+const IDENTITY = 'https://hunwick-tree.netlify.app/.netlify/identity';
+
+// ── Token detection ──────────────────────────────
+const _hash = new URLSearchParams(window.location.hash.replace('#',''));
+const inviteToken   = _hash.get('invite_token');
+const recoveryToken = _hash.get('recovery_token');
+const specialToken  = inviteToken || recoveryToken;
+
+if (specialToken) {
+  // Clean hash from URL
+  history.replaceState(null, '', window.location.pathname + window.location.search);
+  document.getElementById('mode-login').style.display = 'none';
+  document.getElementById('mode-setpw').style.display = 'block';
+  if (recoveryToken) {
+    document.getElementById('setpw-title').textContent = 'Reset your password';
+  }
+}
+
+// ── Redirect destination ─────────────────────────
+const redirectTo = new URLSearchParams(window.location.search).get('redirect') || '/';
+
+// ── Store session cookie ─────────────────────────
+function storeSession(data) {
+  // Store access token in a session cookie so the edge function can see it
+  const maxAge = data.expires_in || 3600;
+  document.cookie = `nf_jwt=${data.access_token}; path=/; max-age=${maxAge}; SameSite=Lax`;
+}
+
+// ── Login ────────────────────────────────────────
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pw    = document.getElementById('login-pw').value;
+  const msg   = document.getElementById('login-msg');
+  const btn   = document.getElementById('login-btn');
+  if (!email || !pw) { msg.className='err'; msg.textContent='Please enter email and password.'; return; }
+  btn.disabled = true; msg.className=''; msg.textContent='Logging in...';
+  try {
+    const res  = await fetch(`${IDENTITY}/token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `grant_type=password&username=${encodeURIComponent(email)}&password=${encodeURIComponent(pw)}`
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error_description || data.msg || 'Login failed');
+    storeSession(data);
+    msg.className='ok'; msg.textContent='Logged in! Redirecting...';
+    setTimeout(() => window.location.href = redirectTo, 400);
+  } catch(e) {
+    msg.className='err'; msg.textContent = e.message;
+    btn.disabled = false;
+  }
+}
+
+// ── Forgot password ──────────────────────────────
+async function doForgot() {
+  const email = document.getElementById('forgot-email').value.trim();
+  const msg   = document.getElementById('forgot-msg');
+  const btn   = document.getElementById('forgot-btn');
+  if (!email) { msg.className='err'; msg.textContent='Please enter your email.'; return; }
+  btn.disabled = true; msg.className=''; msg.textContent='Sending...';
+  try {
+    const res = await fetch(`${IDENTITY}/recover`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+    if (!res.ok) { const d = await res.json(); throw new Error(d.msg || 'Request failed'); }
+    msg.className='ok'; msg.textContent='Reset link sent — check your email.';
+  } catch(e) {
+    msg.className='err'; msg.textContent = e.message;
+    btn.disabled = false;
+  }
+}
+
+// ── Set password (invite / recovery) ────────────
+async function doSetPassword() {
+  const pw   = document.getElementById('setpw-pw').value;
+  const pw2  = document.getElementById('setpw-pw2').value;
+  const msg  = document.getElementById('setpw-msg');
+  const btn  = document.getElementById('setpw-btn');
+  if (pw.length < 8) { msg.className='err'; msg.textContent='Password must be at least 8 characters.'; return; }
+  if (pw !== pw2)    { msg.className='err'; msg.textContent='Passwords do not match.'; return; }
+  btn.disabled = true; msg.className=''; msg.textContent='Setting password...';
+  try {
+    const type = inviteToken ? 'signup' : 'recovery';
+    const res  = await fetch(`${IDENTITY}/verify`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type, token: specialToken, password: pw })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.msg || data.error_description || 'Unknown error');
+    storeSession(data);
+    msg.className='ok'; msg.textContent='Password set! Logging you in...';
+    setTimeout(() => window.location.href = redirectTo, 600);
+  } catch(e) {
+    msg.className='err'; msg.textContent = e.message;
+    btn.disabled = false;
+  }
+}
+
+// ── UI helpers ───────────────────────────────────
+function showForgot() {
+  document.getElementById('mode-login').style.display  = 'none';
+  document.getElementById('mode-forgot').style.display = 'block';
+  document.getElementById('forgot-email').value = document.getElementById('login-email').value;
+}
+function showLogin() {
+  document.getElementById('mode-forgot').style.display = 'none';
+  document.getElementById('mode-login').style.display  = 'block';
+}
+
+// Enter key on login fields
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    const mode = document.getElementById('mode-setpw').style.display !== 'none' ? 'setpw'
+               : document.getElementById('mode-forgot').style.display !== 'none' ? 'forgot'
+               : 'login';
+    if (mode === 'login')  doLogin();
+    if (mode === 'forgot') doForgot();
+    if (mode === 'setpw')  doSetPassword();
+  }
+});
+</script>
+</body>
+</html>

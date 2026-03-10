@@ -78,15 +78,9 @@
   .toolbar-btn:hover { background: var(--accent); transform: translateY(-1px); }
   .toolbar-btn.accent-btn { background: var(--accent); }
   .toolbar-btn.accent-btn:hover { background: #5c2e15; }
-  /* Auth button states */
-  .toolbar-btn.auth-btn-logged-out { background: #3a3a3a; }
-  .toolbar-btn.auth-btn-logged-out:hover { background: #1a1a1a; }
+  /* Auth button */
   .toolbar-btn.auth-btn-logged-in { background: #2d6a2d; }
   .toolbar-btn.auth-btn-logged-in:hover { background: #1e4d1e; }
-  /* Hide edit controls when logged out */
-  body.auth-guest #stats-toggle,
-  body.auth-guest #review-toggle,
-  body.auth-guest #bulk-edit-toggle { display: none; }
   /* Mobile: 2×2 grid of compact buttons */
   @media (max-width: 600px) {
     #bottom-toolbar {
@@ -2453,155 +2447,43 @@
 </div>
 
 <script>
-// ════════════════════════════════════════════
-//  AUTH — Netlify Identity
-// ════════════════════════════════════════════
-let _authUser = null;  // null = guest, object = logged-in user
+// ── Auth ─────────────────────────────────────────
+// Site is fully gated by edge function — user is always authenticated here.
+// We just parse the JWT cookie to get their name for the logout button,
+// and provide a logout function that clears the cookie.
 
-function authHeaders() {
-  const token = _authUser?.token?.access_token;
-  return token ? { 'Authorization': `Bearer ${token}` } : {};
+function _parseJwtName() {
+  try {
+    const match = document.cookie.match(/nf_jwt=([^;]+)/);
+    if (!match) return null;
+    const payload = JSON.parse(atob(match[1].split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+    return payload.email || null;
+  } catch { return null; }
 }
 
-function setAuthState(user) {
-  _authUser = user;
-  const btn = document.getElementById('auth-btn');
-  const label = document.getElementById('auth-btn-label');
-  if (user) {
-    document.body.classList.remove('auth-guest');
-    btn.className = 'toolbar-btn auth-btn-logged-in';
-    const firstName = (user.user_metadata?.full_name || user.email || '').split(/[\s@]/)[0];
-    label.textContent = `Hi, ${firstName} ↩`;
-    btn.setAttribute('aria-label', 'Log out');
-  } else {
-    document.body.classList.add('auth-guest');
-    btn.className = 'toolbar-btn auth-btn-logged-out';
-    label.textContent = 'Family Login';
-    btn.setAttribute('aria-label', 'Log in');
-  }
+function authHeaders() {
+  const match = document.cookie.match(/nf_jwt=([^;]+)/);
+  return match ? { 'Authorization': `Bearer ${match[1]}` } : {};
 }
 
 function handleAuthClick() {
-  if (_authUser) {
-    netlifyIdentity.logout();
-  } else {
-    netlifyIdentity.open('login');
-  }
+  // Clear cookie and redirect to login
+  document.cookie = 'nf_jwt=; path=/; max-age=0';
+  window.location.href = '/login';
 }
 
-function showAuthRequired() {
-  // Flash a brief "please log in" message if a save is attempted while logged out
-  const btn = document.getElementById('auth-btn');
-  btn.style.outline = '2px solid #e33';
-  setTimeout(() => btn.style.outline = '', 2000);
-  netlifyIdentity.open('login');
-}
-
-// ── Identity setup ──────────────────────────────
-// Extract any token from URL hash BEFORE anything loads
-const _hashParams = new URLSearchParams(window.location.hash.replace('#',''));
-const _inviteToken      = _hashParams.get('invite_token');
-const _recoveryToken    = _hashParams.get('recovery_token');
-const _hasSpecialToken  = _inviteToken || _recoveryToken;
-
-// If there's a special token, show our own set-password UI
-// instead of relying on the widget iframe (which never sees the token)
-if (_hasSpecialToken) {
-  history.replaceState(null, '', window.location.pathname);
-  document.addEventListener('DOMContentLoaded', () => _showSetPassword(_inviteToken || _recoveryToken, !!_inviteToken));
-}
-
-function _showSetPassword(token, isInvite) {
-  const overlay = document.createElement('div');
-  overlay.id = 'identity-overlay';
-  overlay.innerHTML = `
-    <div id="identity-box">
-      <div id="identity-logo">&#x1F332;</div>
-      <h2>${isInvite ? 'Welcome to the Hunwick Family Tree' : 'Reset your password'}</h2>
-      <p>${isInvite ? 'Set a password to access the family editing tools.' : 'Choose a new password for your account.'}</p>
-      <input id="identity-pw"  type="password" placeholder="Choose a password"  autocomplete="new-password">
-      <input id="identity-pw2" type="password" placeholder="Confirm password"   autocomplete="new-password">
-      <button id="identity-submit">${isInvite ? 'Set password &amp; log in' : 'Reset password'}</button>
-      <div id="identity-msg"></div>
-    </div>`;
-
-  const style = document.createElement('style');
-  style.textContent = `
-    #identity-overlay{position:fixed;inset:0;z-index:9999;background:rgba(26,18,8,0.72);display:flex;align-items:center;justify-content:center}
-    #identity-box{background:#fdf8f0;border-radius:16px;padding:36px 40px;width:min(420px,92vw);box-shadow:0 12px 48px rgba(90,60,20,0.3);text-align:center;font-family:'Crimson Pro',serif}
-    #identity-logo{font-size:2.4rem;margin-bottom:12px}
-    #identity-box h2{font-size:1.4rem;color:#3d2a1a;margin:0 0 8px}
-    #identity-box p{color:#8b6f4a;font-size:0.95rem;margin:0 0 20px}
-    #identity-pw,#identity-pw2{width:100%;box-sizing:border-box;padding:10px 14px;border:1px solid #d4b896;border-radius:8px;font-size:1rem;font-family:inherit;background:#fff;margin-bottom:10px;color:#3d2a1a}
-    #identity-pw:focus,#identity-pw2:focus{outline:none;border-color:#7a3b1e}
-    #identity-submit{width:100%;padding:12px;background:#5c4730;color:#fdf8f0;border:none;border-radius:8px;font-size:1rem;font-family:'Crimson Pro',serif;font-weight:600;cursor:pointer;margin-top:4px}
-    #identity-submit:hover{background:#7a3b1e}
-    #identity-submit:disabled{opacity:0.6;cursor:not-allowed}
-    #identity-msg{margin-top:12px;font-size:0.88rem;min-height:20px}
-    #identity-msg.err{color:#b00}
-    #identity-msg.ok{color:#2a6b2a}`;
-  document.head.appendChild(style);
-  document.body.appendChild(overlay);
-
-  document.getElementById('identity-submit').addEventListener('click', async () => {
-    const pw  = document.getElementById('identity-pw').value;
-    const pw2 = document.getElementById('identity-pw2').value;
-    const msg = document.getElementById('identity-msg');
-    const btn = document.getElementById('identity-submit');
-
-    if (pw.length < 8)  { msg.className='err'; msg.textContent='Password must be at least 8 characters.'; return; }
-    if (pw !== pw2)     { msg.className='err'; msg.textContent='Passwords do not match.'; return; }
-
-    btn.disabled = true;
-    msg.className=''; msg.textContent='Setting password...';
-
-    try {
-      const type = isInvite ? 'signup' : 'recovery';
-      const res = await fetch('/.netlify/identity/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type, token, password: pw })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.msg || data.error_description || 'Unknown error');
-
-      // Store the access token so we can log in immediately
-      msg.className='ok'; msg.textContent='Success! Logging you in...';
-      
-      // Use the returned token to set auth state directly
-      if (data.access_token) {
-        _authUser = data;
-        setAuthState({ email: data.email, token: { access_token: data.access_token }, user_metadata: data.user_metadata || {} });
-      }
-      setTimeout(() => overlay.remove(), 900);
-
-    } catch(e) {
-      msg.className='err'; msg.textContent='Error: ' + e.message;
-      btn.disabled = false;
-    }
-  });
-}
-
-function _initIdentity() {
-  if (typeof netlifyIdentity === 'undefined') {
-    document.body.classList.add('auth-guest');
-    return;
-  }
-  netlifyIdentity.on('init', user => setAuthState(user || null));
-  netlifyIdentity.on('login', user => { setAuthState(user); netlifyIdentity.close(); });
-  netlifyIdentity.on('logout', () => setAuthState(null));
-  netlifyIdentity.on('error', err => console.error('Identity error:', err));
-  netlifyIdentity.init({ APIUrl: 'https://hunwick-tree.netlify.app/.netlify/identity' });
-}
-
-// Inject widget script then init
+// Set button label from cookie
 (function() {
-  const s = document.createElement('script');
-  s.src = 'https://identity.netlify.com/v1/netlify-identity-widget.js';
-  s.onload = _initIdentity;
-  s.onerror = () => document.body.classList.add('auth-guest');
-  document.head.appendChild(s);
+  const email = _parseJwtName();
+  const btn   = document.getElementById('auth-btn');
+  const label = document.getElementById('auth-btn-label');
+  if (email && btn && label) {
+    const firstName = email.split('@')[0].split('.')[0];
+    btn.className = 'toolbar-btn auth-btn-logged-in';
+    label.textContent = `Hi, ${firstName[0].toUpperCase() + firstName.slice(1)} ↩`;
+  }
 })();
+
 
 const PEOPLE_DEFAULT = {
   "William (patriarch)": { born: null, died: null, spouse: "Mary", children: ["Mary (bap.1701)", "William (bap.1706)", "Francis (bap.1749)"], parents: [], notes: "", generation: "1st — Patriarch", isDirect: false },
