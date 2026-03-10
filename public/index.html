@@ -48,14 +48,31 @@
     display: flex;
     flex-direction: column;
     align-items: flex-start;
+    gap: 6px;
+  }
+  #toolbar-row-1 {
+    display: flex;
     gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    max-width: calc(100vw - 48px);
   }
   #toolbar-buttons {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
-    max-width: calc(100vw - 48px);
   }
+  #toolbar-row-2 {
+    display: flex;
+    gap: 6px;
+  }
+  .toolbar-btn-sm {
+    padding: 6px 12px !important;
+    font-size: 0.78rem !important;
+    border-radius: 18px !important;
+    opacity: 0.85;
+  }
+  .toolbar-btn-sm:hover { opacity: 1; }
   /* Unified toolbar button style */
   .toolbar-btn {
     background: var(--sepia-dark);
@@ -92,6 +109,8 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 7px;
+    }
+    #toolbar-row-2 {
       width: calc(100vw - 24px);
     }
     .toolbar-btn {
@@ -2251,27 +2270,31 @@
 <!-- ── BOTTOM TOOLBAR ── -->
 <div id="search-result-count"></div>
 <div id="bottom-toolbar">
-  <div id="toolbar-buttons">
-    <button id="stats-toggle" class="toolbar-btn" onclick="toggleStats()" aria-label="Family statistics">
-      <span>📊</span><span>Family Stats</span>
-    </button>
-    <button id="review-toggle" class="toolbar-btn accent-btn" onclick="openReviewMode()" aria-label="Complete the tree">
+  <div id="toolbar-row-1">
+    <div id="toolbar-buttons">
+      <button id="stats-toggle" class="toolbar-btn" onclick="toggleStats()" aria-label="Family statistics">
+        <span>📊</span><span>Family Stats</span>
+      </button>
+      <button id="auth-btn" class="toolbar-btn auth-btn-logged-out" onclick="handleAuthClick()" aria-label="Login">
+        <span>🔒</span><span id="auth-btn-label">Family Login</span>
+      </button>
+    </div>
+    <div id="tree-search-wrap">
+      <span id="search-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="5.5" cy="5.5" r="4" stroke="currentColor" stroke-width="1.5"/><line x1="8.7" y1="8.7" x2="12.5" y2="12.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+      <input id="tree-search" type="search" placeholder="Search family members…" autocomplete="off" spellcheck="false">
+      <button id="tree-search-clear" title="Clear">✕</button>
+    </div>
+  </div>
+  <div id="toolbar-row-2">
+    <button id="review-toggle" class="toolbar-btn toolbar-btn-sm accent-btn" onclick="openReviewMode()" aria-label="Complete the tree">
       <span>✏️</span><span>Complete Tree</span>
     </button>
-    <button id="bulk-edit-toggle" class="toolbar-btn" onclick="openBulkEdit()" aria-label="Bulk edit family members">
+    <button id="bulk-edit-toggle" class="toolbar-btn toolbar-btn-sm" onclick="openBulkEdit()" aria-label="Bulk edit family members">
       <span>⚡</span><span>Bulk Edit</span>
     </button>
-    <button id="gedcom-import-toggle" class="toolbar-btn" onclick="openGedcomImport()" aria-label="Import GEDCOM from Ancestry or FamilySearch">
-      <span>📥</span><span>Import</span>
+    <button id="gedcom-import-toggle" class="toolbar-btn toolbar-btn-sm" onclick="openGedcomImport()" aria-label="Import GEDCOM from Ancestry or FamilySearch">
+      <span>📥</span><span>Import GEDCOM</span>
     </button>
-    <button id="auth-btn" class="toolbar-btn auth-btn-logged-out" onclick="handleAuthClick()" aria-label="Login">
-      <span>🔒</span><span id="auth-btn-label">Family Login</span>
-    </button>
-  </div>
-  <div id="tree-search-wrap">
-    <span id="search-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="5.5" cy="5.5" r="4" stroke="currentColor" stroke-width="1.5"/><line x1="8.7" y1="8.7" x2="12.5" y2="12.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
-    <input id="tree-search" type="search" placeholder="Search family members…" autocomplete="off" spellcheck="false">
-    <button id="tree-search-clear" title="Clear">✕</button>
   </div>
 </div>
 <div id="stats-panel" role="complementary" aria-label="Family statistics">
@@ -4801,27 +4824,20 @@ function renderResearchResults(data, key) {
 async function applySuggestion(key, field, btn) {
   const row = btn.closest('.research-suggestion');
   const value = row.querySelector('.sug-value').textContent;
-  const _jwt2 = (document.cookie.match(/nf_jwt=([^;]+)/)||[])[1]||'';
 
   btn.textContent = '…';
   btn.disabled = true;
 
   try {
-    const current = (treeData && treeData[key]) ? { ...treeData[key] } : {};
-    current[field] = value;
+    // Use the same save path as the edit panel
+    const patch = { [field]: value };
+    await apiSaveEdit(key, patch);
 
-    const res = await fetch('/api/save-person', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${_jwt2}` },
-      body: JSON.stringify({ key, data: current }),
-    });
-    if (!res.ok) throw new Error('Save failed');
-
-    if (PEOPLE) PEOPLE[key] = current;
-    btn.textContent = 'Applied';
+    btn.textContent = '✓ Applied';
     btn.style.background = '#28a745';
     row.style.opacity = '0.6';
 
+    // Refresh panel if this person is open
     if (currentKey === key) openPanel(document.getElementById('dp-name').textContent, currentCard, key);
   } catch (e) {
     btn.textContent = 'Error';
