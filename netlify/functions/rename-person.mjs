@@ -44,36 +44,35 @@ export default async (req) => {
   }
 
   // Copy record to new key, update the name field to match
-  oldKey = resolvedOldKey; // use resolved key from here on
-  const record = { ...people[oldKey] };
+  const record = { ...people[resolvedOldKey] };
   const newDisplayName = newKey.split(' (')[0].trim();
   record.name = newDisplayName;
   people[newKey] = record;
-  delete people[oldKey];
+  delete people[resolvedOldKey];
 
   // Update all references throughout the tree
   for (const [k, p] of Object.entries(people)) {
     if (k === newKey) continue;
 
     if (Array.isArray(p.children)) {
-      p.children = p.children.map(c => c === oldKey ? newKey : c);
+      p.children = p.children.map(c => c === resolvedOldKey ? newKey : c);
     }
     if (Array.isArray(p.parents)) {
-      p.parents = p.parents.map(c => c === oldKey ? newKey : c);
+      p.parents = p.parents.map(c => c === resolvedOldKey ? newKey : c);
     }
-    if (typeof p.spouse === 'string' && p.spouse === oldKey) p.spouse = newKey;
+    if (typeof p.spouse === 'string' && p.spouse === resolvedOldKey) p.spouse = newKey;
   }
 
   // Also rename the photo index key if one exists
   const photoIndex = (await store.get("photo-index", { type: "json" })) || {};
-  if (photoIndex[oldKey]) {
-    photoIndex[newKey] = photoIndex[oldKey];
-    delete photoIndex[oldKey];
+  if (photoIndex[resolvedOldKey]) {
+    photoIndex[newKey] = photoIndex[resolvedOldKey];
+    delete photoIndex[resolvedOldKey];
     await store.setJSON("photo-index", photoIndex);
   }
 
   await store.setJSON("people", people);
-  return Response.json({ ok: true, oldKey, newKey });
+  return Response.json({ ok: true, oldKey: resolvedOldKey, newKey });
 };
 
 export const config = { path: "/api/rename-person" };
