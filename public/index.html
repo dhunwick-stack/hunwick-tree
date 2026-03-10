@@ -2501,12 +2501,20 @@ function showAuthRequired() {
 
 // Initialise Identity widget
 if (typeof netlifyIdentity !== 'undefined') {
-  netlifyIdentity.on('init', user => setAuthState(user || null));
+  netlifyIdentity.on('init', user => {
+    setAuthState(user || null);
+    // Auto-open widget if URL contains an invite or recovery token
+    const hash = window.location.hash;
+    if (hash && (hash.includes('invite_token') || hash.includes('recovery_token') || hash.includes('confirmation_token'))) {
+      netlifyIdentity.open();
+    }
+  });
   netlifyIdentity.on('login', user => { setAuthState(user); netlifyIdentity.close(); });
   netlifyIdentity.on('logout', () => setAuthState(null));
+  netlifyIdentity.on('error', err => console.error('Identity error:', err));
   netlifyIdentity.init();
 } else {
-  // Widget script not loaded (unlikely on prod) — default to guest
+  // Widget script not loaded — default to guest
   document.body.classList.add('auth-guest');
 }
 
