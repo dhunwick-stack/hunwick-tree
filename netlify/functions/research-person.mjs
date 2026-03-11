@@ -71,7 +71,7 @@ Find any birth year/place, death year/place, occupation, location, or notable fa
           'anthropic-version': '2023-06-01',
         },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
+          model: 'claude-sonnet-4-5',
           max_tokens: 1500,
           system: systemPrompt,
           tools: [{ type: 'web_search_20250305', name: 'web_search' }],
