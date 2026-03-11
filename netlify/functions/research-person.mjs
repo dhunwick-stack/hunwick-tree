@@ -63,7 +63,6 @@ Search for birth records, death records, census entries, or other genealogical s
         'Content-Type': 'application/json',
         'x-api-key': apiKey,
         'anthropic-version': '2023-06-01',
-        'anthropic-beta': 'interleaved-thinking-2025-05-14',
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-5',
@@ -81,8 +80,9 @@ Search for birth records, death records, census entries, or other genealogical s
 
     const data = await response.json();
 
-    // Extract the final text block (may come after tool_use blocks)
-    const textBlock = data.content?.find(b => b.type === 'text');
+    // Extract the final text block — get the last one (after any tool_use blocks)
+    const textBlocks = data.content?.filter(b => b.type === 'text') || [];
+    const textBlock = textBlocks[textBlocks.length - 1];
     if (!textBlock) {
       throw new Error(`No text response. stop_reason: ${data.stop_reason}, blocks: ${data.content?.map(b=>b.type).join(',')}`);
     }
