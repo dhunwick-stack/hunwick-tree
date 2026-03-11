@@ -4909,6 +4909,7 @@ async function applySuggestion(key, field, btn) {
 // ── GEDCOM IMPORT ──────────────────────────────────────────────────────────
 
 let gedcomParsedData = null;
+let gedcomRawText = null;
 
 function openGedcomImport() {
   document.getElementById('gedcom-modal').classList.add('open');
@@ -4921,7 +4922,7 @@ function closeGedcomImport() {
   document.getElementById('gedcom-import-btn').style.display = 'none';
   document.getElementById('gedcom-drop-label').style.display = '';
   gedcomParsedData = null;
-  document.getElementById('gedcom-file-input').value = '';
+  gedcomRawText = null;
 }
 
 const gedcomDropZone = document.getElementById('gedcom-drop');
@@ -4938,13 +4939,13 @@ document.getElementById('gedcom-file-input').addEventListener('change', e => {
 
 async function handleGedcomFile(file) {
   const text = await file.text();
-  const _jwt3 = (document.cookie.match(/nf_jwt=([^;]+)/)||[])[1]||'';
+  gedcomRawText = text; // cache for import step
   document.getElementById('gedcom-drop-label').innerHTML = '<div style="font-size:1.5rem">⏳</div>Parsing ' + file.name + '…';
 
   try {
     const res = await fetch('/api/gedcom-import', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${_jwt3}` },
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify({ gedcomText: text, mode: 'preview' }),
     });
     const data = await res.json();
@@ -4976,20 +4977,17 @@ function renderGedcomPreview(people) {
 }
 
 async function executeGedcomImport() {
-  if (!gedcomParsedData) return;
+  if (!gedcomParsedData || !gedcomRawText) return;
   const btn = document.getElementById('gedcom-import-btn');
   btn.textContent = 'Importing…';
   btn.disabled = true;
 
-  const _jwt4 = (document.cookie.match(/nf_jwt=([^;]+)/)||[])[1]||'';
-  const fileInput = document.getElementById('gedcom-file-input');
-  const file = fileInput.files[0];
-  const text = file ? await file.text() : '';
+  const text = gedcomRawText; // use cached text — drag-drop doesn't populate fileInput
 
   try {
     const res = await fetch('/api/gedcom-import', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${_jwt4}` },
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify({ gedcomText: text, mode: 'import' }),
     });
     const data = await res.json();
